@@ -1,0 +1,52 @@
+@charset "utf-8";
+#tabName li{border-right: 1px solid #ccc;}
+/*#tabName li.layui-this{border-right: 1px solid #1ab394;}*/
+.project-list table .layui-table-cell{min-width: 80px}
+.layui-btn{border-radius: 3px!important;}
+.add_button{background-color: #1c84c6!important;}
+.export_button{background-color: #ffb800!important;}
+.edit_button{background-color: #1e9fff!important;}
+.delete_button{background-color: #ec4758!important;color: #fff!important;}
+.form-box .layui-input,.layui-textarea{min-width: 100px!important;}
+.soushou_button{background-color: #1ab394;border-color: #1ab394;color: #FFFFFF;border-radius: 50px!important;}
+.layui-btn-group .f_chongzhi{background-color: #f8ac59;border-color: #f8ac59;color: #FFFFFF;border-radius: 50px!important;margin-left: 4px!important;}
+.shuaxin_button{background-color: #ef6776;border-color: #ef6776;}
+.mleft1{margin-left: 3px;}
+.z-input,.layui-input, .layui-textarea{border-color:burlywood;}
+.z-input:hover,.layui-input:hover,.layui-textarea:hover{border-color: #1c84c6!important}
+.layui-icon-cols{color: #ce15e5;}
+.slider_data .layui-slider-input{top:0;right: -75px;border-color: burlywood;}
+.slider_data .layui-slider-input input{min-width: 68px!important}
+@media (max-width: 768px) {
+	body.mini-navbar .navbar-static-side {
+	  width: 220px;
+	  background-image: url(patterns/header-profile.png);
+	  height: -webkit-fill-available;
+	}
+	body.mini-navbar #page-wrapper {
+	  margin: 0 0 0 220px;
+	}
+	body.mini-navbar .nav li a span.nav-label{display: contents!important;}
+	.mini-navbar .nav .nav-second-level{position: initial;}
+	.mini-navbar .nav-second-level li a{
+		padding: 7px 10px 7px 10px;
+    	padding-left: 52px;
+	}
+	body:not(.fixed-sidebar):not(.canvas-menu).mini-navbar li.active .nav-second-level {
+	    display: block;
+	}
+	.mini-navbar .metismenu .collapse a{display: block;}
+	body.mini-navbar .navbar-default .nav li a span {
+	  display: block;
+	}
+}
+
+@media (min-width: 768px) {
+	body:not(.fixed-sidebar):not(.canvas-menu).mini-navbar .nav li:hover > .nav-second-level,
+	.mini-navbar .nav li:focus > .nav-second-level {
+	  display: block;
+	  border-radius: 0 2px 2px 0;
+	  min-width: 160px;
+	  height: auto;
+	}
+}

@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  admin:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+    container_name: tgbot-admin
+    ports:
+      - "8080:80"
+    environment:
+      - API_WEB_URL=http://api-web:4444
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - admin_storage:/var/www/html/storage
+      - admin_cache:/var/www/html/bootstrap/cache
+      - ./admin/.env:/var/www/html/.env:ro
+    restart: unless-stopped
+    networks:
+      - tgbot-network
+
+  job:
+    build:
+      context: ./job
+      dockerfile: Dockerfile
+    container_name: tgbot-job
+    ports:
+      - "9503:9503"
+    environment:
+      - API_WEB_URL=http://api-web:4444
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./job:/var/www/html
+    restart: unless-stopped
+    networks:
+      - tgbot-network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: tgbot-postgres
+    environment:
+      - POSTGRES_PASSWORD=rootpassword
+      - POSTGRES_USER=root
+      - POSTGRES_DB=tgbot
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - tgbot-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: tgbot-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - tgbot-network
+
+networks:
+  tgbot-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  admin_storage:
+  admin_cache:

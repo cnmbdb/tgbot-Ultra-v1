@@ -1,0 +1,7 @@
+vendor
+runtime/*
+.git
+.gitignore
+.env
+.phpunit.result.cache
+test/
