@@ -12,8 +12,8 @@ class CancelUnpaidOrder
     { 
         try {
             //取消会员订单
-            $data = PremiumPlatformOrder::from('premium_platform_order as a')
-                    ->Join('telegram_bot as b','a.bot_rid','b.rid')
+            $data = PremiumPlatformOrder::from('t_premium_platform_order as a')
+                    ->Join('t_telegram_bot as b','a.bot_rid','b.rid')
                     ->where('a.status',0)
                     ->where('a.expire_time','<=',nowDate())
                     ->select('a.rid','a.expire_time','b.bot_token','a.status','a.buy_tg_uid','a.premium_tg_username','a.premium_package_month','a.need_pay_usdt')
@@ -48,8 +48,8 @@ class CancelUnpaidOrder
             }
             
             //取消充值订单
-            $data = FmsRechargeOrder::from('fms_recharge_order as a')
-                    ->Join('telegram_bot as b','a.bot_rid','b.rid')
+            $data = FmsRechargeOrder::from('t_fms_recharge_order as a')
+                    ->Join('t_telegram_bot as b','a.bot_rid','b.rid')
                     ->where('a.status',0)
                     ->where('a.expire_time','<=',nowDate())
                     ->select('a.rid','a.expire_time','b.bot_token','a.status','a.recharge_tg_uid','a.need_pay_price','a.recharge_coin_name','a.recharge_pay_price')

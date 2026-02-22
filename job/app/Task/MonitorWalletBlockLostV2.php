@@ -13,12 +13,12 @@ class MonitorWalletBlockLostV2
             $lostblock = json_decode(getRedis('lostblock'),true) ?? [];
             
             if(!empty($lostblock)){
-                $data = MonitorWallet::from('monitor_wallet as a')
-                    ->Join('telegram_bot as b','a.bot_rid','b.rid')
+                $data = MonitorWallet::from('t_monitor_wallet as a')
+                    ->Join('t_telegram_bot as b','a.bot_rid','b.rid')
                     ->where('a.status',0)
                     ->whereNotNull('a.monitor_wallet')
                     ->where('a.chain_type','trc')
-                    ->select('a.monitor_wallet','a.tg_notice_obj','b.bot_token','a.comments','a.monitor_usdt_transaction','a.monitor_trx_transaction','a.monitor_approve_transaction','a.monitor_multi_transaction','a.monitor_pledge_transaction')
+                    ->select('a.monitor_wallet','a.tg_notice_obj','b.bot_token','a.comments','a.monitor_trx_transaction','a.monitor_approve_transaction','a.monitor_multi_transaction','a.monitor_pledge_transaction')
                     ->get()
                     ->toArray();
                     
@@ -65,8 +65,9 @@ class MonitorWalletBlockLostV2
                                         $found_obj = $data[$isto];
                                         $type = mb_substr($dataaa,0,8) == 'a9059cbb' ?'1':($amount == 0 ?'11':'12');
                                         
-                                        //判断功能开关
-                                        if(($type == 1 && mb_substr($found_obj['monitor_usdt_transaction'],0,1) == 'Y' && $amount >= 0.01) || ($type == 11 && mb_substr($found_obj['monitor_approve_transaction'],1,1) == 'Y') ||  ($type == 12 && mb_substr($found_obj['monitor_approve_transaction'],0,1) == 'Y')){
+                                        //判断功能开关（monitor_usdt_transaction 字段不存在，使用默认值）
+                                        $monitor_usdt = isset($found_obj['monitor_usdt_transaction']) ? $found_obj['monitor_usdt_transaction'] : 'YY';
+                                        if(($type == 1 && mb_substr($monitor_usdt,0,1) == 'Y' && $amount >= 0.01) || ($type == 11 && mb_substr($found_obj['monitor_approve_transaction'],1,1) == 'Y') ||  ($type == 12 && mb_substr($found_obj['monitor_approve_transaction'],0,1) == 'Y')){
                                             $this->sendTgMessage($contractret,$toaddress,$type,$fromaddress,$toaddress,'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',$amount,$currentblock,$blocktimestamp,$y['txID'],$found_obj['tg_notice_obj'],$found_obj['bot_token'],$found_obj['comments']);
                                         }
                                     }
@@ -77,8 +78,9 @@ class MonitorWalletBlockLostV2
                                         $found_obj = $data[$isfrom];
                                         $type = mb_substr($dataaa,0,8) == 'a9059cbb' ?'2':($amount == 0 ?'21':'22');
                                         
-                                        //判断功能开关
-                                        if(($type == 2 && mb_substr($found_obj['monitor_usdt_transaction'],1,1) == 'Y' && $amount >= 0.01) || ($type == 21 && mb_substr($found_obj['monitor_approve_transaction'],1,1) == 'Y') ||  ($type == 22 && mb_substr($found_obj['monitor_approve_transaction'],0,1) == 'Y')){
+                                        //判断功能开关（monitor_usdt_transaction 字段不存在，使用默认值）
+                                        $monitor_usdt = isset($found_obj['monitor_usdt_transaction']) ? $found_obj['monitor_usdt_transaction'] : 'YY';
+                                        if(($type == 2 && mb_substr($monitor_usdt,1,1) == 'Y' && $amount >= 0.01) || ($type == 21 && mb_substr($found_obj['monitor_approve_transaction'],1,1) == 'Y') ||  ($type == 22 && mb_substr($found_obj['monitor_approve_transaction'],0,1) == 'Y')){
                                             $this->sendTgMessage($contractret,$fromaddress,$type,$fromaddress,$toaddress,'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',$amount,$currentblock,$blocktimestamp,$y['txID'],$found_obj['tg_notice_obj'],$found_obj['bot_token'],$found_obj['comments']);
                                         }
                                     }
@@ -98,8 +100,9 @@ class MonitorWalletBlockLostV2
                                         $contractret = $y['ret'][0]['contractRet'];
                                         $found_obj = $data[$isto];
                                         
-                                        //判断功能开关
-                                        if(mb_substr($found_obj['monitor_usdt_transaction'],0,1) == 'Y' && $amount >= 0.01){
+                                        //判断功能开关（monitor_usdt_transaction 字段不存在，使用默认值）
+                                        $monitor_usdt = isset($found_obj['monitor_usdt_transaction']) ? $found_obj['monitor_usdt_transaction'] : 'YY';
+                                        if(mb_substr($monitor_usdt,0,1) == 'Y' && $amount >= 0.01){
                                             $this->sendTgMessage($contractret,$toaddress,3,$fromaddress,$toaddress,'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',$amount,$currentblock,$blocktimestamp,$y['txID'],$found_obj['tg_notice_obj'],$found_obj['bot_token'],$found_obj['comments']);
                                         }
                                     }
@@ -109,8 +112,9 @@ class MonitorWalletBlockLostV2
                                         $contractret = $y['ret'][0]['contractRet'];
                                         $found_obj = $data[$isfrom];
                                         
-                                        //判断功能开关
-                                        if(mb_substr($found_obj['monitor_usdt_transaction'],1,1) == 'Y' && $amount >= 0.01){
+                                        //判断功能开关（monitor_usdt_transaction 字段不存在，使用默认值）
+                                        $monitor_usdt = isset($found_obj['monitor_usdt_transaction']) ? $found_obj['monitor_usdt_transaction'] : 'YY';
+                                        if(mb_substr($monitor_usdt,1,1) == 'Y' && $amount >= 0.01){
                                             $this->sendTgMessage($contractret,$fromaddress,4,$fromaddress,$toaddress,'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',$amount,$currentblock,$blocktimestamp,$y['txID'],$found_obj['tg_notice_obj'],$found_obj['bot_token'],$found_obj['comments']);
                                         }
                                     }

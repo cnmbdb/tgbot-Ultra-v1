@@ -279,6 +279,11 @@ function Get_Pay($url, $data = null, array $heders = [], $time=6)
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); //这个是重点,规避ssl的证书检查。
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE); // 跳过host验证
     if(!empty($data)){
+        // 如果是数组，转换为JSON格式（API-web需要JSON格式）
+        if(is_array($data)){
+            $data = json_encode($data);
+            $heders[] = 'Content-Type: application/json';
+        }
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
     }
     if(!empty($heders)){

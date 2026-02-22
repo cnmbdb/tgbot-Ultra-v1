@@ -29,8 +29,8 @@ class PremiumPlatformController extends Controller
     //列表
     public function getData(Request $request)
     {
-        $model = PremiumPlatform::from('premium_platform as a')
-                 ->leftJoin('telegram_bot as b','a.bot_rid','b.rid')
+        $model = PremiumPlatform::from('t_premium_platform as a')
+                 ->leftJoin('t_telegram_bot as b','a.bot_rid','b.rid')
                  ->where(function($query) use ($request){
                 if ($request->platform_hash != '') {
                     $query->where('a.platform_hash', 'like' ,"%" . $request->platform_hash ."%");

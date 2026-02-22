@@ -28,8 +28,8 @@ class TransitWalletCoinController extends Controller
     //列表
     public function getData(Request $request)
     {
-        $model = TransitWalletCoin::from('transit_wallet_coin as a')
-                 ->join('transit_wallet as b','a.transit_wallet_id','b.rid')
+        $model = TransitWalletCoin::from('t_transit_wallet_coin as a')
+                 ->join('t_transit_wallet as b','a.transit_wallet_id','b.rid')
                  ->where(function($query) use ($request){
                     if ($request->receive_wallet != '') {
                         $query->where('receive_wallet', 'like' ,"%" . $request->receive_wallet ."%");

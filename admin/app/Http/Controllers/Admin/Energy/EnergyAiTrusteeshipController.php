@@ -23,8 +23,8 @@ class EnergyAiTrusteeshipController extends Controller
     //列表
     public function getData(Request $request)
     {
-        $model = EnergyAiTrusteeship::from('energy_ai_trusteeship as a')
-                ->leftJoin('telegram_bot as b','a.bot_rid','b.rid')
+        $model = EnergyAiTrusteeship::from('t_energy_ai_trusteeship as a')
+                ->leftJoin('t_telegram_bot as b','a.bot_rid','b.rid')
                 ->where(function($query) use ($request){
                 if ($request->tg_uid != '') {
                     $query->where('tg_uid', 'like' ,"%" . $request->tg_uid ."%");

@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class EnergyThirdPart extends Model
 {
-	protected $connection = 'mysql';
+	
 
-    protected $table = 'energy_third_part';
+    protected $table = 't_energy_third_part';
 
     protected $primaryKey  = 'rid';
 

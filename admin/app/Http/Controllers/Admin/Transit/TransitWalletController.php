@@ -30,8 +30,8 @@ class TransitWalletController extends Controller
     //列表
     public function getData(Request $request)
     {
-        $model = TransitWallet::from('transit_wallet as a')
-                 ->leftJoin('telegram_bot as b','a.bot_rid','b.rid')
+        $model = TransitWallet::from('t_transit_wallet as a')
+                 ->leftJoin('t_telegram_bot as b','a.bot_rid','b.rid')
                  ->where(function($query) use ($request){
                 if ($request->receive_wallet != '') {
                     $query->where('a.receive_wallet', 'like' ,"%" . $request->receive_wallet ."%");

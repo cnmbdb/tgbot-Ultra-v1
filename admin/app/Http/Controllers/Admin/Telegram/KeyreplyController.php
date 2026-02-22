@@ -33,8 +33,8 @@ class KeyreplyController extends Controller
     //列表
     public function getData(Request $request)
     {
-        $model = TelegramBotKeyreply::from('telegram_bot_keyreply as a')
-                ->join('telegram_bot as b','a.bot_rid','b.rid')
+        $model = TelegramBotKeyreply::from('t_telegram_bot_keyreply as a')
+                ->join('t_telegram_bot as b','a.bot_rid','b.rid')
                 ->where(function($query) use ($request){
                 if ($request->monitor_word != '') {
                     $query->where('a.monitor_word', 'like' ,"%" . $request->monitor_word ."%");
@@ -154,8 +154,8 @@ class KeyreplyController extends Controller
         
         $botData = TelegramBot::pluck('bot_token','rid'); 
         
-        $data = TelegramBotKeyreply::from('telegram_bot_keyreply as a')
-            ->join('telegram_bot as b','a.bot_rid','b.rid')
+        $data = TelegramBotKeyreply::from('t_telegram_bot_keyreply as a')
+            ->join('t_telegram_bot as b','a.bot_rid','b.rid')
             ->where('a.rid',$request->rid)
             ->select('a.*','b.bot_token','b.bot_firstname','b.bot_username')
             ->first();

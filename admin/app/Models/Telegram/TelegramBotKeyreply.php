@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class TelegramBotKeyreply extends Model
 {
-	protected $connection = 'mysql';
+	
 
-    protected $table = 'telegram_bot_keyreply';
+    protected $table = 't_telegram_bot_keyreply';
 
     protected $primaryKey  = 'rid';
 

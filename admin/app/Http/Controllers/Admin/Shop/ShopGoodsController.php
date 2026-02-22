@@ -24,7 +24,7 @@ class ShopGoodsController extends Controller
     //列表
     public function getData(Request $request)
     {
-        $model = ShopGoods::from('shop_goods as a')
+        $model = ShopGoods::from('t_shop_goods as a')
                 ->where(function($query) use ($request){
                 if ($request->goods_name != '') {
                     $query->where('a.goods_name', 'like' ,"%" . $request->goods_name ."%");

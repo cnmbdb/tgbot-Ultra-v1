@@ -27,8 +27,8 @@ class CollectionWalletController extends Controller
     //列表
     public function getData(Request $request)
     {
-        $model = CollectionWallet::from('collection_wallet as a')
-                ->leftJoin('telegram_bot as b','a.bot_rid','b.rid')
+        $model = CollectionWallet::from('t_collection_wallet as a')
+                ->leftJoin('t_telegram_bot as b','a.bot_rid','b.rid')
                 ->where(function($query) use ($request){
                 if ($request->wallet_addr != '') {
                     $query->where('a.wallet_addr', 'like' ,"%" . $request->wallet_addr ."%");

@@ -26,9 +26,9 @@ class ShopGoodsBotController extends Controller
     //列表
     public function getData(Request $request)
     {
-        $model = ShopGoodsBot::from('shop_goods_bot as a')
-                ->join('shop_goods as b','a.goods_rid','b.rid')
-                ->join('telegram_bot as c','a.bot_rid','c.rid')
+        $model = ShopGoodsBot::from('t_shop_goods_bot as a')
+                ->join('t_shop_goods as b','a.goods_rid','b.rid')
+                ->join('t_telegram_bot as c','a.bot_rid','c.rid')
                 ->where(function($query) use ($request){
                 if ($request->goods_name != '') {
                     $query->where('b.goods_name', 'like' ,"%" . $request->goods_name ."%");

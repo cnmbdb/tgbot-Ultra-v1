@@ -24,8 +24,8 @@ class GroupController extends Controller
     //列表
     public function getData(Request $request)
     {
-        $model = TelegramBotGroup::from('telegram_bot_group as a')
-                ->leftJoin('telegram_bot as b','a.bot_rid','b.rid')
+        $model = TelegramBotGroup::from('t_telegram_bot_group as a')
+                ->leftJoin('t_telegram_bot as b','a.bot_rid','b.rid')
                 ->where(function($query) use ($request){
                 if ($request->tg_groupusername != '') {
                     $query->where('a.tg_groupusername', 'like' ,"%" . str_replace(['https://t.me/','@'],'',$request->tg_groupusername) ."%");

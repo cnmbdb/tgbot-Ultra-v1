@@ -11,11 +11,11 @@ class BishuWalletStop
     { 
         //笔数套餐超过滞留天数自动停止
         try {
-            $data = EnergyAiBishu::from('energy_ai_bishu as a')
-                    ->Join('telegram_bot as b','a.bot_rid','b.rid')
+            $data = EnergyAiBishu::from('t_energy_ai_bishu as a')
+                    ->Join('t_telegram_bot as b','a.bot_rid','b.rid')
                     ->where('a.status',0)
                     ->where('a.bishu_stop_day','>',0)
-                    ->whereRaw('length(t_a.wallet_addr) = 34 and t_a.max_buy_quantity > t_a.total_buy_quantity')
+                    ->whereRaw('length(a.wallet_addr) = 34 and a.max_buy_quantity > a.total_buy_quantity')
                     ->select('a.*','b.bot_token')
                     ->get();
             

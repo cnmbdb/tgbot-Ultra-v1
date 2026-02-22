@@ -11,8 +11,8 @@ class GetEnergyPlatformBalance
     public function execute()
     { 
         try {
-            $data = EnergyPlatform::from('energy_platform as a')
-                    ->leftJoin('telegram_bot as b','a.tg_notice_bot_rid','b.rid')
+            $data = EnergyPlatform::from('t_energy_platform as a')
+                    ->leftJoin('t_telegram_bot as b','a.tg_notice_bot_rid','b.rid')
                     ->where('a.status',0)
                     ->select('a.*','b.bot_token')
                     ->get();

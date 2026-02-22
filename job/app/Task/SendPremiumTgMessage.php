@@ -10,9 +10,9 @@ class SendPremiumTgMessage
     public function execute()
     { 
         try {
-            $data = PremiumPlatformOrder::from('premium_platform_order as a')
+            $data = PremiumPlatformOrder::from('t_premium_platform_order as a')
                     ->leftJoin('premium_platform as b','a.bot_rid','b.bot_rid')
-                    ->leftJoin('telegram_bot as c','a.bot_rid','c.rid')
+                    ->leftJoin('t_telegram_bot as c','a.bot_rid','c.rid')
                     ->where('a.tg_notice_user','Y')
                     ->orWhere('a.tg_notice_admin','Y')
                     ->select('a.*','b.tg_admin_uid','b.tg_notice_obj_send','c.bot_token','b.receive_wallet','c.bot_admin_username','c.bot_username')
@@ -70,9 +70,9 @@ class SendPremiumTgMessage
         
         //交易老版本不用管
         // try {
-        //     $data = PremiumWalletTradeList::from('premium_wallet_trade_list as a')
+        //     $data = PremiumWalletTradeList::from('t_premium_wallet_trade_list as a')
         //             ->leftJoin('premium_platform as b','a.premium_platform_rid','b.rid')
-        //             ->leftJoin('telegram_bot as c','b.bot_rid','c.rid')
+        //             ->leftJoin('t_telegram_bot as c','b.bot_rid','c.rid')
         //             ->leftJoin('premium_platform_package as d','a.premium_package_rid','d.rid')
         //             ->where('a.tg_notice_status_receive','N')
         //             ->orWhere('a.tg_notice_status_send','N')

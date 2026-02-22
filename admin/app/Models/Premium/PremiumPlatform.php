@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class PremiumPlatform extends Model
 {
-	protected $connection = 'mysql';
+	
 
-    protected $table = 'premium_platform';
+    protected $table = 't_premium_platform';
 
     protected $primaryKey  = 'rid';
 

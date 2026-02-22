@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class EnergyPlatformOrder extends Model
 {
-	protected $connection = 'mysql';
+	
 
-    protected $table = 'energy_platform_order';
+    protected $table = 't_energy_platform_order';
 
     protected $primaryKey  = 'rid';
 

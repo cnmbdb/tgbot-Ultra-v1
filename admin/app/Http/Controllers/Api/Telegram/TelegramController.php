@@ -61,19 +61,131 @@ class TelegramController extends Controller
     //机器人通知
     public function getdata(Request $request)
     {
-        // llog($request);
-        // return '';
+        // 记录所有 Webhook 请求（用于调试）
+        \Log::info('Telegram Webhook: 收到请求', [
+            'method' => $request->method(),
+            'url' => $request->fullUrl(),
+            'content_type' => $request->header('Content-Type'),
+            'has_body' => !empty($request->getContent()),
+        ]);
+        
         #获取通知的机器人ID
-        $bot_rid = $request->rid;
+        $bot_rid = $request->rid ?? $request->query('rid');
+        
+        if(empty($bot_rid)){
+            \Log::error('Telegram Webhook: 缺少 rid 参数', [
+                'request_all' => $request->all(),
+                'request_query' => $request->query(),
+                'request_json' => $request->json() ? $request->json()->all() : null,
+                'request_content' => substr($request->getContent(), 0, 500), // 只记录前500字符
+            ]);
+            return $this->responseData(400, '缺少 rid 参数');
+        }
+        
+        \Log::info('Telegram Webhook: 处理机器人消息', ['bot_rid' => $bot_rid]);
         
         $data = TelegramBot::where('rid', $bot_rid)->first();
         if(empty($data)){
+            \Log::error('Telegram Webhook: 机器人不存在', ['bot_rid' => $bot_rid]);
             return $this->responseData(400, '数据不存在');
         }
         
         $telegram = new Api($data->bot_token);
         
-        $result = $telegram->getWebhookUpdates();
+        // 本地开发模式：如果没有 Webhook 数据，尝试使用 getUpdates
+        if (env('APP_ENV') === 'local' || env('APP_ENV') === 'development') {
+            // 检查是否有 Webhook 数据
+            $webhookData = $request->all();
+            if (empty($webhookData) || (empty($webhookData['message']) && empty($webhookData['callback_query']) && empty($webhookData['my_chat_member']))) {
+                // 尝试使用 getUpdates 获取消息（仅用于测试）
+                try {
+                    $lastUpdateId = \Cache::get("telegram_last_update_id_{$bot_rid}", 0);
+                    $updates = $telegram->getUpdates([
+                        'offset' => $lastUpdateId + 1,
+                        'timeout' => 1,
+                        'limit' => 1
+                    ]);
+                    
+                    if (!empty($updates)) {
+                        $update = $updates[0];
+                        $updateId = $update->getUpdateId();
+                        $updateData = $update->toArray();
+                        
+                        // 将 update 数据合并到 request 中
+                        if (isset($updateData['message'])) {
+                            $request->merge(['message' => $updateData['message']]);
+                        }
+                        if (isset($updateData['callback_query'])) {
+                            $request->merge(['callback_query' => $updateData['callback_query']]);
+                        }
+                        if (isset($updateData['my_chat_member'])) {
+                            $request->merge(['my_chat_member' => $updateData['my_chat_member']]);
+                        }
+                        
+                        \Cache::put("telegram_last_update_id_{$bot_rid}", $updateId, 3600);
+                    }
+                } catch (\Exception $e) {
+                    // 忽略错误，继续使用 Webhook 方式
+                }
+            }
+        }
+        
+        // Webhook 场景：Telegram 会直接 POST JSON 数据到 Webhook URL
+        // 优先从 JSON body 中获取数据（这是 Telegram Webhook 的标准方式）
+        $result = [];
+        
+        // 方法1: 尝试从 request->json() 获取（Laravel 自动解析 JSON）
+        if ($request->isJson() && $request->json()) {
+            $result = $request->json()->all();
+            \Log::info('Telegram Webhook: 从 request->json() 获取数据', ['bot_rid' => $bot_rid]);
+        }
+        
+        // 方法2: 如果方法1失败，尝试手动解析 JSON body
+        if (empty($result) || (empty($result['message']) && empty($result['callback_query']) && empty($result['my_chat_member']) && empty($result['chat_join_request']))) {
+            $content = $request->getContent();
+            if (!empty($content)) {
+                $jsonData = json_decode($content, true);
+                if (json_last_error() === JSON_ERROR_NONE && !empty($jsonData)) {
+                    $result = $jsonData;
+                    \Log::info('Telegram Webhook: 从手动解析 JSON 获取数据', ['bot_rid' => $bot_rid]);
+                }
+            }
+        }
+        
+        // 方法3: 尝试从 request->all() 获取（表单数据或已解析的数据）
+        if (empty($result) || (empty($result['message']) && empty($result['callback_query']) && empty($result['my_chat_member']) && empty($result['chat_join_request']))) {
+            $allData = $request->all();
+            if (!empty($allData) && (isset($allData['message']) || isset($allData['callback_query']) || isset($allData['my_chat_member']) || isset($allData['chat_join_request']))) {
+                $result = $allData;
+                \Log::info('Telegram Webhook: 从 request->all() 获取数据', ['bot_rid' => $bot_rid]);
+            }
+        }
+        
+        // 记录接收到的数据（用于调试）
+        if (!empty($result)) {
+            \Log::info('Telegram Webhook: 收到数据', [
+                'bot_rid' => $bot_rid,
+                'has_message' => !empty($result['message']),
+                'has_callback_query' => !empty($result['callback_query']),
+                'has_my_chat_member' => !empty($result['my_chat_member']),
+                'has_chat_join_request' => !empty($result['chat_join_request']),
+            ]);
+            
+            // 将解析后的数据合并到 request 中，以便后续代码可以正常访问
+            // 这样 $request->message、$request->callback_query 等就能正常工作了
+            $request->merge($result);
+        }
+        
+        // 如果仍然没有数据，记录详细日志用于调试
+        if (empty($result)) {
+            \Log::warning('Telegram Webhook: 没有收到任何数据', [
+                'bot_rid' => $bot_rid,
+                'request_method' => $request->method(),
+                'request_content_type' => $request->header('Content-Type'),
+                'request_body_preview' => substr($request->getContent(), 0, 500), // 只记录前500字符
+                'request_all_keys' => array_keys($request->all()),
+            ]);
+        }
         // llog($result);
 
         #异常处理
@@ -202,8 +314,8 @@ class TelegramController extends Controller
                 
                 if (strpos($replytext, 'trxusdtrate') !== false || strpos($replytext, 'trxusdtwallet') !== false || strpos($replytext, 'tgbotadmin') !== false || strpos($replytext, 'trxusdtshownotes') !== false || strpos($replytext, 'tgbotname') !== false || strpos($replytext, 'trx10usdtrate') !== false || strpos($replytext, 'trx100usdtrate') !== false || strpos($replytext, 'trx1000usdtrate') !== false) {
                     //替换变量
-                    $walletcoin = TransitWalletCoin::from('transit_wallet_coin as a')
-                                ->join('transit_wallet as b','a.transit_wallet_id','b.rid')
+                    $walletcoin = TransitWalletCoin::from('t_transit_wallet_coin as a')
+                                ->join('t_transit_wallet as b','a.transit_wallet_id','b.rid')
                                 ->where('b.bot_rid', $bot_rid)
                                 ->where('in_coin_name','usdt')
                                 ->where('out_coin_name','trx')
@@ -244,8 +356,8 @@ class TelegramController extends Controller
                 $replyphoto = $keyreply->reply_photo;
                 
                 //取键盘
-                $keyboardList = TelegramBotKeyreplyKeyboard::from('telegram_bot_keyreply_keyboard as a')
-                            ->join('telegram_bot_keyboard as b','a.keyboard_rid','b.rid')
+                $keyboardList = TelegramBotKeyreplyKeyboard::from('t_telegram_bot_keyreply_keyboard as a')
+                            ->join('t_telegram_bot_keyboard as b','a.keyboard_rid','b.rid')
                             ->where('a.bot_rid', $bot_rid)
                             ->where('a.keyreply_rid', $keyreply->rid)
                             ->where('b.status', 0)
@@ -1002,8 +1114,8 @@ class TelegramController extends Controller
                             ];
                             $reply_markup = json_encode($keyboard);
                         }else{
-                            $packageData = EnergyPlatformPackage::from('energy_platform_package as a')
-                                ->join('energy_platform_bot as b','a.bot_rid','b.bot_rid')
+                            $packageData = EnergyPlatformPackage::from('t_energy_platform_package as a')
+                                ->join('t_energy_platform_bot as b','a.bot_rid','b.bot_rid')
                                 ->where('a.rid', $rid)
                                 ->where('a.status',0)
                                 ->where('b.status',0)
@@ -2294,8 +2406,8 @@ class TelegramController extends Controller
             }elseif(mb_substr($message,0,7) == 'energy_' && mb_strlen($message) == 39 && $inlinecall == 'Y'){
                 $username = $request->callback_query['from']['username'] ?? '';
                 
-                $packageData = EnergyPlatformPackage::from('energy_platform_package as a')
-                            ->join('energy_platform_bot as b','a.bot_rid','b.bot_rid')
+                $packageData = EnergyPlatformPackage::from('t_energy_platform_package as a')
+                            ->join('t_energy_platform_bot as b','a.bot_rid','b.bot_rid')
                             ->where('a.callback_data', $message)
                             ->where('a.status',0)
                             ->where('b.status',0)
@@ -2341,8 +2453,8 @@ class TelegramController extends Controller
                 };
                 
                 // #查询能量放入
-                // $keyboardList = EnergyPlatformPackage::from('energy_platform_package as a')
-                //             ->join('energy_platform_bot as b','a.bot_rid','b.bot_rid')
+                // $keyboardList = EnergyPlatformPackage::from('t_energy_platform_package as a')
+                //             ->join('t_energy_platform_bot as b','a.bot_rid','b.bot_rid')
                 //             ->where('a.bot_rid', $bot_rid)
                 //             ->where('a.status', 0)
                 //             ->where('b.status', 0)
@@ -2494,8 +2606,8 @@ class TelegramController extends Controller
                         $reply_markup = json_encode($keyboard);
                     }else{
                         $rid = str_replace(['balancebuytrx','balancebuyusd'],'',$message);
-                        $packageData = EnergyPlatformPackage::from('energy_platform_package as a')
-                            ->join('energy_platform_bot as b','a.bot_rid','b.bot_rid')
+                        $packageData = EnergyPlatformPackage::from('t_energy_platform_package as a')
+                            ->join('t_energy_platform_bot as b','a.bot_rid','b.bot_rid')
                             ->where('a.rid', $rid)
                             ->where('a.status',0)
                             ->where('b.status',0)
@@ -2582,8 +2694,8 @@ class TelegramController extends Controller
                 }else{
                     $paytype = mb_substr($message,14,3);
                     $rid = str_replace(['balancebuyconftrx','balancebuyconfusd'],'',$message);
-                    $packageData = EnergyPlatformPackage::from('energy_platform_package as a')
-                            ->join('energy_platform_bot as b','a.bot_rid','b.bot_rid')
+                    $packageData = EnergyPlatformPackage::from('t_energy_platform_package as a')
+                            ->join('t_energy_platform_bot as b','a.bot_rid','b.bot_rid')
                             ->where('a.rid', $rid)
                             ->where('a.status',0)
                             ->where('b.status',0)
@@ -2744,8 +2856,8 @@ class TelegramController extends Controller
                 $rid = implode("_", array_slice($explodeArr, 0, 1));
                 $paytype = implode("_", array_slice($explodeArr, 1));
                 
-                $packageData = EnergyPlatformPackage::from('energy_platform_package as a')
-                            ->join('energy_platform_bot as b','a.bot_rid','b.bot_rid')
+                $packageData = EnergyPlatformPackage::from('t_energy_platform_package as a')
+                            ->join('t_energy_platform_bot as b','a.bot_rid','b.bot_rid')
                             ->where('a.rid', $rid)
                             ->where('a.status',0)
                             ->where('b.status',0)
@@ -4535,9 +4647,9 @@ class TelegramController extends Controller
                     $choosetype = strpos($message, 'trx') !== false ?'trx':'usdt';
                     $message = str_replace(['buygoodscdkeyconfirmtrx','buygoodscdkeyconfirmusdt'],'',$message);
                     //查cdkey价格
-                    $shopcdkeymodel = ShopGoodsCdkey::from('shop_goods_cdkey as a')
-                            ->join('shop_goods as b','a.goods_rid','b.rid')
-                            ->join('shop_goods_bot as c','c.goods_rid','b.rid')
+                    $shopcdkeymodel = ShopGoodsCdkey::from('t_shop_goods_cdkey as a')
+                            ->join('t_shop_goods as b','a.goods_rid','b.rid')
+                            ->join('t_shop_goods_bot as c','c.goods_rid','b.rid')
                             ->where('a.status',1)
                             ->where('b.status',0)
                             ->where('c.status',0)
@@ -4664,9 +4776,9 @@ class TelegramController extends Controller
                 }else{
                     $message = str_replace(['buygoodscdkey'],'',$message);
                     //查cdkey价格
-                    $shopcdkeymodel = ShopGoodsCdkey::from('shop_goods_cdkey as a')
-                            ->join('shop_goods as b','a.goods_rid','b.rid')
-                            ->join('shop_goods_bot as c','c.goods_rid','b.rid')
+                    $shopcdkeymodel = ShopGoodsCdkey::from('t_shop_goods_cdkey as a')
+                            ->join('t_shop_goods as b','a.goods_rid','b.rid')
+                            ->join('t_shop_goods_bot as c','c.goods_rid','b.rid')
                             ->where('a.status',1)
                             ->where('b.status',0)
                             ->where('c.status',0)
@@ -4767,8 +4879,8 @@ class TelegramController extends Controller
                     $page = implode("_", array_slice($explodeArr, 1));
                     $limit = 10;
 
-                    $shopmodel = ShopGoodsCdkey::from('shop_goods_cdkey as a')
-                            ->join('shop_goods as b','a.goods_rid','b.rid')
+                    $shopmodel = ShopGoodsCdkey::from('t_shop_goods_cdkey as a')
+                            ->join('t_shop_goods as b','a.goods_rid','b.rid')
                             ->where('a.status',1)
                             ->where('b.status',0)
                             ->where('b.rid',$goodsRid);
@@ -5138,8 +5250,8 @@ class TelegramController extends Controller
             }elseif(mb_substr($message,0,8) == 'premium_' && mb_strlen($message) == 40 && $inlinecall == 'Y'){
                 $username = $request->callback_query['from']['username'] ?? '';
                 
-                $packageData = PremiumPlatformPackage::from('premium_platform_package as a')
-                            ->join('premium_platform as b','a.premium_platform_rid','b.rid')
+                $packageData = PremiumPlatformPackage::from('t_premium_platform_package as a')
+                            ->join('t_premium_platform as b','a.premium_platform_rid','b.rid')
                             ->where('a.callback_data', $message)
                             ->where('a.status',0)
                             ->where('b.status',0)
@@ -5167,8 +5279,8 @@ class TelegramController extends Controller
                 };
                 
                 #查询会员放入
-                $keyboardList = PremiumPlatformPackage::from('premium_platform_package as a')
-                            ->join('premium_platform as b','a.premium_platform_rid','b.rid')
+                $keyboardList = PremiumPlatformPackage::from('t_premium_platform_package as a')
+                            ->join('t_premium_platform as b','a.premium_platform_rid','b.rid')
                             ->where('a.bot_rid', $bot_rid)
                             ->where('a.status', 0)
                             ->where('b.status', 0)
@@ -5317,8 +5429,8 @@ class TelegramController extends Controller
                         return '';
                     }
                     
-                    $packageData = PremiumPlatformPackage::from('premium_platform_package as a')
-                                ->join('premium_platform as b','a.premium_platform_rid','b.rid')
+                    $packageData = PremiumPlatformPackage::from('t_premium_platform_package as a')
+                                ->join('t_premium_platform as b','a.premium_platform_rid','b.rid')
                                 ->where('a.rid', $premium_package_rid)
                                 ->where('a.status',0)
                                 ->where('b.status',0)
@@ -5548,8 +5660,8 @@ class TelegramController extends Controller
                 }
                 
                 //替换变量
-                $walletcoin = TransitWalletCoin::from('transit_wallet_coin as a')
-                            ->join('transit_wallet as b','a.transit_wallet_id','b.rid')
+                $walletcoin = TransitWalletCoin::from('t_transit_wallet_coin as a')
+                            ->join('t_transit_wallet as b','a.transit_wallet_id','b.rid')
                             ->where('b.bot_rid', $bot_rid)
                             ->where('in_coin_name','usdt')
                             ->where('out_coin_name','trx')
@@ -5596,8 +5708,19 @@ class TelegramController extends Controller
                 return '';
             }  
             
-            #判断消息和回复内容
-            $keyreply = TelegramBotKeyreply::where('bot_rid', $bot_rid)->where('status',0)->whereRaw("FIND_IN_SET('$message',monitor_word)")->first();
+            #判断消息和回复内容（PostgreSQL 兼容：使用 LIKE 匹配逗号分隔的关键字）
+            $escapedMessage = str_replace("'", "''", $message); // 转义单引号防止 SQL 注入
+            $keyreply = TelegramBotKeyreply::where('bot_rid', $bot_rid)
+                ->where('status', 0)
+                ->whereRaw("(',' || monitor_word || ',' LIKE ?)", [",%,{$escapedMessage},%"])
+                ->first();
+            
+            \Log::info('Telegram 关键字匹配', [
+                'bot_rid' => $bot_rid,
+                'message' => $message,
+                'keyreply_found' => !empty($keyreply),
+                'keyreply_rid' => $keyreply->rid ?? null,
+            ]);
 
         } catch (\Throwable $e) {
             llog($e);
@@ -5642,8 +5765,8 @@ class TelegramController extends Controller
             
             if (strpos($replytext, 'trxusdtrate') !== false || strpos($replytext, 'trxusdtwallet') !== false || strpos($replytext, 'tgbotadmin') !== false || strpos($replytext, 'trxusdtshownotes') !== false || strpos($replytext, 'tgbotname') !== false || strpos($replytext, 'trx10usdtrate') !== false || strpos($replytext, 'trx100usdtrate') !== false || strpos($replytext, 'trx1000usdtrate') !== false) {
                 //替换变量
-                $walletcoin = TransitWalletCoin::from('transit_wallet_coin as a')
-                            ->join('transit_wallet as b','a.transit_wallet_id','b.rid')
+                $walletcoin = TransitWalletCoin::from('t_transit_wallet_coin as a')
+                            ->join('t_transit_wallet as b','a.transit_wallet_id','b.rid')
                             ->where('b.bot_rid', $bot_rid)
                             ->where('in_coin_name','usdt')
                             ->where('out_coin_name','trx')
@@ -5681,8 +5804,8 @@ class TelegramController extends Controller
             //回复内容时,查询关联键盘
             if($keyreply->opt_type == 1){
                 #查询键盘,放入
-                $keyboardList = TelegramBotKeyreplyKeyboard::from('telegram_bot_keyreply_keyboard as a')
-                            ->join('telegram_bot_keyboard as b','a.keyboard_rid','b.rid')
+                $keyboardList = TelegramBotKeyreplyKeyboard::from('t_telegram_bot_keyreply_keyboard as a')
+                            ->join('t_telegram_bot_keyboard as b','a.keyboard_rid','b.rid')
                             ->where('a.bot_rid', $bot_rid)
                             ->where('a.keyreply_rid', $keyreply->rid)
                             ->where('b.status', 0)
@@ -5692,8 +5815,8 @@ class TelegramController extends Controller
             //回复消息(通用)+能量按钮
             }elseif($keyreply->opt_type == 3){
                 #查询能量放入
-                $keyboardList = EnergyPlatformPackage::from('energy_platform_bot as b')
-                            ->leftjoin('energy_platform_package as a', function($join)
+                $keyboardList = EnergyPlatformPackage::from('t_energy_platform_bot as b')
+                            ->leftjoin('t_energy_platform_package as a', function($join)
                                 {
                                     $join->on('b.bot_rid', '=', 'a.bot_rid')
                                          ->where('a.status', 0);
@@ -5713,8 +5836,8 @@ class TelegramController extends Controller
                 setexRedis('buypremium'.$chatid,'one',900);
                 
                 #查询会员放入
-                $keyboardList = PremiumPlatformPackage::from('premium_platform_package as a')
-                            ->join('premium_platform as b','a.premium_platform_rid','b.rid')
+                $keyboardList = PremiumPlatformPackage::from('t_premium_platform_package as a')
+                            ->join('t_premium_platform as b','a.premium_platform_rid','b.rid')
                             ->where('a.bot_rid', $bot_rid)
                             ->where('a.status', 0)
                             ->where('b.status', 0)
@@ -5894,8 +6017,8 @@ class TelegramController extends Controller
                     ];
                     $encodedKeyboard = json_encode($keyboard);
                 }else{
-                    $shopGoods = ShopGoodsBot::from('shop_goods_bot as a')
-                                ->join('shop_goods as b','a.goods_rid','b.rid')
+                    $shopGoods = ShopGoodsBot::from('t_shop_goods_bot as a')
+                                ->join('t_shop_goods as b','a.goods_rid','b.rid')
                                 ->where('a.bot_rid',$bot_rid)
                                 ->where('a.status',0)
                                 ->where('b.status',0)

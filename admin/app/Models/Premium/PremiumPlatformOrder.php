@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class PremiumPlatformOrder extends Model
 {
-	protected $connection = 'mysql';
+	
 
-    protected $table = 'premium_platform_order';
+    protected $table = 't_premium_platform_order';
 
     protected $primaryKey  = 'rid';
 

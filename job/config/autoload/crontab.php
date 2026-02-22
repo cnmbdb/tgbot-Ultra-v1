@@ -85,5 +85,9 @@ return [
         
         // 笔数滞留暂停地址
         (new Crontab())->setName($jobpre.'bishuwalletstop')->setRule('1 3 * * *')->setCallback([App\Task\BishuWalletStop::class, 'execute'])->setMemo('笔数滞留暂停地址')->setSingleton(true),
+        
+        // 本地开发：轮询 Telegram 消息（每5秒运行一次）
+        // 注意：移除 singleton 模式，避免任务被跳过
+        (new Crontab())->setName($jobpre.'polltelegrammessages')->setRule('*/5 * * * * *')->setCallback([App\Task\PollTelegramMessages::class, 'execute'])->setMemo('本地开发：轮询Telegram消息')->setSingleton(false),
     ],
 ];

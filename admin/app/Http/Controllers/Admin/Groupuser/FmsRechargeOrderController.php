@@ -22,8 +22,8 @@ class FmsRechargeOrderController extends Controller
     //列表
     public function getData(Request $request)
     {
-        $model = FmsRechargeOrder::from('fms_recharge_order as a')
-                ->leftJoin('telegram_bot as b','a.bot_rid','b.rid')
+        $model = FmsRechargeOrder::from('t_fms_recharge_order as a')
+                ->leftJoin('t_telegram_bot as b','a.bot_rid','b.rid')
                 ->where(function($query) use ($request){
                 if ($request->recharge_tg_username != '') {
                     $query->where('a.recharge_tg_username', 'like' ,"%" . $request->recharge_tg_username ."%");

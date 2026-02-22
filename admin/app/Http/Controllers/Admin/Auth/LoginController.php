@@ -96,7 +96,11 @@ class LoginController extends Controller
         }else{
             if(!empty($data->white_ip)){
                 $ip = getClientIP();
-                $canLogin = Admin::where('name',$request->name)->where('status',1)->whereRaw("FIND_IN_SET('$ip',white_ip)")->first();
+                // PostgreSQL 兼容：使用 string_to_array 和 ANY 替代 MySQL 的 FIND_IN_SET
+                $canLogin = Admin::where('name',$request->name)
+                    ->where('status',1)
+                    ->whereRaw("? = ANY(string_to_array(white_ip, ','))", [$ip])
+                    ->first();
                 if(empty($canLogin)){
                     return $this->sendFailedLoginResponse($request);
                 }

@@ -34,8 +34,21 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         Schema::defaultStringLength(191);
-        if(env('IS_HTTPS')){
+        
+        // 处理 HTTPS：优先检查环境变量，然后检查请求
+        $isHttps = env('IS_HTTPS', false);
+        if(!$isHttps && request()->isSecure()){
+            $isHttps = true;
+        }
+        // 检查反向代理的 X-Forwarded-Proto 头
+        if(!$isHttps && request()->header('X-Forwarded-Proto') === 'https'){
+            $isHttps = true;
+        }
+        
+        if($isHttps){
             \URL::forceScheme('https');
+            // 确保所有URL生成都使用HTTPS
+            request()->server->set('HTTPS', 'on');
         }
 
         // 数据库连接保活和自动重连机制

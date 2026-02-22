@@ -17,7 +17,7 @@ class RoleController extends Controller
 
     public function getData(Request $request)
     {
-        $model = Role::select(['id', 'name','status', 'created_at']);
+        $model = Role::select(['id', 'name', 'created_at']);
         $total = $model->count(); //总数
         $limit = $request->has('limit') ? $request->limit : 20;
         $page = $request->has('page') ? ($request->page - 1) * $limit : 0;

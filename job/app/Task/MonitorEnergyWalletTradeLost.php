@@ -17,12 +17,12 @@ class MonitorEnergyWalletTradeLost
             if(!empty($lostblock)){
                 $data = EnergyPlatformBot::select('receive_wallet')->where('status',0)->whereRaw('length(receive_wallet) = 34')->get()->toArray();
                 
-                $data2 = EnergyAiBishu::from('energy_ai_bishu as a')
-                    ->Join('telegram_bot as b','a.bot_rid','b.rid')
+                $data2 = EnergyAiBishu::from('t_energy_ai_bishu as a')
+                    ->Join('t_telegram_bot as b','a.bot_rid','b.rid')
                     ->Join('energy_platform_bot as c','a.bot_rid','c.bot_rid')
                     ->where('a.status',0)
                     ->where('c.is_open_bishu','Y')
-                    ->whereRaw('length(t_a.wallet_addr) = 34 and t_a.max_buy_quantity > t_a.total_buy_quantity')
+                    ->whereRaw('length(a.wallet_addr) = 34 and a.max_buy_quantity > a.total_buy_quantity')
                     ->select('a.*')
                     ->get()->toArray();
                 

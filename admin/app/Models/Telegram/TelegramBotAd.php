@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class TelegramBotAd extends Model
 {
-	protected $connection = 'mysql';
+	
 
-    protected $table = 'telegram_bot_ad';
+    protected $table = 't_telegram_bot_ad';
 
     protected $primaryKey  = 'rid';
 

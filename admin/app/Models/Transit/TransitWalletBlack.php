@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class TransitWalletBlack extends Model
 {
-	protected $connection = 'mysql';
-
-    protected $table = 'transit_wallet_black';
+	
+	
+    protected $table = 't_transit_wallet_black';
 
     protected $primaryKey  = 'rid';
 

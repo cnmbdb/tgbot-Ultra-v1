@@ -10,9 +10,9 @@ class SendTransitTgMessage
     public function execute()
     { 
         try {
-            $data = TransitWalletTradeList::from('transit_wallet_trade_list as a')
-                    ->leftJoin('transit_wallet as b','a.transferto_address','b.receive_wallet')
-                    ->leftJoin('telegram_bot as c','b.bot_rid','c.rid')
+            $data = TransitWalletTradeList::from('t_transit_wallet_trade_list as a')
+                    ->leftJoin('t_transit_wallet as b','a.transferto_address','b.receive_wallet')
+                    ->leftJoin('t_telegram_bot as c','b.bot_rid','c.rid')
                     ->where('a.tg_notice_status_receive','N')
                     ->orWhere('a.tg_notice_status_send','N')
                     ->select('a.rid','a.tx_hash','a.transferfrom_address','a.coin_name','a.amount','a.process_status','a.tg_notice_status_receive','a.tg_notice_status_send','a.sendback_coin_name','a.sendback_tx_hash','a.sendback_amount','b.tg_notice_obj_receive','b.tg_notice_obj_send','c.bot_token','b.receive_wallet','a.current_huan_yuzhi_amount','a.sendback_time','c.bot_admin_username')

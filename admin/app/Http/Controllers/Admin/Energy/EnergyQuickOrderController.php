@@ -23,8 +23,8 @@ class EnergyQuickOrderController extends Controller
     //列表
     public function getData(Request $request)
     {
-        $model = EnergyQuickOrder::from('energy_quick_order as a')
-                ->join('telegram_bot as b','a.bot_rid','b.rid')
+        $model = EnergyQuickOrder::from('t_energy_quick_order as a')
+                ->join('t_telegram_bot as b','a.bot_rid','b.rid')
                 ->where(function($query) use ($request){
             if ($request->bot_rid != '') {
                     $query->where('b.bot_rid', $request->bot_rid);

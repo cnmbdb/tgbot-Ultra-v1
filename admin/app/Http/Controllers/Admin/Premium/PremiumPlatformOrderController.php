@@ -27,8 +27,8 @@ class PremiumPlatformOrderController extends Controller
     //列表
     public function getData(Request $request)
     {
-        $model = PremiumPlatformOrder::from('premium_platform_order as a')
-                ->leftjoin('telegram_bot as b','a.bot_rid','b.rid')
+        $model = PremiumPlatformOrder::from('t_premium_platform_order as a')
+                ->leftjoin('t_telegram_bot as b','a.bot_rid','b.rid')
                 ->where(function($query) use ($request){
                 if ($request->premium_tg_username != '') {
                     $query->where('a.premium_tg_username', 'like' ,"%" . $request->premium_tg_username ."%");

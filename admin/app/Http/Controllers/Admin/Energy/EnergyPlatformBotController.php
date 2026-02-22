@@ -41,8 +41,8 @@ class EnergyPlatformBotController extends Controller
     //列表
     public function getData(Request $request)
     {
-        $model = EnergyPlatformBot::from('energy_platform_bot as a')
-                 ->leftJoin('telegram_bot as b','a.bot_rid','b.rid')
+        $model = EnergyPlatformBot::from('t_energy_platform_bot as a')
+                 ->leftJoin('t_telegram_bot as b','a.bot_rid','b.rid')
                  ->where(function($query) use ($request){
                 if ($request->platform_uid != '') {
                     $query->where('a.platform_uid', 'like' ,"%" . $request->platform_uid ."%");
@@ -59,9 +59,9 @@ class EnergyPlatformBotController extends Controller
         $IsOpenAiTrusteeship = $this->IsOpenAiTrusteeship;
         
         $data = $data->map(function($query) use ($PollGroup,$IsOpenAiTrusteeship){
-            $query->poll_group_val = $PollGroup[$query->poll_group];
-            $query->is_open_ai_trusteeship_val = $IsOpenAiTrusteeship[$query->is_open_ai_trusteeship];
-            $query->is_open_bishu_val = $IsOpenAiTrusteeship[$query->is_open_bishu];
+            $query->poll_group_val = $PollGroup[$query->poll_group] ?? '';
+            $query->is_open_ai_trusteeship_val = $IsOpenAiTrusteeship[$query->is_open_ai_trusteeship] ?? '';
+            $query->is_open_bishu_val = $IsOpenAiTrusteeship[$query->is_open_bishu] ?? '';
             return $query;
         });
 

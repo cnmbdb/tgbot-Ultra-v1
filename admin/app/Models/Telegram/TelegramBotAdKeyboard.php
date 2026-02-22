@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class TelegramBotAdKeyboard extends Model
 {
-	protected $connection = 'mysql';
+	
 
-    protected $table = 'telegram_bot_ad_keyboard';
+    protected $table = 't_telegram_bot_ad_keyboard';
 
     protected $primaryKey  = 'rid';
 

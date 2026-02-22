@@ -10,12 +10,12 @@ class GetAiTrusteeshipWalletResource
     public function execute()
     { 
         try {
-            $data = EnergyAiTrusteeship::from('energy_ai_trusteeship as a')
-                    ->Join('telegram_bot as b','a.bot_rid','b.rid')
+            $data = EnergyAiTrusteeship::from('t_energy_ai_trusteeship as a')
+                    ->Join('t_telegram_bot as b','a.bot_rid','b.rid')
                     ->Join('energy_platform_bot as c','a.bot_rid','c.bot_rid')
                     ->where('a.status',0)
                     ->where('c.is_open_ai_trusteeship','Y')
-                    ->whereRaw('length(t_a.wallet_addr) = 34')
+                    ->whereRaw('length(a.wallet_addr) = 34')
                     ->select('a.*','b.bot_token')
                     ->get();
             

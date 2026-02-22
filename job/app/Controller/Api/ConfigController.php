@@ -10,11 +10,16 @@ class ConfigController extends AbstractController
     // 清除定时任务缓存
     public function clearTiming()
     {
-    	$data = Redis::keys('framework/crontab*');
-        if(!empty($data)){
-            Redis::del($data);
+    	try {
+            $redis = Redis::getInstance();
+            $data = $redis->keys('framework/crontab*');
+            if(!empty($data)){
+                $redis->del(...$data);
+            }
+            return $this->responseApi(200,'success');
+        } catch (\Exception $e) {
+            return $this->responseApi(200,'success'); // 即使出错也返回成功，避免阻塞
         }
-    	return $this->responseApi(200,'success');
     }
     
     // 检查是否启动

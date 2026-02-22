@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class EnergyWalletTradeList extends Model
 {
-	protected $connection = 'mysql';
-
-    protected $table = 'energy_wallet_trade_list';
+	
+	
+    protected $table = 't_energy_wallet_trade_list';
 
     protected $primaryKey  = 'rid';
 

@@ -18,8 +18,10 @@ ENV TIMEZONE=${timezone:-"Asia/Shanghai"} \
     APP_ENV=prod \
     SCAN_CACHEABLE=(true)
 
-# update
+# update - 安装 PostgreSQL 驱动 (pdo_pgsql)，Job 需要连接 PostgreSQL
 RUN set -ex \
+    && apk add --no-cache postgresql-dev \
+    && apk add --no-cache php8-pdo_pgsql || apk add --no-cache php-pdo_pgsql \
     # show php version and extensions
     && php -v \
     && php -m \

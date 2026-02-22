@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class EnergyPlatformBot extends Model
 {
-	protected $connection = 'mysql';
+	
 
-    protected $table = 'energy_platform_bot';
+    protected $table = 't_energy_platform_bot';
 
     protected $primaryKey  = 'rid';
 

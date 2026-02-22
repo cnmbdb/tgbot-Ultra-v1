@@ -14,11 +14,17 @@ class SendTimingTgMessage
         try {
             $time = nowDate();
         
-            $data = TelegramBotAd::from('telegram_bot_ad as a')
-                    ->Join('telegram_bot as b','a.bot_rid','b.rid')
-                    ->where('a.status',0)
-                    ->select('a.rid','b.bot_token','a.last_notice_time','a.notice_cycle','a.notice_obj','a.notice_ad','a.bot_rid','a.notice_photo','b.bot_username','b.bot_admin_username')
-                    ->get();
+            // 检查表是否存在，如果不存在则跳过
+            try {
+                $data = TelegramBotAd::from('telegram_bot_ad as a')
+                        ->Join('t_telegram_bot as b','a.bot_rid','b.rid')
+                        ->where('a.status',0)
+                        ->select('a.rid','b.bot_token','a.last_notice_time','a.notice_cycle','a.notice_obj','a.notice_ad','a.bot_rid','a.notice_photo','b.bot_username','b.bot_admin_username')
+                        ->get();
+            } catch (\Exception $e) {
+                // 表不存在，返回空集合
+                $data = collect([]);
+            }
                     
             if($data->count() > 0){
                 foreach ($data as $k => $v) {
@@ -177,7 +183,7 @@ class SendTimingTgMessage
                         if (strpos($replytext, 'trxusdtrate') !== false || strpos($replytext, 'trxusdtwallet') !== false || strpos($replytext, 'tgbotadmin') !== false || strpos($replytext, 'trxusdtshownotes') !== false || strpos($replytext, 'tgbotname') !== false || strpos($replytext, 'trx10usdtrate') !== false || strpos($replytext, 'trx100usdtrate') !== false || strpos($replytext, 'trx1000usdtrate') !== false) {
                             //替换变量
                             $walletcoin = TransitWalletCoin::from('transit_wallet_coin as a')
-                                        ->join('transit_wallet as b','a.transit_wallet_id','b.rid')
+                                        ->join('t_transit_wallet as b','a.transit_wallet_id','b.rid')
                                         ->where('b.bot_rid', $v->bot_rid)
                                         ->where('in_coin_name','usdt')
                                         ->where('out_coin_name','trx')

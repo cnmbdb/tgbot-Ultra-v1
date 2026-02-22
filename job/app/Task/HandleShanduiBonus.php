@@ -10,8 +10,8 @@ class HandleShanduiBonus
     public function execute()
     { 
         try {
-            $data = TransitWalletTradeList::from('transit_wallet_trade_list as twtl')
-                ->leftJoin('transit_wallet as tw','twtl.transferto_address','tw.receive_wallet')
+            $data = TransitWalletTradeList::from('t_transit_wallet_trade_list as twtl')
+                ->leftJoin('t_transit_wallet as tw','twtl.transferto_address','tw.receive_wallet')
                 ->where('twtl.process_status',1)
                 ->select('twtl.rid','twtl.tx_hash','twtl.transferto_address','twtl.coin_name','twtl.amount','twtl.sendback_address','twtl.sendback_amount','twtl.sendback_coin_name','tw.rid as transit_wallet_id','tw.send_wallet','tw.send_wallet_privatekey')
                 ->limit(100)

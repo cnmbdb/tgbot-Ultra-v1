@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class ShopGoodsBot extends Model
 {
-	protected $connection = 'mysql';
+	
 
-    protected $table = 'shop_goods_bot';
+    protected $table = 't_shop_goods_bot';
 
     protected $primaryKey  = 'rid';
 

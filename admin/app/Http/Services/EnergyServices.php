@@ -110,7 +110,8 @@ class EnergyServices
                         'permissionid' => $v->permission_id
                     ];
                     
-                    $res = Get_Curl(base64_decode('aHR0cHM6Ly90cm9ud2Vibm9kZWpzLndhbGxldGltLnZpcC9kZWxlZ2VhbmR1bmRlbGV0ZQ=='),$params);
+                    $apiWebUrl = config('services.api_web.url');
+                    $res = Get_Curl($apiWebUrl . '/api/tron/delegaandundelete',$params);
                     
                 //trongas.io平台
                 }elseif($v->platform_name == 4){

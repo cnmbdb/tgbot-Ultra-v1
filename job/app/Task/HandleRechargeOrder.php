@@ -13,7 +13,7 @@ class HandleRechargeOrder
     { 
         try {
             //['1' => '待充值','7' => '金额无对应订单','8' => '充值中','9' => '充值成功','4' => '充值失败','2' => '人工禁止','3' => '找不到用户'];
-            $data = FmsWalletTradeList::from('fms_wallet_trade_list as a')
+            $data = FmsWalletTradeList::from('t_fms_wallet_trade_list as a')
                 ->where('a.process_status',1)
                 ->select('a.rid','a.transferfrom_address','a.amount','a.coin_name','a.tx_hash')
                 ->limit(100)

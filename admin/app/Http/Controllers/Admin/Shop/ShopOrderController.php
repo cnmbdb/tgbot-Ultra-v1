@@ -23,8 +23,8 @@ class ShopOrderController extends Controller
     //列表
     public function getData(Request $request)
     {
-        $model = ShopOrder::from('shop_order as a')
-                ->join('telegram_bot as b','a.bot_rid','b.rid')
+        $model = ShopOrder::from('t_shop_order as a')
+                ->join('t_telegram_bot as b','a.bot_rid','b.rid')
                 ->where(function($query) use ($request){
                 if ($request->cdkey_no != '') {
                     $query->where('a.cdkey_no', 'like' ,"%" . $request->cdkey_no ."%");

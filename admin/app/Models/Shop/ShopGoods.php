@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class ShopGoods extends Model
 {
-	protected $connection = 'mysql';
+	
 
-    protected $table = 'shop_goods';
+    protected $table = 't_shop_goods';
 
     protected $primaryKey  = 'rid';
 

@@ -11,7 +11,7 @@ class RecoveryEnergy
     { 
         try {
             //代理期限:0一小时,1一天,3三天
-            $data = EnergyPlatformOrder::from('energy_platform_order as a')
+            $data = EnergyPlatformOrder::from('t_energy_platform_order as a')
                     ->Join('energy_platform as b','a.energy_platform_rid','b.rid')
                     ->where(function($query){
                         $query->where('a.recovery_status','=',2)->where('a.energy_day','=',0)->where('a.energy_time','<=',date('Y-m-d H:i:s',strtotime('-30 minutes', strtotime(nowDate()))));
@@ -48,7 +48,8 @@ class RecoveryEnergy
                             'permissionid' => $v->permission_id
                         ];
                         
-                        $res = Get_Pay(base64_decode('aHR0cHM6Ly90cm9ud2Vibm9kZWpzLndhbGxldGltLnZpcC9kZWxlZ2VhbmR1bmRlbGV0ZQ=='),$params);
+                        $apiWebUrl = config('services.api_web.url');
+                        $res = Get_Pay($apiWebUrl . '/api/tron/delegaandundelete',$params);
                         
                         if(empty($res)){
                             $this->log('recoveryenergy',$v->rid.'：能量回收失败1，为空');

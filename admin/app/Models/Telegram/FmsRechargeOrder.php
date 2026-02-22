@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class FmsRechargeOrder extends Model
 {
-	protected $connection = 'mysql';
+	
 
-    protected $table = 'fms_recharge_order';
+    protected $table = 't_fms_recharge_order';
 
     protected $primaryKey  = 'rid';
 

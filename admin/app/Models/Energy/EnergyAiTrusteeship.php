@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class EnergyAiTrusteeship extends Model
 {
-	protected $connection = 'mysql';
+	
 
-    protected $table = 'energy_ai_trusteeship';
+    protected $table = 't_energy_ai_trusteeship';
 
     protected $primaryKey  = 'rid';
 

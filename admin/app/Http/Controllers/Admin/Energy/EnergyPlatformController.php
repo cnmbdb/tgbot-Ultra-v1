@@ -29,8 +29,8 @@ class EnergyPlatformController extends Controller
     //列表
     public function getData(Request $request)
     {
-        $model = EnergyPlatform::from('energy_platform as a')
-                ->join('telegram_bot as b','a.tg_notice_bot_rid','b.rid')
+        $model = EnergyPlatform::from('t_energy_platform as a')
+                ->join('t_telegram_bot as b','a.tg_notice_bot_rid','b.rid')
                 ->where(function($query) use ($request){
                 if ($request->platform_uid != '') {
                     $query->where('a.platform_uid', 'like' ,"%" . $request->platform_uid ."%");

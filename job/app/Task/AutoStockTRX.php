@@ -10,13 +10,13 @@ class AutoStockTRX
     public function execute()
     { 
         try {
-            $data = TransitWallet::from('transit_wallet as a')
-                    ->Join('telegram_bot as b','a.bot_rid','b.rid')
+            $data = TransitWallet::from('t_transit_wallet as a')
+                    ->Join('t_telegram_bot as b','a.bot_rid','b.rid')
                     ->where('a.status',0)
                     ->where('a.auto_stock_min_trx','>',0)
                     ->where('a.auto_stock_per_usdt','>',0)
                     ->whereNotNull('a.send_wallet')
-                    ->whereRaw('length(t_a.send_wallet) = 34')
+                    ->whereRaw('length(a.send_wallet) = 34')
                     ->select('a.rid','a.send_wallet','a.send_wallet_privatekey','a.auto_stock_min_trx','a.auto_stock_per_usdt','a.tg_notice_obj_receive','b.bot_token')
                     ->get();
             

@@ -80,27 +80,15 @@
                 </button>
             @endif
             @if( auth('admin')->user()->can('更新机器人') || auth('admin')->user()->hasrole('超级管理员') )
-                <button class="layui-btn layui-btn-primary layui-btn-sm" style="background-color:#ff9dea !important" onclick="javascript:confirm_opt(
-                    ()=>{
-                        form_func('{{route("admin.telegram.telegrambot.gengxin")}}',{'rid':'@{{d.rid}}'},get_online_data);
-                    });">更新
+                <button class="layui-btn layui-btn-primary layui-btn-sm" style="background-color:#ff9dea !important" lay-event="gengxin" data-rid="@{{d.rid}}">更新
                 </button>
             @endif
             @if( auth('admin')->user()->can('注册Webhook') || auth('admin')->user()->hasrole('超级管理员') )
-                <button class="layui-btn layui-btn-sm" style="background-color:blueviolet !important" onclick="javascript:tools_add('注册Webhook',
-                    {
-                        'rid':['','hidden','@{{ d.rid }}'],
-                        'bot_username':['机器人名称','span','@{{d.bot_username}}'],
-                        'bot_token':['机器人token','span','@{{d.bot_token}}']
-                    },
-                    '{{route("admin.telegram.telegrambot.regwebhook")}}',get_online_data);">Webhook
+                <button class="layui-btn layui-btn-sm" style="background-color:blueviolet !important" lay-event="regwebhook" data-rid="@{{d.rid}}" data-bot-username="@{{d.bot_username}}" data-bot-token="@{{d.bot_token}}">Webhook
                 </button>
             @endif
             @if( auth('admin')->user()->can('删除机器人') || auth('admin')->user()->hasrole('超级管理员') )
-                <button class="layui-btn delete_button layui-btn-sm" onclick="javascript:confirm_opt(
-                    ()=>{
-                        form_func('{{route("admin.telegram.telegrambot.delete")}}',{'rid':'@{{d.rid}}'},get_online_data);
-                    });">删除
+                <button class="layui-btn delete_button layui-btn-sm" lay-event="delete" data-rid="@{{d.rid}}">删除
                 </button>
             @endif
             @if( auth('admin')->user()->can('修改机器人充值') || auth('admin')->user()->hasrole('超级管理员') )
@@ -131,6 +119,33 @@
                     where: obj.field
                 });
                 return false;
+            });
+
+            //监听工具条事件
+            table.on('tool(userTable)', function(obj){
+                var data = obj.data;
+                var layEvent = obj.event;
+                
+                if(layEvent === 'gengxin'){
+                    // 更新机器人信息
+                    confirm_opt(function(){
+                        form_func('{{route("admin.telegram.telegrambot.gengxin")}}', {'rid': data.rid}, get_online_data);
+                    });
+                } else if(layEvent === 'regwebhook'){
+                    // 注册Webhook
+                    tools_add('注册Webhook',
+                        {
+                            'rid':['','hidden', data.rid],
+                            'bot_username':['机器人名称','span', data.bot_username],
+                            'bot_token':['机器人token','span', data.bot_token]
+                        },
+                        '{{route("admin.telegram.telegrambot.regwebhook")}}', get_online_data);
+                } else if(layEvent === 'delete'){
+                    // 删除机器人
+                    confirm_opt(function(){
+                        form_func('{{route("admin.telegram.telegrambot.delete")}}', {'rid': data.rid}, get_online_data);
+                    });
+                }
             });
         });
 

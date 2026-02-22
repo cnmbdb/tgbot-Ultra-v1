@@ -13,8 +13,8 @@ class HandleTgPremium
     public function execute()
     { 
         try {
-            $data = PremiumWalletTradeList::from('premium_wallet_trade_list as a')
-                ->join('premium_platform as b','a.transferto_address','b.receive_wallet')
+            $data = PremiumWalletTradeList::from('t_premium_wallet_trade_list as a')
+                ->join('t_premium_platform as b','a.transferto_address','b.receive_wallet')
                 ->where('a.process_status',1)
                 ->where('a.coin_name','usdt')
                 ->select('a.rid','a.transferfrom_address','a.amount','b.rid as premium_platform_rid','b.platform_cookie','b.platform_hash','b.status','b.platform_name','b.platform_phrase','a.platform_order_rid')

@@ -30,10 +30,10 @@ class KeyreplyboardController extends Controller
     //列表
     public function getData(Request $request)
     {
-        $model = TelegramBotKeyreplyKeyboard::from('telegram_bot_keyreply_keyboard as a')
-                ->join('telegram_bot as b','a.bot_rid','b.rid')
-                ->join('telegram_bot_keyreply as c','a.keyreply_rid','c.rid')
-                ->join('telegram_bot_keyboard as d','a.keyboard_rid','d.rid')
+        $model = TelegramBotKeyreplyKeyboard::from('t_telegram_bot_keyreply_keyboard as a')
+                ->join('t_telegram_bot as b','a.bot_rid','b.rid')
+                ->join('t_telegram_bot_keyreply as c','a.keyreply_rid','c.rid')
+                ->join('t_telegram_bot_keyboard as d','a.keyboard_rid','d.rid')
                 ->where(function($query) use ($request){
                 if ($request->monitor_word != '') {
                     $query->where('c.monitor_word', 'like' ,"%" . $request->monitor_word ."%");

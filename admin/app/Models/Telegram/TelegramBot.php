@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class TelegramBot extends Model
 {
-	protected $connection = 'mysql';
+    protected $connection = 'pgsql'; // 使用 PostgreSQL 连接
 
-    protected $table = 'telegram_bot';
+    protected $table = 't_telegram_bot';
 
     protected $primaryKey  = 'rid';
 

@@ -25,8 +25,8 @@ class ShopGoodsCdkeyController extends Controller
     //列表
     public function getData(Request $request)
     {
-        $model = ShopGoodsCdkey::from('shop_goods_cdkey as a')
-                ->join('shop_goods as b','a.goods_rid','b.rid')
+        $model = ShopGoodsCdkey::from('t_shop_goods_cdkey as a')
+                ->join('t_shop_goods as b','a.goods_rid','b.rid')
                 ->where(function($query) use ($request){
                 if ($request->cdkey_no != '') {
                     $query->where('a.cdkey_no', 'like' ,"%" . $request->cdkey_no ."%");

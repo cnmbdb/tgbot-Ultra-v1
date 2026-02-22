@@ -24,8 +24,8 @@ class MonitorBotController extends Controller
     //列表
     public function getData(Request $request)
     {
-        $model = MonitorBot::from('monitor_bot as a')
-                 ->leftJoin('telegram_bot as b','a.bot_rid','b.rid')
+        $model = MonitorBot::from('t_monitor_bot as a')
+                 ->leftJoin('t_telegram_bot as b','a.bot_rid','b.rid')
                 ->where(function($query) use ($request){
                 if ($request->monitor_wallet != '') {
                     $query->where('a.monitor_wallet', 'like' ,"%" . $request->monitor_wallet ."%");

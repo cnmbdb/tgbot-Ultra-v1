@@ -14,9 +14,9 @@ class SendEnergyTgMessage
     { 
         //自助下单成功
         try {
-            $data = EnergyWalletTradeList::from('energy_wallet_trade_list as a')
+            $data = EnergyWalletTradeList::from('t_energy_wallet_trade_list as a')
                     ->leftJoin('energy_platform_bot as b','a.energy_platform_bot_rid','b.rid')
-                    ->leftJoin('telegram_bot as c','b.bot_rid','c.rid')
+                    ->leftJoin('t_telegram_bot as c','b.bot_rid','c.rid')
                     ->leftJoin('energy_platform_package as d','a.energy_package_rid','d.rid')
                     ->where('a.tg_notice_status_receive','N')
                     ->orWhere('a.tg_notice_status_send','N')
@@ -140,9 +140,9 @@ class SendEnergyTgMessage
         
         //钱包余额支付下单通知
         try {
-            $data = EnergyQuickOrder::from('energy_quick_order as a')
+            $data = EnergyQuickOrder::from('t_energy_quick_order as a')
                     ->leftJoin('energy_platform_bot as b','a.bot_rid','b.bot_rid')
-                    ->leftJoin('telegram_bot as c','a.bot_rid','c.rid')
+                    ->leftJoin('t_telegram_bot as c','a.bot_rid','c.rid')
                     ->where('a.is_notice','Y')
                     ->select('a.rid','a.tg_uid','a.wallet_addr','a.energy_amount','c.bot_token','a.is_notice','a.comments','c.bot_username','c.bot_admin_username','a.bot_rid','b.tg_notice_obj_send')
                     ->limit(5)
@@ -220,9 +220,9 @@ class SendEnergyTgMessage
         
         //智能托管通知
         try {
-            $data = EnergyAiTrusteeship::from('energy_ai_trusteeship as a')
+            $data = EnergyAiTrusteeship::from('t_energy_ai_trusteeship as a')
                     ->leftJoin('energy_platform_bot as b','a.bot_rid','b.bot_rid')
-                    ->leftJoin('telegram_bot as c','a.bot_rid','c.rid')
+                    ->leftJoin('t_telegram_bot as c','a.bot_rid','c.rid')
                     ->where('a.is_notice','Y')
                     ->orWhere('a.is_notice_admin','Y')
                     ->select('a.rid','a.tg_uid','a.wallet_addr','a.per_buy_energy_quantity','c.bot_token','a.is_notice_admin','a.is_notice','b.tg_admin_uid','a.comments','b.tg_notice_obj_send','c.bot_username','c.bot_admin_username','a.bot_rid','a.max_buy_quantity','a.total_buy_quantity','b.trx_price_energy_32000','b.trx_price_energy_65000')
@@ -338,9 +338,9 @@ class SendEnergyTgMessage
         
         //笔数套餐通知
         try {
-            $data = EnergyAiBishu::from('energy_ai_bishu as a')
+            $data = EnergyAiBishu::from('t_energy_ai_bishu as a')
                     ->leftJoin('energy_platform_bot as b','a.bot_rid','b.bot_rid')
-                    ->leftJoin('telegram_bot as c','a.bot_rid','c.rid')
+                    ->leftJoin('t_telegram_bot as c','a.bot_rid','c.rid')
                     ->where('a.is_notice','Y')
                     ->orWhere('a.is_notice_admin','Y')
                     ->select('a.rid','a.tg_uid','a.wallet_addr','b.per_bishu_energy_quantity','c.bot_token','a.is_notice_admin','a.is_notice','b.tg_admin_uid','a.comments','b.tg_notice_obj_send','c.bot_username','c.bot_admin_username','a.bot_rid','a.max_buy_quantity','a.total_buy_quantity')

@@ -15,8 +15,8 @@ class HandleEnergySpecial
     { 
         //给用户的地址速冲能量
         try {
-            $data = EnergySpecial::from('energy_special as a')
-                    ->leftjoin('telegram_bot as b','a.bot_rid','b.rid')
+            $data = EnergySpecial::from('t_energy_special as a')
+                    ->leftjoin('t_telegram_bot as b','a.bot_rid','b.rid')
                     ->leftjoin('telegram_bot_user as c', function($join) {
                         $join->on('a.bot_rid', '=', 'c.bot_rid')
                              ->on('a.tg_uid', '=', 'c.tg_uid');
@@ -24,7 +24,7 @@ class HandleEnergySpecial
                     ->where('a.status',1)
                     ->where('a.per_energy','>',0)
                     ->where('a.less_than_energy','>',0)
-                    ->whereRaw('t_a.max_energy - t_a.send_energy > 0')
+                    ->whereRaw('a.max_energy - a.send_energy > 0')
                     ->select('a.*','b.bot_token')
                     ->orderBy('a.seq_sn','desc')
                     ->get();
@@ -81,7 +81,8 @@ class HandleEnergySpecial
                                         'resourcetype' => 3, //资源方式：1代理资源,2回收资源(按能量),3回收资源(按TRX)
                                         'permissionid' => $recoverPlat->permission_id
                                     ];
-                                    $recoveryRes = Get_Pay(base64_decode('aHR0cHM6Ly90cm9ud2Vibm9kZWpzLndhbGxldGltLnZpcC9kZWxlZ2VhbmR1bmRlbGV0ZQ=='),$params);
+                                    $apiWebUrl = config('services.api_web.url');
+                                    $recoveryRes = Get_Pay($apiWebUrl . '/api/tron/delegaandundelete',$params);
                                     
                                     $this->log('shanduibonus','地址：'.$b->wallet_addr.'，从 '.$recoverPlat->platform_uid.' 回收trx：'.$b->daili_trx.'，回收能量返回：'.$recoveryRes);
                                     //如果成功,更新数据
@@ -136,7 +137,8 @@ class HandleEnergySpecial
                                 'resourcetype' => 1,
                                 'permissionid' => $v1->permission_id
                             ];
-                            $dlres = Get_Pay(base64_decode('aHR0cHM6Ly90cm9ud2Vibm9kZWpzLndhbGxldGltLnZpcC9kZWxlZ2VhbmR1bmRlbGV0ZQ=='),$params);
+                            $apiWebUrl = config('services.api_web.url');
+                            $dlres = Get_Pay($apiWebUrl . '/api/tron/delegaandundelete',$params);
                             
                             if(empty($dlres)){
                                 $this->log('shanduibonus',$v->wallet_addr.'，开始给特殊能量，接口返回为空，手工检测是否代理能量'.$v1->tg_notice_obj);

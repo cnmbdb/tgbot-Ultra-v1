@@ -1,4 +1,5 @@
-FROM php:8.0-fpm
+# 生产环境镜像，兼容服务器部署 (linux/amd64)
+FROM --platform=linux/amd64 php:8.0-fpm
 
 # 设置工作目录
 WORKDIR /var/www/html

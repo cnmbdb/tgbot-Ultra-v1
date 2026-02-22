@@ -30,10 +30,10 @@ class TelegramBotAdKeyboardController extends Controller
     //列表
     public function getData(Request $request)
     {
-        $model = TelegramBotAdKeyboard::from('telegram_bot_ad_keyboard as a')
-                ->join('telegram_bot as b','a.bot_rid','b.rid')
-                ->join('telegram_bot_ad as c','a.ad_rid','c.rid')
-                ->join('telegram_bot_keyboard as d','a.keyboard_rid','d.rid')
+        $model = TelegramBotAdKeyboard::from('t_telegram_bot_ad_keyboard as a')
+                ->join('t_telegram_bot as b','a.bot_rid','b.rid')
+                ->join('t_telegram_bot_ad as c','a.ad_rid','c.rid')
+                ->join('t_telegram_bot_keyboard as d','a.keyboard_rid','d.rid')
                 ->where(function($query) use ($request){
                 if ($request->notice_ad != '') {
                     $query->where('c.notice_ad', 'like' ,"%" . $request->notice_ad ."%");
@@ -71,8 +71,8 @@ class TelegramBotAdKeyboardController extends Controller
         //同一个广告只能添加一种类型
         $keyboard = TelegramBotKeyboard::where('rid',$request->keyboard_rid)->value('keyboard_type');
         
-        $adkeyboard = TelegramBotAdKeyboard::from('telegram_bot_ad_keyboard as a')
-                    ->join('telegram_bot_keyboard as b','a.keyboard_rid','b.rid')
+        $adkeyboard = TelegramBotAdKeyboard::from('t_telegram_bot_ad_keyboard as a')
+                    ->join('t_telegram_bot_keyboard as b','a.keyboard_rid','b.rid')
                     ->where('b.keyboard_type','<>',$keyboard)
                     ->where('a.ad_rid', $request->ad_rid)
                     ->first();
@@ -114,8 +114,8 @@ class TelegramBotAdKeyboardController extends Controller
         //同一个广告只能添加一种类型
         $keyboard = TelegramBotKeyboard::where('rid',$request->keyboard_rid)->value('keyboard_type');
         
-        $adkeyboard = TelegramBotAdKeyboard::from('telegram_bot_ad_keyboard as a')
-                    ->join('telegram_bot_keyboard as b','a.keyboard_rid','b.rid')
+        $adkeyboard = TelegramBotAdKeyboard::from('t_telegram_bot_ad_keyboard as a')
+                    ->join('t_telegram_bot_keyboard as b','a.keyboard_rid','b.rid')
                     ->where('b.keyboard_type','<>',$keyboard)
                     ->where('a.ad_rid', $request->ad_rid)
                     ->first();

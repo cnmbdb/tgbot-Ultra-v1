@@ -1,6 +1,15 @@
-version: '3.8'
+# =============================================================================
+# TGBot-Ultra-v1 本地开发环境
+# 使用 docker-compose build 本地构建镜像，代码挂载可实时生效
+# 生产部署请使用: 部署到服务器的文件/tgbot-Ultra-v1
+# =============================================================================
 
 services:
+  # ---------------------------------------------------------------------------
+  # 1. 后台管理服务 (Laravel/PHP)
+  # 访问地址: http://localhost:8080/admin/login
+  # 本地开发：build 构建 + 代码挂载
+  # ---------------------------------------------------------------------------
   admin:
     build:
       context: ./admin
@@ -9,18 +18,33 @@ services:
     ports:
       - "8080:80"
     environment:
-      - API_WEB_URL=http://api-web:4444
-    depends_on:
-      - postgres
-      - redis
+      # API-Web 服务地址（从环境变量或 .env 文件读取）
+      - API_WEB_URL=${API_WEB_URL:-http://host.docker.internal:4444}
     volumes:
       - admin_storage:/var/www/html/storage
       - admin_cache:/var/www/html/bootstrap/cache
       - ./admin/.env:/var/www/html/.env:ro
+      # 挂载配置文件，确保表名配置生效
+      - ./admin/config/permission.php:/var/www/html/config/permission.php:ro
+      # 本地开发：挂载代码目录，修改后立即生效（无需重新构建镜像）
+      - ./admin:/var/www/html
+    depends_on:
+      - postgres
+      - redis
     restart: unless-stopped
     networks:
       - tgbot-network
+    extra_hosts:
+      # 允许容器访问宿主机上的 API-Web 服务
+      - "host.docker.internal:host-gateway"
 
+  # ---------------------------------------------------------------------------
+  # 2. 任务处理服务 (Hyperf/Swoole)
+  # 处理 Telegram 消息、定时任务、异步队列
+  # 本地开发：使用 build 构建镜像
+  # 
+  # 注意：API-Web 服务已独立部署，通过环境变量 API_WEB_URL 连接
+  # ---------------------------------------------------------------------------
   job:
     build:
       context: ./job
@@ -29,16 +53,37 @@ services:
     ports:
       - "9503:9503"
     environment:
-      - API_WEB_URL=http://api-web:4444
+      # API-Web 服务地址（从环境变量或 .env 文件读取）
+      - API_WEB_URL=${API_WEB_URL:-http://host.docker.internal:4444}
+      # Redis 配置
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_AUTH=
+      - REDIS_DB=1
+      # 数据库配置
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=tgbot
+      - DB_USERNAME=root
+      - DB_PASSWORD=rootpassword
+      - DB_PREFIX=t_
+    volumes:
+      - job_storage:/opt/www/runtime
+      - ./job:/opt/www
     depends_on:
       - postgres
       - redis
-    volumes:
-      - ./job:/var/www/html
     restart: unless-stopped
     networks:
       - tgbot-network
+    extra_hosts:
+      # 允许容器访问宿主机上的 API-Web 服务
+      - "host.docker.internal:host-gateway"
 
+  # ---------------------------------------------------------------------------
+  # 4. 主数据库 (PostgreSQL)
+  # 存储机器人业务数据
+  # ---------------------------------------------------------------------------
   postgres:
     image: postgres:15-alpine
     container_name: tgbot-postgres
@@ -50,10 +95,15 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      # 自动初始化脚本挂载（仅首次启动有效）
+      - ./DB_PostgreSQL.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
     networks:
       - tgbot-network
 
+  # ---------------------------------------------------------------------------
+  # 5. 主缓存 (Redis)
+  # ---------------------------------------------------------------------------
   redis:
     image: redis:7-alpine
     container_name: tgbot-redis
@@ -63,6 +113,7 @@ services:
     networks:
       - tgbot-network
 
+
 networks:
   tgbot-network:
     driver: bridge
@@ -71,3 +122,4 @@ volumes:
   postgres_data:
   admin_storage:
   admin_cache:
+  job_storage:

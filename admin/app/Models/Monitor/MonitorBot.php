@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class MonitorBot extends Model
 {
-	protected $connection = 'mysql';
+	
 
-    protected $table = 'monitor_bot';
+    protected $table = 't_monitor_bot';
 
     protected $primaryKey  = 'rid';
 

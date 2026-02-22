@@ -18,8 +18,8 @@ class HandleEnergyOrder
     { 
         //trx闪租能量
         try {
-            $data = EnergyWalletTradeList::from('energy_wallet_trade_list as a')
-                ->join('energy_platform_bot as b','a.transferto_address','b.receive_wallet')
+            $data = EnergyWalletTradeList::from('t_energy_wallet_trade_list as a')
+                ->join('t_energy_platform_bot as b','a.transferto_address','b.receive_wallet')
                 ->where('a.process_status',1)
                 ->where('a.coin_name','trx')
                 ->select('a.rid','a.transferfrom_address','a.amount','b.poll_group','b.status','b.bot_rid','b.rid as energy_platform_bot_rid','b.agent_tg_uid')
@@ -209,7 +209,8 @@ class HandleEnergyOrder
                                     'resourcetype' => 1,
                                     'permissionid' => $v1->permission_id
                                 ];
-                                $dlres = Get_Pay(base64_decode('aHR0cHM6Ly90cm9ud2Vibm9kZWpzLndhbGxldGltLnZpcC9kZWxlZ2VhbmR1bmRlbGV0ZQ=='),$params);
+                                $apiWebUrl = config('services.api_web.url');
+                                $dlres = Get_Pay($apiWebUrl . '/api/tron/delegaandundelete',$params);
                             //trongas.io平台
                             }elseif($v1->platform_name == 4){
                                 //0：一小时，1：一天，3：三天
@@ -428,8 +429,8 @@ class HandleEnergyOrder
         
         //能量快捷余额购买
         try {
-            $data = EnergyQuickOrder::from('energy_quick_order as a')
-                ->join('energy_platform_bot as b','a.bot_rid','b.bot_rid')
+            $data = EnergyQuickOrder::from('t_energy_quick_order as a')
+                ->join('t_energy_platform_bot as b','a.bot_rid','b.bot_rid')
                 ->where('a.status',1)
                 ->where('a.energy_amount','>',0)
                 ->select('a.rid','a.wallet_addr','a.energy_amount','a.energy_day','b.poll_group','b.status','b.bot_rid','b.rid as energy_platform_bot_rid','b.agent_tg_uid','a.package_rid')
@@ -598,7 +599,8 @@ class HandleEnergyOrder
                                     'resourcetype' => 1,
                                     'permissionid' => $v1->permission_id
                                 ];
-                                $dlres = Get_Pay(base64_decode('aHR0cHM6Ly90cm9ud2Vibm9kZWpzLndhbGxldGltLnZpcC9kZWxlZ2VhbmR1bmRlbGV0ZQ=='),$params);
+                                $apiWebUrl = config('services.api_web.url');
+                                $dlres = Get_Pay($apiWebUrl . '/api/tron/delegaandundelete',$params);
                             //trongas.io平台
                             }elseif($v1->platform_name == 4){
                                 //0：一小时，1：一天，3：三天
@@ -802,8 +804,8 @@ class HandleEnergyOrder
         
         //机器人开发代理-闪租下单
         try {
-            $data = EnergyThirdPart::from('energy_third_part as a')
-                ->join('energy_platform_bot as b','a.bot_rid','b.bot_rid')
+            $data = EnergyThirdPart::from('t_energy_third_part as a')
+                ->join('t_energy_platform_bot as b','a.bot_rid','b.bot_rid')
                 ->where('a.process_status',1)
                 ->where('a.order_type',2)
                 ->select('a.rid','a.wallet_addr','a.cishu_energy','b.poll_group','b.status','b.bot_rid','b.rid as energy_platform_bot_rid')
@@ -922,7 +924,8 @@ class HandleEnergyOrder
                                     'resourcetype' => 1,
                                     'permissionid' => $v1->permission_id
                                 ];
-                                $dlres = Get_Pay(base64_decode('aHR0cHM6Ly90cm9ud2Vibm9kZWpzLndhbGxldGltLnZpcC9kZWxlZ2VhbmR1bmRlbGV0ZQ=='),$params);
+                                $apiWebUrl = config('services.api_web.url');
+                                $dlres = Get_Pay($apiWebUrl . '/api/tron/delegaandundelete',$params);
                             //trongas.io平台
                             }elseif($v1->platform_name == 4){
                                 //0：一小时，1：一天，3：三天
@@ -1070,9 +1073,9 @@ class HandleEnergyOrder
         
         //usdt笔数套餐
         try {
-            $data = EnergyWalletTradeList::from('energy_wallet_trade_list as a')
-                ->join('energy_platform_bot as b','a.transferto_address','b.receive_wallet')
-                ->leftJoin('telegram_bot as c','b.bot_rid','c.rid')
+            $data = EnergyWalletTradeList::from('t_energy_wallet_trade_list as a')
+                ->join('t_energy_platform_bot as b','a.transferto_address','b.receive_wallet')
+                ->leftJoin('t_telegram_bot as c','b.bot_rid','c.rid')
                 ->where('a.process_status',1)
                 ->where('a.coin_name','usdt')
                 ->select('a.rid','a.transferfrom_address','a.amount','b.bot_rid','b.per_bishu_usdt_price','b.tg_notice_obj_send','c.bot_token','c.bot_username','c.bot_admin_username','b.bishu_stop_day')

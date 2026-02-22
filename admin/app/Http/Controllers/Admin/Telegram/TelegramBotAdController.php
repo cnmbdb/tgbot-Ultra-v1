@@ -31,8 +31,8 @@ class TelegramBotAdController extends Controller
     //列表
     public function getData(Request $request)
     {
-        $model = TelegramBotAd::from('telegram_bot_ad as a')
-                ->join('telegram_bot as b','a.bot_rid','b.rid')
+        $model = TelegramBotAd::from('t_telegram_bot_ad as a')
+                ->join('t_telegram_bot as b','a.bot_rid','b.rid')
                 ->where(function($query) use ($request){
                 if ($request->notice_ad != '') {
                     $query->where('a.notice_ad', 'like' ,"%" . $request->notice_ad ."%");
@@ -144,8 +144,8 @@ class TelegramBotAdController extends Controller
         
         $botData = TelegramBot::pluck('bot_token','rid'); 
         
-        $data = TelegramBotAd::from('telegram_bot_ad as a')
-            ->join('telegram_bot as b','a.bot_rid','b.rid')
+        $data = TelegramBotAd::from('t_telegram_bot_ad as a')
+            ->join('t_telegram_bot as b','a.bot_rid','b.rid')
             ->where('a.rid',$request->rid)
             ->select('a.*','b.bot_token','b.bot_firstname','b.bot_username')
             ->first();

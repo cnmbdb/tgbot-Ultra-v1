@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class MonitorWallet extends Model
 {
-	protected $connection = 'mysql';
+	
 
-    protected $table = 'monitor_wallet';
+    protected $table = 't_monitor_wallet';
 
     protected $primaryKey  = 'rid';
 

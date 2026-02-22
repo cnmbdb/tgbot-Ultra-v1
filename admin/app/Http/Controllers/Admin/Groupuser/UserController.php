@@ -23,8 +23,8 @@ class UserController extends Controller
     //列表
     public function getData(Request $request)
     {
-        $model = TelegramBotUser::from('telegram_bot_user as a')
-                ->leftJoin('telegram_bot as b','a.bot_rid','b.rid')
+        $model = TelegramBotUser::from('t_telegram_bot_user as a')
+                ->leftJoin('t_telegram_bot as b','a.bot_rid','b.rid')
                 ->where(function($query) use ($request){
                 if ($request->tg_username != '') {
                     $query->where('a.tg_username', 'like' ,"%" . str_replace(['https://t.me/','@'],'',$request->tg_username) ."%");

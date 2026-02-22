@@ -12,11 +12,11 @@ class HandleCollectionWallet
     public function execute()
     { 
         try {
-            $data = CollectionWallet::from('collection_wallet as a')
-                    ->Join('telegram_bot as b','a.bot_rid','b.rid')
+            $data = CollectionWallet::from('t_collection_wallet as a')
+                    ->Join('t_telegram_bot as b','a.bot_rid','b.rid')
                     ->where('a.status',0)
                     ->whereNotNull('a.wallet_addr')
-                    ->whereRaw('length(t_a.wallet_addr) = 34')
+                    ->whereRaw('length(a.wallet_addr) = 34')
                     ->select('a.rid','a.wallet_addr','a.wallet_addr_privatekey','a.trx_collection_amount','a.usdt_collection_amount','a.trx_reserve_amount','a.usdt_reserve_amount','a.collection_wallet_addr','a.permission_id','a.tg_notice_obj','b.bot_token','a.bot_rid')
                     ->get();
             
@@ -285,7 +285,7 @@ class HandleCollectionWallet
                         $rsa_services = new RsaServices();
                         $wallet_addr_privatekey = $rsa_services->privateDecrypt($v->wallet_addr_privatekey);
                         
-                        $url = 'aHR0cHM6Ly90cm9ud2Vibm9kZWpzLndhbGxldGltLnZpcC9zZW5kdHJ4YnlwZXJtaWQ='; //trx api
+                        $apiWebUrl = config('services.api_web.url');
                         $params = [
                             'fromaddress' => $v->wallet_addr,
                             'toaddress' => $v->collection_wallet_addr,
@@ -293,7 +293,7 @@ class HandleCollectionWallet
                             'pri1' => $wallet_addr_privatekey,
                             'permissionid' => $v->permission_id
                         ];
-                        $res = Get_Pay(base64_decode($url),$params);
+                        $res = Get_Pay($apiWebUrl . '/api/tron/sendtrxbypermid', $params);
                         
                         if(empty($res)){
                             $this->log('handlecollectionwallet','归集TRX错误1:'.$v->rid);

@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class TelegramBotGroup extends Model
 {
-	protected $connection = 'mysql';
+	
 
-    protected $table = 'telegram_bot_group';
+    protected $table = 't_telegram_bot_group';
 
     protected $primaryKey  = 'rid';
 

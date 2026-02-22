@@ -30,8 +30,8 @@ class PremiumPlatformPackageController extends Controller
     //列表
     public function getData(Request $request)
     {
-        $model = PremiumPlatformPackage::from('premium_platform_package as a')
-                ->leftJoin('telegram_bot as b','a.bot_rid','b.rid')
+        $model = PremiumPlatformPackage::from('t_premium_platform_package as a')
+                ->leftJoin('t_telegram_bot as b','a.bot_rid','b.rid')
                 ->where(function($query) use ($request){
                 if ($request->package_name != '') {
                     $query->where('a.package_name', 'like' ,"%" . $request->package_name ."%");
@@ -166,8 +166,8 @@ class PremiumPlatformPackageController extends Controller
         $Status = $this->Status;
         $PackageMonth = $this->PackageMonth;
         
-        $data = PremiumPlatformPackage::from('premium_platform_package as a')
-                 ->leftJoin('telegram_bot as b','a.bot_rid','b.rid')
+        $data = PremiumPlatformPackage::from('t_premium_platform_package as a')
+                 ->leftJoin('t_telegram_bot as b','a.bot_rid','b.rid')
                  ->where('a.rid',$request->rid)
                  ->select('a.*','b.bot_token','b.bot_firstname','b.bot_username')
                  ->first();

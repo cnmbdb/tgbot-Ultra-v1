@@ -18,7 +18,7 @@ class CollectionListController extends Controller
     //列表
     public function getData(Request $request)
     {
-        $model = CollectionWalletList::from('collection_wallet_list as a')
+        $model = CollectionWalletList::from('t_collection_wallet_list as a')
                 ->where(function($query) use ($request){
                 if ($request->wallet_addr != '') {
                     $query->where('a.wallet_addr', 'like' ,"%" . $request->wallet_addr ."%");

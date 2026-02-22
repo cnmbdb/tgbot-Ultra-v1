@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class EnergyPlatformPackage extends Model
 {
-	protected $connection = 'mysql';
+	
 
-    protected $table = 'energy_platform_package';
+    protected $table = 't_energy_platform_package';
 
     protected $primaryKey  = 'rid';
 

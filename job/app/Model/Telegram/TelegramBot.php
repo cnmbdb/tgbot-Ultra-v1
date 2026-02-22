@@ -15,7 +15,7 @@ class TelegramBot extends Model
      *
      * @var string
      */
-    protected $table = 'telegram_bot';
+    protected $table = 't_telegram_bot';
 
     public $primaryKey  = 'rid';
 

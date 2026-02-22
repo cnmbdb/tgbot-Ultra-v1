@@ -53,14 +53,18 @@
                                             <td>
                                                 <div>
                                                     <div class="title-key flex">
-                                                        <input type="text" class="z-input" name="job_url[url]" autocomplete="off" value="{{$data->firstWhere('config_key', 'job_url')->config_val->url}}">
+                                                        @php
+                                                            $jobConfig = $data->firstWhere('config_key', 'job_url');
+                                                            $jobUrl = $jobConfig ? $jobConfig->config_val->url : 'http://tgbot-job:9503';
+                                                        @endphp
+                                                        <input type="text" class="z-input" name="job_url[url]" autocomplete="off" value="{{$jobUrl}}">
                                                     </div>
                                                 </div>
                                             </td>
                                         </tr>
                                         <tr>
                                             <td colspan="4">
-                                                <p class="tip"><i class="layui-icon layui-icon-tips"></i>{{$data->firstWhere('config_key', 'job_url')->comments}}</p>
+                                                <p class="tip"><i class="layui-icon layui-icon-tips"></i>{{$jobConfig ? $jobConfig->comments : '任务域名url'}}</p>
                                             </td>
                                         </tr>
                                         
@@ -69,14 +73,38 @@
                                             <td>
                                                 <div>
                                                     <div class="title-key flex">
-                                                        <input type="text" class="z-input" name="ton_url[url]" autocomplete="off" value="{{$data->firstWhere('config_key', 'ton_url')->config_val->url}}">
+                                                        @php
+                                                            $tonConfig = $data->firstWhere('config_key', 'ton_url');
+                                                            $tonUrl = $tonConfig ? $tonConfig->config_val->url : 'http://host.docker.internal:4444/api/premium';
+                                                        @endphp
+                                                        <input type="text" class="z-input" name="ton_url[url]" autocomplete="off" value="{{$tonUrl}}">
                                                     </div>
                                                 </div>
                                             </td>
                                         </tr>
                                         <tr>
                                             <td colspan="4">
-                                                <p class="tip"><i class="layui-icon layui-icon-tips"></i>{{$data->firstWhere('config_key', 'ton_url')->comments}}</p>
+                                                <p class="tip"><i class="layui-icon layui-icon-tips"></i>{{$tonConfig ? $tonConfig->comments : 'ton支付接口url(不需要开通tg会员,用不到这个接口)'}}</p>
+                                            </td>
+                                        </tr>
+                                        
+                                        <tr>
+                                            <th class="fu-title">API连接url：</th>
+                                            <td>
+                                                <div>
+                                                    <div class="title-key flex">
+                                                        @php
+                                                            $apiWebConfig = $data->firstWhere('config_key', 'api_web_url');
+                                                            $apiWebUrl = $apiWebConfig ? $apiWebConfig->config_val->url : 'http://host.docker.internal:4444/';
+                                                        @endphp
+                                                        <input type="text" class="z-input" name="api_web_url[url]" autocomplete="off" value="{{$apiWebUrl}}">
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4">
+                                                <p class="tip"><i class="layui-icon layui-icon-tips"></i>API连接url</p>
                                             </td>
                                         </tr>
                                         

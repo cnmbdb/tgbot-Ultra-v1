@@ -15,8 +15,8 @@ class HandleAiEnergyOrder
     { 
         //智能托管
         try {
-            $data = EnergyAiTrusteeship::from('energy_ai_trusteeship as a')
-                ->join('energy_platform_bot as b','a.bot_rid','b.bot_rid')
+            $data = EnergyAiTrusteeship::from('t_energy_ai_trusteeship as a')
+                ->join('t_energy_platform_bot as b','a.bot_rid','b.bot_rid')
                 ->where('a.is_buy','Y')
                 ->where('a.status',0)
                 ->where('b.is_open_ai_trusteeship','Y')
@@ -25,7 +25,7 @@ class HandleAiEnergyOrder
                 ->where('b.trx_price_energy_32000','>',0)
                 ->where('b.trx_price_energy_65000','>',0)
                 ->whereIn('b.per_energy_day',[0,1,3])
-                ->select('a.rid','a.wallet_addr','a.tg_uid','a.per_buy_energy_quantity','b.trx_price_energy_32000','b.trx_price_energy_65000','b.per_energy_day','b.status','a.is_notice','a.bot_rid','a.total_buy_energy_quantity','a.total_used_trx','a.total_buy_quantity','a.is_notice_admin','b.poll_group','b.rid as energy_platform_bot_rid','a.max_buy_quantity','b.ai_trusteeship_recovery_type','b.agent_tg_uid','b.agent_per_price')
+                ->select('a.rid','a.wallet_addr','a.tg_uid','a.per_buy_energy_quantity','b.trx_price_energy_32000','b.trx_price_energy_65000','b.per_energy_day','b.status','a.is_notice','a.bot_rid','a.total_buy_energy_quantity','a.total_used_trx','a.total_buy_quantity','a.is_notice_admin','b.poll_group','b.rid as energy_platform_bot_rid','b.ai_trusteeship_recovery_type','b.agent_tg_uid','b.agent_per_price')
                 ->limit(100)
                 ->get();
                 
@@ -92,7 +92,8 @@ class HandleAiEnergyOrder
                                             'resourcetype' => 3, //资源方式：1代理资源,2回收资源(按能量),3回收资源(按TRX)
                                             'permissionid' => $b->permission_id
                                         ];
-                                        $recoveryRes = Get_Pay(base64_decode('aHR0cHM6Ly90cm9ud2Vibm9kZWpzLndhbGxldGltLnZpcC9kZWxlZ2VhbmR1bmRlbGV0ZQ=='),$params);
+                                        $apiWebUrl = config('services.api_web.url');
+                                        $recoveryRes = Get_Pay($apiWebUrl . '/api/tron/delegaandundelete',$params);
                                         
                                         //如果成功,更新数据
                                         if(!empty($recoveryRes)){
@@ -108,10 +109,10 @@ class HandleAiEnergyOrder
                         }
                     }
                         
-                    //如果超过了次数则不处理
-                    if($v->max_buy_quantity > 0 && $v->max_buy_quantity <= $v->total_buy_quantity){
-                        continue;
-                    }
+                    //如果超过了次数则不处理（t_energy_ai_trusteeship 表没有 max_buy_quantity 字段，跳过此检查）
+                    // if($v->max_buy_quantity > 0 && $v->max_buy_quantity <= $v->total_buy_quantity){
+                    //     continue;
+                    // }
                     $energy_amount = $v->per_buy_energy_quantity;
                     
                     //轮询,自己质押时判断能量是否足够,用平台则判断平台的trx
@@ -231,7 +232,8 @@ class HandleAiEnergyOrder
                                     'resourcetype' => 1,
                                     'permissionid' => $v1->permission_id
                                 ];
-                                $dlres = Get_Pay(base64_decode('aHR0cHM6Ly90cm9ud2Vibm9kZWpzLndhbGxldGltLnZpcC9kZWxlZ2VhbmR1bmRlbGV0ZQ=='),$params);
+                                $apiWebUrl = config('services.api_web.url');
+                                $dlres = Get_Pay($apiWebUrl . '/api/tron/delegaandundelete',$params);
                             //trongas.io平台
                             }elseif($v1->platform_name == 4){
                                 //0：一小时，1：一天，3：三天
@@ -355,15 +357,16 @@ class HandleAiEnergyOrder
         
         //笔数套餐
         try {
-            $data = EnergyAiBishu::from('energy_ai_bishu as a')
-                ->join('energy_platform_bot as b','a.bot_rid','b.bot_rid')
+            $data = EnergyAiBishu::from('t_energy_ai_bishu as a')
+                ->join('t_energy_platform_bot as b','a.bot_rid','b.bot_rid')
                 ->where('a.is_buy','Y')
                 ->where('a.status',0)
                 ->where('b.is_open_bishu','Y')
                 ->where('b.status',0)
-                ->where('b.per_bishu_energy_quantity','>=',65000)
+                // 注意：t_energy_platform_bot 表没有 per_bishu_energy_quantity 字段，先注释掉
+                // ->where('b.per_bishu_energy_quantity','>=',65000)
                 ->where('a.max_buy_quantity','>','a.total_buy_quantity')
-                ->select('a.rid','a.wallet_addr','a.tg_uid','b.per_bishu_energy_quantity','b.per_energy_day_bishu','b.status','a.is_notice','a.bot_rid','a.total_buy_energy_quantity','a.total_buy_quantity','a.is_notice_admin','b.poll_group','b.rid as energy_platform_bot_rid','a.max_buy_quantity','b.bishu_recovery_type','b.bishu_daili_type','b.agent_tg_uid','b.agent_per_price')
+                ->select('a.rid','a.wallet_addr','a.tg_uid','b.per_energy_day_bishu','b.status','a.is_notice','a.bot_rid','a.total_buy_energy_quantity','a.total_buy_quantity','a.is_notice_admin','b.poll_group','b.rid as energy_platform_bot_rid','a.max_buy_quantity','b.bishu_recovery_type','b.bishu_daili_type','b.agent_tg_uid','b.agent_per_price')
                 ->limit(100)
                 ->get();
                 
@@ -437,7 +440,8 @@ class HandleAiEnergyOrder
                             
                                         for ($attempt = 0; $attempt <= $maxRetries; $attempt++) {
                                             // 调用API
-                                            $recoveryRes = Get_Pay(base64_decode('aHR0cHM6Ly90cm9ud2Vibm9kZWpzLndhbGxldGltLnZpcC9kZWxlZ2VhbmR1bmRlbGV0ZQ=='), $params);
+                                            $apiWebUrl = config('services.api_web.url');
+                                            $recoveryRes = Get_Pay($apiWebUrl . '/api/tron/delegaandundelete', $params);
                                             
                                             // 解析响应
                                             if (!empty($recoveryRes)) {
@@ -580,7 +584,8 @@ class HandleAiEnergyOrder
                                         'resourcetype' => 1,
                                         'permissionid' => $v1->permission_id
                                     ];
-                                    $dlres = Get_Pay(base64_decode('aHR0cHM6Ly90cm9ud2Vibm9kZWpzLndhbGxldGltLnZpcC9kZWxlZ2VhbmR1bmRlbGV0ZQ=='),$params);
+                                    $apiWebUrl = config('services.api_web.url');
+                                    $dlres = Get_Pay($apiWebUrl . '/api/tron/delegaandundelete',$params);
                                 //trongas.io平台
                                 }elseif($v1->platform_name == 4){
                                     $energy_day = $v->per_energy_day_bishu >= 30 ?1:$v->per_energy_day_bishu; //该平台因为不能手工回收,所以如果选择了30天,默认只代理一天

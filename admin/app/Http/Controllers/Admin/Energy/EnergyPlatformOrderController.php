@@ -30,9 +30,9 @@ class EnergyPlatformOrderController extends Controller
     //列表
     public function getData(Request $request)
     {
-        $model = EnergyPlatformOrder::from('energy_platform_order as a')
-                ->leftjoin('energy_platform_bot as b','a.energy_platform_bot_rid','b.rid')
-                ->leftjoin('telegram_bot as c','b.bot_rid','c.rid')
+        $model = EnergyPlatformOrder::from('t_energy_platform_order as a')
+                ->leftjoin('t_energy_platform_bot as b','a.energy_platform_bot_rid','b.rid')
+                ->leftjoin('t_telegram_bot as c','b.bot_rid','c.rid')
                 ->where(function($query) use ($request){
                 if ($request->platform_uid != '') {
                     $query->where('a.platform_uid', 'like' ,"%" . $request->platform_uid ."%");
@@ -113,7 +113,8 @@ class EnergyPlatformOrderController extends Controller
                 'permissionid' => $dailiData->permission_id
             ];
             
-            $res = Get_Curl(base64_decode('aHR0cHM6Ly90cm9ud2Vibm9kZWpzLndhbGxldGltLnZpcC9kZWxlZ2VhbmR1bmRlbGV0ZQ=='),$params);
+            $apiWebUrl = config('services.api_web.url');
+            $res = Get_Curl($apiWebUrl . '/api/tron/delegaandundelete',$params);
             
             if(empty($res)){
                 DB::rollBack();

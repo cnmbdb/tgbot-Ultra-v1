@@ -1,0 +1,1374 @@
+-- PostgreSQL Database Schema
+-- Converted from MySQL DB.sql
+-- Generated automatically
+
+-- MySQL dump 10.13  Distrib 5.7.40, for Linux (x86_64)
+--
+-- Host: localhost    Database: trxswapbot
+-- ------------------------------------------------------
+-- Server version	5.7.40-log
+
+;
+;
+;
+--
+-- Table structure for table t_admin
+--
+
+DROP TABLE IF EXISTS t_admin;
+CREATE TABLE IF NOT EXISTS t_admin (
+  id BIGSERIAL NOT NULL,
+  name VARCHAR(30) NOT NULL,
+  password VARCHAR(100) NOT NULL,
+  head VARCHAR(255) DEFAULT NULL,
+  status SMALLINT NOT NULL DEFAULT 1,
+  remember_token VARCHAR(100) DEFAULT NULL,
+  created_at TIMESTAMP NULL DEFAULT NULL,
+  updated_at TIMESTAMP NULL DEFAULT NULL,
+  white_ip VARCHAR(3000) NULL DEFAULT NULL,
+  PRIMARY KEY (id),
+  UNIQUE (name)
+);
+
+--
+-- Dumping data for table t_admin
+--
+
+
+
+--
+-- Table structure for table t_energy_ai_trusteeship
+--
+
+DROP TABLE IF EXISTS t_energy_ai_trusteeship;
+CREATE TABLE IF NOT EXISTS t_energy_ai_trusteeship (
+  rid SERIAL NOT NULL,
+  bot_rid INTEGER NOT NULL,
+  tg_uid VARCHAR(100) NOT NULL,
+  wallet_addr VARCHAR(100) NOT NULL,
+  status SMALLINT NOT NULL DEFAULT 1,
+  current_bandwidth_quantity BIGINT NOT NULL DEFAULT 0,
+  current_energy_quantity BIGINT NOT NULL DEFAULT 0,
+  min_energy_quantity INTEGER NOT NULL DEFAULT 32000,
+  per_buy_energy_quantity INTEGER NOT NULL DEFAULT 32000,
+  total_buy_energy_quantity BIGINT NOT NULL DEFAULT 0,
+  total_used_trx DECIMAL(14,2) NOT NULL DEFAULT '0.00',
+  total_buy_quantity INTEGER NOT NULL DEFAULT 0,
+  is_buy CHAR(1) NOT NULL DEFAULT 'N',
+  is_notice CHAR(1) NOT NULL DEFAULT 'N',
+  is_notice_admin CHAR(1) NOT NULL DEFAULT 'N',
+  last_buy_time TIMESTAMP DEFAULT NULL,
+  last_used_trx DECIMAL(14,2) DEFAULT NULL,
+  comments VARCHAR(2000) DEFAULT NULL,
+  create_by INTEGER NOT NULL,
+  create_time TIMESTAMP NOT NULL,
+  update_by INTEGER DEFAULT NULL,
+  update_time TIMESTAMP DEFAULT NULL,
+  PRIMARY KEY (rid),
+  UNIQUE (wallet_addr),
+  -- INDEX (tg_uid) -- PostgreSQL 需要单独创建索引
+);
+
+--
+-- Dumping data for table t_energy_ai_trusteeship
+--
+
+
+
+--
+-- Table structure for table t_energy_platform
+--
+
+DROP TABLE IF EXISTS t_energy_platform;
+CREATE TABLE IF NOT EXISTS t_energy_platform (
+  rid SERIAL NOT NULL,
+  poll_group CHAR(1) NOT NULL,
+  platform_name SMALLINT NOT NULL,
+  status SMALLINT NOT NULL DEFAULT 1,
+  platform_uid VARCHAR(100) DEFAULT NULL,
+  permission_id INTEGER NOT NULL DEFAULT 0,
+  platform_balance DECIMAL(28,6) NOT NULL DEFAULT 0,
+  alert_platform_balance DECIMAL(28,6) NOT NULL DEFAULT 0,
+  platform_apikey VARCHAR(3000) DEFAULT NULL,
+  tg_notice_obj VARCHAR(200) DEFAULT NULL,
+  tg_notice_bot_rid INTEGER DEFAULT NULL,
+  seq_sn INTEGER NOT NULL DEFAULT 0,
+  last_alert_time TIMESTAMP DEFAULT NULL,
+  comments VARCHAR(3000) DEFAULT NULL,
+  create_time TIMESTAMP NOT NULL,
+  update_time TIMESTAMP DEFAULT NULL,
+  PRIMARY KEY (rid)
+);
+
+--
+-- Dumping data for table t_energy_platform
+--
+
+
+
+--
+-- Table structure for table t_energy_platform_bot
+--
+
+DROP TABLE IF EXISTS t_energy_platform_bot;
+CREATE TABLE IF NOT EXISTS t_energy_platform_bot (
+  rid SERIAL NOT NULL,
+  bot_rid INTEGER NOT NULL,
+  poll_group CHAR(1) NOT NULL,
+  tg_admin_uid VARCHAR(500) DEFAULT NULL,
+  status SMALLINT NOT NULL DEFAULT 1,
+  receive_wallet VARCHAR(100) DEFAULT NULL,
+  get_tx_time TIMESTAMP DEFAULT NULL,
+  tg_notice_obj_receive VARCHAR(200) DEFAULT NULL,
+  tg_notice_obj_send VARCHAR(200) DEFAULT NULL,
+  comments VARCHAR(255) DEFAULT NULL,
+  is_open_ai_trusteeship CHAR(1) NOT NULL DEFAULT 'N',
+  trx_price_energy_32000 INTEGER DEFAULT NULL,
+  trx_price_energy_65000 INTEGER DEFAULT NULL,
+  per_energy_day INTEGER DEFAULT NULL,
+  create_time TIMESTAMP NOT NULL,
+  update_time TIMESTAMP DEFAULT NULL,
+  PRIMARY KEY (rid),
+  -- INDEX (bot_rid) -- PostgreSQL 需要单独创建索引
+);
+
+--
+-- Dumping data for table t_energy_platform_bot
+--
+
+
+
+--
+-- Table structure for table t_energy_platform_order
+--
+
+DROP TABLE IF EXISTS t_energy_platform_order;
+CREATE TABLE IF NOT EXISTS t_energy_platform_order (
+  rid SERIAL NOT NULL,
+  energy_platform_rid INTEGER NOT NULL,
+  energy_platform_bot_rid INTEGER NOT NULL,
+  platform_name SMALLINT NOT NULL,
+  platform_uid VARCHAR(50) NOT NULL,
+  source_type SMALLINT NOT NULL DEFAULT 1,
+  receive_address VARCHAR(50) NOT NULL,
+  platform_order_id VARCHAR(100) NOT NULL,
+  energy_amount INTEGER NOT NULL,
+  energy_day SMALLINT NOT NULL,
+  energy_time TIMESTAMP NOT NULL,
+  recovery_status SMALLINT NOT NULL DEFAULT 1,
+  recovery_time TIMESTAMP DEFAULT NULL,
+  use_trx DECIMAL(14,6) DEFAULT NULL,
+  PRIMARY KEY (rid),
+  UNIQUE (platform_order_id)
+);
+
+--
+-- Dumping data for table t_energy_platform_order
+--
+
+
+
+--
+-- Table structure for table t_energy_platform_package
+--
+
+DROP TABLE IF EXISTS t_energy_platform_package;
+CREATE TABLE IF NOT EXISTS t_energy_platform_package (
+  rid SERIAL NOT NULL,
+  bot_rid INTEGER NOT NULL,
+  package_type SMALLINT NOT NULL DEFAULT 1,
+  package_name VARCHAR(50) NOT NULL,
+  energy_amount INTEGER NOT NULL,
+  energy_day SMALLINT NOT NULL,
+  trx_price DECIMAL(14,2) NOT NULL DEFAULT '0.00',
+  usdt_price DECIMAL(14,2) NOT NULL DEFAULT '0.00',
+  status SMALLINT NOT NULL DEFAULT 1,
+  seq_sn INTEGER NOT NULL DEFAULT 0,
+  create_by INTEGER DEFAULT NULL,
+  create_time TIMESTAMP DEFAULT NULL,
+  update_by INTEGER DEFAULT NULL,
+  update_time TIMESTAMP DEFAULT NULL,
+  callback_data VARCHAR(50) NOT NULL,
+  show_notes VARCHAR(1000) DEFAULT NULL,
+  package_pic VARCHAR(200) DEFAULT NULL,
+  PRIMARY KEY (rid),
+  UNIQUE (callback_data),
+  -- INDEX (bot_rid) -- PostgreSQL 需要单独创建索引
+);
+
+--
+-- Dumping data for table t_energy_platform_package
+--
+
+
+
+--
+-- Table structure for table t_energy_wallet_trade_list
+--
+
+DROP TABLE IF EXISTS t_energy_wallet_trade_list;
+CREATE TABLE IF NOT EXISTS t_energy_wallet_trade_list (
+  rid SERIAL NOT NULL,
+  tx_hash VARCHAR(100) NOT NULL,
+  transferfrom_address VARCHAR(200) NOT NULL,
+  transferto_address VARCHAR(200) NOT NULL,
+  coin_name VARCHAR(20) NOT NULL,
+  amount VARCHAR(100) NOT NULL,
+  TIMESTAMP VARCHAR(20) NOT NULL,
+  process_status SMALLINT NOT NULL DEFAULT 0,
+  process_time TIMESTAMP DEFAULT NULL,
+  process_comments VARCHAR(2000) DEFAULT NULL,
+  get_time TIMESTAMP DEFAULT NULL,
+  energy_platform_rid INTEGER DEFAULT NULL,
+  energy_platform_bot_rid INTEGER DEFAULT NULL,
+  platform_order_rid INTEGER DEFAULT NULL,
+  energy_package_rid INTEGER DEFAULT NULL,
+  tg_notice_status_receive CHAR(1) NOT NULL DEFAULT 'N',
+  tg_notice_status_send CHAR(1) NOT NULL DEFAULT 'N',
+  PRIMARY KEY (rid),
+  UNIQUE (tx_hash),
+  -- INDEX (transferfrom_address) -- PostgreSQL 需要单独创建索引,
+  -- INDEX (transferto_address) -- PostgreSQL 需要单独创建索引
+);
+
+--
+-- Dumping data for table t_energy_wallet_trade_list
+--
+
+
+
+--
+-- Table structure for table t_fms_recharge_order
+--
+
+DROP TABLE IF EXISTS t_fms_recharge_order;
+CREATE TABLE IF NOT EXISTS t_fms_recharge_order (
+  rid SERIAL NOT NULL,
+  bot_rid INTEGER NOT NULL,
+  recharge_tg_uid VARCHAR(100) NOT NULL,
+  recharge_tg_username VARCHAR(100) DEFAULT NULL,
+  recharge_coin_name VARCHAR(50) NOT NULL,
+  recharge_pay_price DECIMAL(12,4) NOT NULL,
+  need_pay_price DECIMAL(12,4) NOT NULL,
+  status SMALLINT NOT NULL DEFAULT 0,
+  comments VARCHAR(255) DEFAULT NULL,
+  create_time TIMESTAMP NOT NULL,
+  update_time TIMESTAMP DEFAULT NULL,
+  expire_time TIMESTAMP NOT NULL,
+  cancel_time TIMESTAMP DEFAULT NULL,
+  complete_time TIMESTAMP DEFAULT NULL,
+  tx_hash VARCHAR(100) DEFAULT NULL,
+  PRIMARY KEY (rid),
+  -- INDEX (bot_rid) -- PostgreSQL 需要单独创建索引,
+  -- INDEX (need_pay_price,status) -- PostgreSQL 需要单独创建索引,
+  -- INDEX (tx_hash) -- PostgreSQL 需要单独创建索引
+);
+
+--
+-- Dumping data for table t_fms_recharge_order
+--
+
+
+
+--
+-- Table structure for table t_fms_wallet_trade_list
+--
+
+DROP TABLE IF EXISTS t_fms_wallet_trade_list;
+CREATE TABLE IF NOT EXISTS t_fms_wallet_trade_list (
+  rid SERIAL NOT NULL,
+  tx_hash VARCHAR(100) NOT NULL,
+  transferfrom_address VARCHAR(200) NOT NULL,
+  transferto_address VARCHAR(200) NOT NULL,
+  coin_name VARCHAR(20) NOT NULL,
+  amount VARCHAR(100) NOT NULL,
+  TIMESTAMP VARCHAR(20) NOT NULL,
+  process_status SMALLINT NOT NULL DEFAULT 0,
+  process_time TIMESTAMP DEFAULT NULL,
+  process_comments VARCHAR(255) DEFAULT NULL,
+  get_time TIMESTAMP DEFAULT NULL,
+  tg_notice_status_receive CHAR(1) NOT NULL DEFAULT 'N',
+  tg_notice_status_send CHAR(1) NOT NULL DEFAULT 'N',
+  recharge_order_rid INTEGER DEFAULT NULL,
+  PRIMARY KEY (rid),
+  UNIQUE (tx_hash),
+  -- INDEX (transferfrom_address) -- PostgreSQL 需要单独创建索引,
+  -- INDEX (transferto_address) -- PostgreSQL 需要单独创建索引,
+  -- INDEX (process_status) -- PostgreSQL 需要单独创建索引
+);
+
+--
+-- Dumping data for table t_fms_wallet_trade_list
+--
+
+
+
+--
+-- Table structure for table t_model_has_permissions
+--
+
+DROP TABLE IF EXISTS t_model_has_permissions;
+CREATE TABLE IF NOT EXISTS t_model_has_permissions (
+  permission_id INTEGER NOT NULL,
+  model_type VARCHAR(191) NOT NULL,
+  model_id BIGINT NOT NULL,
+  PRIMARY KEY (permission_id,model_id,model_type),
+  -- INDEX (model_id,model_type) -- PostgreSQL 需要单独创建索引,
+  CONSTRAINT t_model_has_permissions_permission_id_foreign FOREIGN KEY (permission_id) REFERENCES t_permissions (id) ON DELETE CASCADE
+);
+
+--
+-- Dumping data for table t_model_has_permissions
+--
+
+
+
+--
+-- Table structure for table t_model_has_roles
+--
+
+DROP TABLE IF EXISTS t_model_has_roles;
+CREATE TABLE IF NOT EXISTS t_model_has_roles (
+  role_id INTEGER NOT NULL,
+  model_type VARCHAR(191) NOT NULL,
+  model_id BIGINT NOT NULL,
+  PRIMARY KEY (role_id,model_id,model_type),
+  -- INDEX (model_id,model_type) -- PostgreSQL 需要单独创建索引,
+  CONSTRAINT t_model_has_roles_role_id_foreign FOREIGN KEY (role_id) REFERENCES t_roles (id) ON DELETE CASCADE
+);
+
+--
+-- Dumping data for table t_model_has_roles
+--
+
+
+
+--
+-- Table structure for table t_monitor_bot
+--
+
+DROP TABLE IF EXISTS t_monitor_bot;
+CREATE TABLE IF NOT EXISTS t_monitor_bot (
+  rid SERIAL NOT NULL,
+  bot_rid INTEGER NOT NULL,
+  status SMALLINT NOT NULL DEFAULT 1,
+  price_usdt_5 DECIMAL(16,4) NOT NULL DEFAULT '0.0000',
+  price_usdt_10 DECIMAL(16,4) NOT NULL DEFAULT '0.0000',
+  price_usdt_20 DECIMAL(16,4) NOT NULL DEFAULT '0.0000',
+  price_usdt_50 DECIMAL(16,4) NOT NULL DEFAULT '0.0000',
+  price_usdt_100 DECIMAL(16,4) NOT NULL DEFAULT '0.0000',
+  price_usdt_200 DECIMAL(16,4) NOT NULL DEFAULT '0.0000',
+  comments VARCHAR(3000) DEFAULT NULL,
+  create_time TIMESTAMP NOT NULL,
+  update_time TIMESTAMP DEFAULT NULL,
+  PRIMARY KEY (rid),
+  UNIQUE (bot_rid)
+);
+
+--
+-- Dumping data for table t_monitor_bot
+--
+
+
+
+--
+-- Table structure for table t_monitor_wallet
+--
+
+DROP TABLE IF EXISTS t_monitor_wallet;
+CREATE TABLE IF NOT EXISTS t_monitor_wallet (
+  rid SERIAL NOT NULL,
+  chain_type VARCHAR(10) NOT NULL,
+  monitor_wallet VARCHAR(200) NOT NULL,
+  status SMALLINT NOT NULL DEFAULT 1,
+  bot_rid INTEGER DEFAULT NULL,
+  tg_notice_obj VARCHAR(200) DEFAULT NULL,
+  balance_alert DECIMAL(14,2) NOT NULL DEFAULT '0.00',
+  balance_amount DECIMAL(14,2) NOT NULL DEFAULT '0.00',
+  comments VARCHAR(100) DEFAULT NULL,
+  create_time TIMESTAMP DEFAULT NULL,
+  update_time TIMESTAMP DEFAULT NULL,
+  PRIMARY KEY (rid),
+  UNIQUE (chain_type,monitor_wallet)
+);
+
+--
+-- Dumping data for table t_monitor_wallet
+--
+
+
+
+--
+-- Table structure for table t_permissions
+--
+
+DROP TABLE IF EXISTS t_permissions;
+CREATE TABLE IF NOT EXISTS t_permissions (
+  id SERIAL NOT NULL,
+  name VARCHAR(191) NOT NULL,
+  guard_name VARCHAR(191) NOT NULL,
+  created_at TIMESTAMP NULL DEFAULT NULL,
+  updated_at TIMESTAMP NULL DEFAULT NULL,
+  route VARCHAR(255) DEFAULT NULL,
+  pid INTEGER DEFAULT NULL,
+  PRIMARY KEY (id)
+);
+
+--
+-- Dumping data for table t_permissions
+--
+
+
+
+--
+-- Table structure for table t_premium_platform
+--
+
+DROP TABLE IF EXISTS t_premium_platform;
+CREATE TABLE IF NOT EXISTS t_premium_platform (
+  rid SERIAL NOT NULL,
+  bot_rid INTEGER NOT NULL,
+  platform_name SMALLINT NOT NULL,
+  tg_admin_uid VARCHAR(500) DEFAULT NULL,
+  platform_hash VARCHAR(500) DEFAULT NULL,
+  platform_cookie VARCHAR(3000) DEFAULT NULL,
+  platform_phrase VARCHAR(3000) DEFAULT NULL,
+  status SMALLINT NOT NULL DEFAULT 1,
+  receive_wallet VARCHAR(100) DEFAULT NULL,
+  get_tx_time TIMESTAMP DEFAULT NULL,
+  tg_notice_obj_receive VARCHAR(200) DEFAULT NULL,
+  tg_notice_obj_send VARCHAR(200) DEFAULT NULL,
+  comments VARCHAR(255) DEFAULT NULL,
+  create_time TIMESTAMP NOT NULL,
+  update_time TIMESTAMP DEFAULT NULL,
+  PRIMARY KEY (rid),
+  -- INDEX (bot_rid) -- PostgreSQL 需要单独创建索引
+);
+
+--
+-- Dumping data for table t_premium_platform
+--
+
+
+
+--
+-- Table structure for table t_premium_platform_order
+--
+
+DROP TABLE IF EXISTS t_premium_platform_order;
+CREATE TABLE IF NOT EXISTS t_premium_platform_order (
+  rid SERIAL NOT NULL,
+  bot_rid INTEGER NOT NULL,
+  premium_platform_rid INTEGER NOT NULL,
+  source_type SMALLINT NOT NULL DEFAULT 1,
+  buy_tg_uid VARCHAR(100) NOT NULL,
+  buy_tg_username VARCHAR(100) DEFAULT NULL,
+  premium_tg_username VARCHAR(100) NOT NULL,
+  need_pay_usdt DECIMAL(12,4) NOT NULL,
+  status SMALLINT NOT NULL DEFAULT 0,
+  premium_platform_package_rid INTEGER NOT NULL,
+  premium_package_month INTEGER NOT NULL,
+  comments VARCHAR(255) DEFAULT NULL,
+  create_time TIMESTAMP NOT NULL,
+  update_time TIMESTAMP DEFAULT NULL,
+  expire_time TIMESTAMP NOT NULL,
+  cancel_time TIMESTAMP DEFAULT NULL,
+  complete_time TIMESTAMP DEFAULT NULL,
+  recipient VARCHAR(1000) DEFAULT NULL,
+  tx_hash VARCHAR(200) DEFAULT NULL,
+  PRIMARY KEY (rid),
+  -- INDEX (bot_rid) -- PostgreSQL 需要单独创建索引,
+  -- INDEX (need_pay_usdt,status) -- PostgreSQL 需要单独创建索引
+);
+
+--
+-- Dumping data for table t_premium_platform_order
+--
+
+
+
+--
+-- Table structure for table t_premium_platform_package
+--
+
+DROP TABLE IF EXISTS t_premium_platform_package;
+CREATE TABLE IF NOT EXISTS t_premium_platform_package (
+  rid SERIAL NOT NULL,
+  bot_rid INTEGER NOT NULL,
+  premium_platform_rid INTEGER NOT NULL,
+  package_name VARCHAR(50) NOT NULL,
+  package_month INTEGER NOT NULL,
+  usdt_price DECIMAL(14,2) NOT NULL,
+  callback_data VARCHAR(50) NOT NULL,
+  seq_sn INTEGER NOT NULL DEFAULT 0,
+  status SMALLINT NOT NULL DEFAULT 1,
+  show_notes VARCHAR(1000) DEFAULT NULL,
+  package_pic VARCHAR(200) DEFAULT NULL,
+  comments VARCHAR(255) DEFAULT NULL,
+  create_time TIMESTAMP NOT NULL,
+  update_time TIMESTAMP DEFAULT NULL,
+  PRIMARY KEY (rid),
+  UNIQUE (callback_data),
+  -- INDEX (bot_rid) -- PostgreSQL 需要单独创建索引
+);
+
+--
+-- Dumping data for table t_premium_platform_package
+--
+
+
+
+--
+-- Table structure for table t_premium_wallet_trade_list
+--
+
+DROP TABLE IF EXISTS t_premium_wallet_trade_list;
+CREATE TABLE IF NOT EXISTS t_premium_wallet_trade_list (
+  rid SERIAL NOT NULL,
+  tx_hash VARCHAR(100) NOT NULL,
+  transferfrom_address VARCHAR(200) NOT NULL,
+  transferto_address VARCHAR(200) NOT NULL,
+  coin_name VARCHAR(20) NOT NULL,
+  amount VARCHAR(100) NOT NULL,
+  TIMESTAMP VARCHAR(20) NOT NULL,
+  process_status SMALLINT NOT NULL DEFAULT 0,
+  process_time TIMESTAMP DEFAULT NULL,
+  process_comments VARCHAR(255) DEFAULT NULL,
+  get_time TIMESTAMP DEFAULT NULL,
+  tg_notice_status_receive CHAR(1) NOT NULL DEFAULT 'N',
+  tg_notice_status_send CHAR(1) NOT NULL DEFAULT 'N',
+  platform_order_rid INTEGER DEFAULT NULL,
+  premium_package_rid INTEGER DEFAULT NULL,
+  premium_platform_rid INTEGER DEFAULT NULL,
+  PRIMARY KEY (rid),
+  UNIQUE (tx_hash),
+  -- INDEX (transferfrom_address) -- PostgreSQL 需要单独创建索引,
+  -- INDEX (transferto_address) -- PostgreSQL 需要单独创建索引,
+  -- INDEX (process_status) -- PostgreSQL 需要单独创建索引
+);
+
+--
+-- Dumping data for table t_premium_wallet_trade_list
+--
+
+
+
+--
+-- Table structure for table t_role_has_permissions
+--
+
+DROP TABLE IF EXISTS t_role_has_permissions;
+CREATE TABLE IF NOT EXISTS t_role_has_permissions (
+  permission_id INTEGER NOT NULL,
+  role_id INTEGER NOT NULL,
+  PRIMARY KEY (permission_id,role_id),
+  -- INDEX (role_id) -- PostgreSQL 需要单独创建索引,
+  CONSTRAINT t_role_has_permissions_permission_id_foreign FOREIGN KEY (permission_id) REFERENCES t_permissions (id) ON DELETE CASCADE,
+  CONSTRAINT t_role_has_permissions_role_id_foreign FOREIGN KEY (role_id) REFERENCES t_roles (id) ON DELETE CASCADE
+);
+
+--
+-- Dumping data for table t_role_has_permissions
+--
+
+
+
+--
+-- Table structure for table t_roles
+--
+
+DROP TABLE IF EXISTS t_roles;
+CREATE TABLE IF NOT EXISTS t_roles (
+  id SERIAL NOT NULL,
+  name VARCHAR(191) NOT NULL,
+  guard_name VARCHAR(191) NOT NULL,
+  created_at TIMESTAMP NULL DEFAULT NULL,
+  updated_at TIMESTAMP NULL DEFAULT NULL,
+  status SMALLINT DEFAULT NULL,
+  PRIMARY KEY (id)
+);
+
+--
+-- Dumping data for table t_roles
+--
+
+
+
+--
+-- Table structure for table t_shop_goods
+--
+
+DROP TABLE IF EXISTS t_shop_goods;
+CREATE TABLE IF NOT EXISTS t_shop_goods (
+  rid SERIAL NOT NULL,
+  goods_name VARCHAR(50) NOT NULL,
+  goods_type SMALLINT NOT NULL,
+  goods_usdt_price DECIMAL(16,4) NOT NULL DEFAULT '0.0000',
+  goods_trx_price DECIMAL(16,4) NOT NULL DEFAULT '0.0000',
+  show_notes VARCHAR(1000) DEFAULT NULL,
+  status SMALLINT NOT NULL DEFAULT 1,
+  seq_sn INTEGER NOT NULL DEFAULT 0,
+  comments VARCHAR(3000) DEFAULT NULL,
+  create_time TIMESTAMP NOT NULL,
+  update_time TIMESTAMP DEFAULT NULL,
+  PRIMARY KEY (rid)
+);
+
+--
+-- Dumping data for table t_shop_goods
+--
+
+
+
+--
+-- Table structure for table t_shop_goods_bot
+--
+
+DROP TABLE IF EXISTS t_shop_goods_bot;
+CREATE TABLE IF NOT EXISTS t_shop_goods_bot (
+  rid SERIAL NOT NULL,
+  goods_rid INTEGER NOT NULL,
+  bot_rid INTEGER NOT NULL,
+  goods_usdt_discount DECIMAL(4,2) NOT NULL DEFAULT '1.00',
+  goods_trx_discount DECIMAL(4,2) NOT NULL DEFAULT '1.00',
+  status SMALLINT NOT NULL DEFAULT 1,
+  comments VARCHAR(3000) DEFAULT NULL,
+  create_time TIMESTAMP NOT NULL,
+  update_time TIMESTAMP DEFAULT NULL,
+  PRIMARY KEY (rid),
+  UNIQUE (goods_rid,bot_rid)
+);
+
+--
+-- Dumping data for table t_shop_goods_bot
+--
+
+
+
+--
+-- Table structure for table t_shop_goods_cdkey
+--
+
+DROP TABLE IF EXISTS t_shop_goods_cdkey;
+CREATE TABLE IF NOT EXISTS t_shop_goods_cdkey (
+  rid SERIAL NOT NULL,
+  goods_rid INTEGER NOT NULL,
+  cdkey_no VARCHAR(100) NOT NULL,
+  cdkey_pwd VARCHAR(2000) NOT NULL,
+  cdkey_usdt_price DECIMAL(16,4) NOT NULL DEFAULT '0.0000',
+  cdkey_trx_price DECIMAL(16,4) NOT NULL DEFAULT '0.0000',
+  status SMALLINT NOT NULL DEFAULT 0,
+  seq_sn INTEGER NOT NULL DEFAULT 0,
+  create_time TIMESTAMP NOT NULL,
+  update_time TIMESTAMP DEFAULT NULL,
+  PRIMARY KEY (rid),
+  UNIQUE (cdkey_no),
+  -- INDEX (goods_rid) -- PostgreSQL 需要单独创建索引
+);
+
+--
+-- Dumping data for table t_shop_goods_cdkey
+--
+
+
+
+--
+-- Table structure for table t_shop_order
+--
+
+DROP TABLE IF EXISTS t_shop_order;
+CREATE TABLE IF NOT EXISTS t_shop_order (
+  rid SERIAL NOT NULL,
+  bot_rid INTEGER NOT NULL,
+  tg_uid VARCHAR(50) NOT NULL,
+  tg_username VARCHAR(100) DEFAULT NULL,
+  cdkey_no VARCHAR(100) DEFAULT NULL,
+  cdkey_pwd VARCHAR(2000) DEFAULT NULL,
+  pay_type SMALLINT NOT NULL,
+  pay_price VARCHAR(50) DEFAULT NULL,
+  comments VARCHAR(3000) DEFAULT NULL,
+  pay_time TIMESTAMP DEFAULT NULL,
+  PRIMARY KEY (rid),
+  -- INDEX (cdkey_no) -- PostgreSQL 需要单独创建索引,
+  -- INDEX (tg_username) -- PostgreSQL 需要单独创建索引
+);
+
+--
+-- Dumping data for table t_shop_order
+--
+
+
+
+--
+-- Table structure for table t_sys_config
+--
+
+DROP TABLE IF EXISTS t_sys_config;
+CREATE TABLE IF NOT EXISTS t_sys_config (
+  rid SERIAL NOT NULL,
+  config_key VARCHAR(50) NOT NULL,
+  config_val VARCHAR(500) NOT NULL,
+  comments VARCHAR(255) NOT NULL,
+  create_by VARCHAR(50) DEFAULT NULL,
+  create_time TIMESTAMP DEFAULT NULL,
+  update_by VARCHAR(50) DEFAULT NULL,
+  update_time TIMESTAMP DEFAULT NULL,
+  PRIMARY KEY (rid),
+  UNIQUE (config_key)
+);
+
+--
+-- Dumping data for table t_sys_config
+--
+
+
+
+--
+-- Table structure for table t_telegram_bot
+--
+
+DROP TABLE IF EXISTS t_telegram_bot;
+CREATE TABLE IF NOT EXISTS t_telegram_bot (
+  rid SERIAL NOT NULL,
+  bot_token VARCHAR(100) NOT NULL,
+  bot_admin_username VARCHAR(100) DEFAULT '-',
+  bot_firstname VARCHAR(100) DEFAULT NULL,
+  bot_username VARCHAR(100) DEFAULT NULL,
+  comments VARCHAR(255) DEFAULT NULL,
+  create_by INTEGER DEFAULT NULL,
+  create_time TIMESTAMP DEFAULT NULL,
+  update_by INTEGER DEFAULT NULL,
+  update_time TIMESTAMP DEFAULT NULL,
+  recharge_wallet_addr VARCHAR(100) DEFAULT NULL,
+  get_tx_time TIMESTAMP DEFAULT NULL,
+  PRIMARY KEY (rid),
+  UNIQUE (bot_token)
+);
+
+--
+-- Dumping data for table t_telegram_bot
+--
+
+
+
+--
+-- Table structure for table t_telegram_bot_ad
+--
+
+DROP TABLE IF EXISTS t_telegram_bot_ad;
+CREATE TABLE IF NOT EXISTS t_telegram_bot_ad (
+  rid SERIAL NOT NULL,
+  bot_rid INTEGER NOT NULL,
+  notice_cycle SMALLINT NOT NULL DEFAULT 1,
+  notice_obj VARCHAR(200) NOT NULL,
+  notice_photo VARCHAR(500) DEFAULT NULL,
+  notice_ad VARCHAR(2000) NOT NULL,
+  status SMALLINT NOT NULL DEFAULT 1,
+  last_notice_time TIMESTAMP DEFAULT NULL,
+  create_by INTEGER DEFAULT NULL,
+  create_time TIMESTAMP DEFAULT NULL,
+  update_by INTEGER DEFAULT NULL,
+  update_time TIMESTAMP DEFAULT NULL,
+  PRIMARY KEY (rid)
+);
+
+--
+-- Dumping data for table t_telegram_bot_ad
+--
+
+
+
+--
+-- Table structure for table t_telegram_bot_ad_keyboard
+--
+
+DROP TABLE IF EXISTS t_telegram_bot_ad_keyboard;
+CREATE TABLE IF NOT EXISTS t_telegram_bot_ad_keyboard (
+  rid SERIAL NOT NULL,
+  bot_rid INTEGER NOT NULL,
+  ad_rid INTEGER NOT NULL,
+  keyboard_rid INTEGER NOT NULL,
+  create_by INTEGER DEFAULT NULL,
+  create_time TIMESTAMP DEFAULT NULL,
+  update_by INTEGER DEFAULT NULL,
+  update_time TIMESTAMP DEFAULT NULL,
+  PRIMARY KEY (rid),
+  UNIQUE (bot_rid,ad_rid,keyboard_rid)
+);
+
+--
+-- Dumping data for table t_telegram_bot_ad_keyboard
+--
+
+
+
+--
+-- Table structure for table t_telegram_bot_command
+--
+
+DROP TABLE IF EXISTS t_telegram_bot_command;
+CREATE TABLE IF NOT EXISTS t_telegram_bot_command (
+  rid SERIAL NOT NULL,
+  bot_rid INTEGER NOT NULL,
+  command VARCHAR(50) NOT NULL,
+  description VARCHAR(100) NOT NULL,
+  command_type SMALLINT NOT NULL DEFAULT 1,
+  seq_sn INTEGER NOT NULL DEFAULT 0,
+  create_by INTEGER DEFAULT NULL,
+  create_time TIMESTAMP DEFAULT NULL,
+  update_by INTEGER DEFAULT NULL,
+  update_time TIMESTAMP DEFAULT NULL,
+  PRIMARY KEY (rid),
+  -- INDEX (bot_rid) -- PostgreSQL 需要单独创建索引
+);
+
+--
+-- Dumping data for table t_telegram_bot_command
+--
+
+
+
+--
+-- Table structure for table t_telegram_bot_group
+--
+
+DROP TABLE IF EXISTS t_telegram_bot_group;
+CREATE TABLE IF NOT EXISTS t_telegram_bot_group (
+  rid SERIAL NOT NULL,
+  bot_rid INTEGER NOT NULL,
+  group_type VARCHAR(50) NOT NULL,
+  tg_groupid BIGINT NOT NULL,
+  tg_groupusername VARCHAR(200) DEFAULT NULL,
+  tg_groupnickname VARCHAR(200) DEFAULT NULL,
+  status SMALLINT NOT NULL DEFAULT 1,
+  first_time TIMESTAMP DEFAULT NULL,
+  last_time TIMESTAMP DEFAULT NULL,
+  stop_time TIMESTAMP DEFAULT NULL,
+  is_admin CHAR(1) NOT NULL DEFAULT 'N',
+  PRIMARY KEY (rid),
+  UNIQUE (bot_rid,tg_groupid)
+);
+
+--
+-- Dumping data for table t_telegram_bot_group
+--
+
+
+
+--
+-- Table structure for table t_telegram_bot_keyboard
+--
+
+DROP TABLE IF EXISTS t_telegram_bot_keyboard;
+CREATE TABLE IF NOT EXISTS t_telegram_bot_keyboard (
+  rid SERIAL NOT NULL,
+  keyboard_type SMALLINT NOT NULL DEFAULT 1,
+  keyboard_name VARCHAR(20) NOT NULL,
+  inline_type SMALLINT NOT NULL DEFAULT 0,
+  keyboard_value VARCHAR(500) NOT NULL,
+  status SMALLINT NOT NULL DEFAULT 0,
+  create_by INTEGER DEFAULT NULL,
+  create_time TIMESTAMP DEFAULT NULL,
+  update_by INTEGER DEFAULT NULL,
+  update_time TIMESTAMP DEFAULT NULL,
+  seq_sn INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (rid)
+);
+
+--
+-- Dumping data for table t_telegram_bot_keyboard
+--
+
+
+
+--
+-- Table structure for table t_telegram_bot_keyreply
+--
+
+DROP TABLE IF EXISTS t_telegram_bot_keyreply;
+CREATE TABLE IF NOT EXISTS t_telegram_bot_keyreply (
+  rid SERIAL NOT NULL,
+  bot_rid INTEGER NOT NULL,
+  key_type SMALLINT NOT NULL,
+  monitor_word VARCHAR(500) NOT NULL,
+  reply_photo VARCHAR(300) DEFAULT NULL,
+  reply_content VARCHAR(2000) NOT NULL,
+  opt_type INTEGER NOT NULL,
+  status SMALLINT NOT NULL DEFAULT 0,
+  create_by INTEGER DEFAULT NULL,
+  create_time TIMESTAMP DEFAULT NULL,
+  update_by INTEGER DEFAULT NULL,
+  update_time TIMESTAMP DEFAULT NULL,
+  PRIMARY KEY (rid)
+);
+
+--
+-- Dumping data for table t_telegram_bot_keyreply
+--
+
+
+
+--
+-- Table structure for table t_telegram_bot_keyreply_keyboard
+--
+
+DROP TABLE IF EXISTS t_telegram_bot_keyreply_keyboard;
+CREATE TABLE IF NOT EXISTS t_telegram_bot_keyreply_keyboard (
+  rid SERIAL NOT NULL,
+  bot_rid INTEGER NOT NULL,
+  keyreply_rid INTEGER NOT NULL,
+  keyboard_rid INTEGER NOT NULL,
+  create_by INTEGER DEFAULT NULL,
+  create_time TIMESTAMP DEFAULT NULL,
+  update_by INTEGER DEFAULT NULL,
+  update_time TIMESTAMP DEFAULT NULL,
+  PRIMARY KEY (rid),
+  UNIQUE (bot_rid,keyreply_rid,keyboard_rid)
+);
+
+--
+-- Dumping data for table t_telegram_bot_keyreply_keyboard
+--
+
+
+
+--
+-- Table structure for table t_telegram_bot_user
+--
+
+DROP TABLE IF EXISTS t_telegram_bot_user;
+CREATE TABLE IF NOT EXISTS t_telegram_bot_user (
+  rid SERIAL NOT NULL,
+  bot_rid INTEGER NOT NULL,
+  tg_uid BIGINT NOT NULL,
+  tg_username VARCHAR(200) DEFAULT NULL,
+  tg_nickname VARCHAR(200) DEFAULT NULL,
+  status SMALLINT NOT NULL DEFAULT 1,
+  bind_trc_wallet_addr VARCHAR(200) DEFAULT NULL,
+  first_time TIMESTAMP DEFAULT NULL,
+  last_time TIMESTAMP DEFAULT NULL,
+  stop_time TIMESTAMP DEFAULT NULL,
+  cash_trx DECIMAL(16,6) NOT NULL DEFAULT '0.000000',
+  cash_usdt DECIMAL(16,6) NOT NULL DEFAULT '0.000000',
+  total_recharge_trx DECIMAL(16,6) NOT NULL DEFAULT '0.000000',
+  total_recharge_usdt DECIMAL(16,6) NOT NULL DEFAULT '0.000000',
+  max_monitor_wallet INTEGER NOT NULL DEFAULT 2,
+  PRIMARY KEY (rid),
+  UNIQUE (bot_rid,tg_uid)
+);
+
+--
+-- Dumping data for table t_telegram_bot_user
+--
+
+
+
+--
+-- Table structure for table t_transit_user_wallet
+--
+
+DROP TABLE IF EXISTS t_transit_user_wallet;
+CREATE TABLE IF NOT EXISTS t_transit_user_wallet (
+  rid SERIAL NOT NULL,
+  chain_type VARCHAR(10) NOT NULL,
+  wallet_addr VARCHAR(200) NOT NULL,
+  total_transit_usdt VARCHAR(200) NOT NULL DEFAULT 0,
+  total_transit_sxf VARCHAR(200) NOT NULL DEFAULT 0,
+  total_yuzhi_sxf VARCHAR(200) NOT NULL DEFAULT 0,
+  need_feedback_sxf VARCHAR(200) NOT NULL DEFAULT 0,
+  send_feedback_sxf VARCHAR(200) NOT NULL DEFAULT 0,
+  last_transit_time TIMESTAMP DEFAULT NULL,
+  last_yuzhi_time TIMESTAMP DEFAULT NULL,
+  PRIMARY KEY (rid),
+  UNIQUE (chain_type,wallet_addr)
+);
+
+--
+-- Dumping data for table t_transit_user_wallet
+--
+
+
+
+--
+-- Table structure for table t_transit_wallet
+--
+
+DROP TABLE IF EXISTS t_transit_wallet;
+CREATE TABLE IF NOT EXISTS t_transit_wallet (
+  rid SERIAL NOT NULL,
+  chain_type VARCHAR(10) NOT NULL,
+  receive_wallet VARCHAR(200) NOT NULL,
+  send_wallet VARCHAR(200) NOT NULL,
+  send_wallet_privatekey VARCHAR(2000) DEFAULT NULL,
+  show_notes VARCHAR(500) DEFAULT NULL,
+  status SMALLINT NOT NULL DEFAULT 1,
+  tg_notice_obj_receive VARCHAR(200) DEFAULT NULL,
+  tg_notice_obj_send VARCHAR(200) DEFAULT NULL,
+  get_tx_time TIMESTAMP DEFAULT NULL,
+  create_time TIMESTAMP DEFAULT NULL,
+  update_time TIMESTAMP DEFAULT NULL,
+  bot_rid INTEGER DEFAULT NULL,
+  auto_stock_min_trx INTEGER NOT NULL DEFAULT 0,
+  auto_stock_per_usdt INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (rid),
+  UNIQUE (chain_type,receive_wallet)
+);
+
+--
+-- Dumping data for table t_transit_wallet
+--
+
+
+
+--
+-- Table structure for table t_transit_wallet_black
+--
+
+DROP TABLE IF EXISTS t_transit_wallet_black;
+CREATE TABLE IF NOT EXISTS t_transit_wallet_black (
+  rid SERIAL NOT NULL,
+  chain_type VARCHAR(10) NOT NULL,
+  black_wallet VARCHAR(200) NOT NULL,
+  comments VARCHAR(255) DEFAULT NULL,
+  create_time TIMESTAMP DEFAULT NULL,
+  update_time TIMESTAMP DEFAULT NULL,
+  PRIMARY KEY (rid),
+  UNIQUE (chain_type,black_wallet)
+);
+
+--
+-- Dumping data for table t_transit_wallet_black
+--
+
+
+
+--
+-- Table structure for table t_transit_wallet_coin
+--
+
+DROP TABLE IF EXISTS t_transit_wallet_coin;
+CREATE TABLE IF NOT EXISTS t_transit_wallet_coin (
+  rid SERIAL NOT NULL,
+  transit_wallet_id INTEGER NOT NULL,
+  in_coin_name VARCHAR(20) NOT NULL,
+  out_coin_name VARCHAR(20) NOT NULL,
+  is_realtime_rate SMALLINT NOT NULL DEFAULT 1,
+  profit_rate DECIMAL(4,2) NOT NULL DEFAULT '1.00',
+  exchange_rate DECIMAL(8,2) NOT NULL DEFAULT '0.00',
+  kou_out_amount DECIMAL(8,2) NOT NULL DEFAULT '0.00',
+  min_transit_amount INTEGER NOT NULL,
+  max_transit_amount INTEGER NOT NULL,
+  comments VARCHAR(255) DEFAULT NULL,
+  create_by INTEGER DEFAULT NULL,
+  create_time TIMESTAMP DEFAULT NULL,
+  update_by INTEGER DEFAULT NULL,
+  update_time TIMESTAMP DEFAULT NULL,
+  PRIMARY KEY (rid),
+  UNIQUE (transit_wallet_id,in_coin_name)
+);
+
+--
+-- Dumping data for table t_transit_wallet_coin
+--
+
+
+
+--
+-- Table structure for table t_transit_wallet_trade_list
+--
+
+DROP TABLE IF EXISTS t_transit_wallet_trade_list;
+CREATE TABLE IF NOT EXISTS t_transit_wallet_trade_list (
+  rid SERIAL NOT NULL,
+  tx_hash VARCHAR(100) NOT NULL,
+  transferfrom_address VARCHAR(200) NOT NULL,
+  transferto_address VARCHAR(200) NOT NULL,
+  coin_name VARCHAR(20) NOT NULL,
+  amount VARCHAR(100) NOT NULL,
+  TIMESTAMP VARCHAR(20) NOT NULL,
+  process_status SMALLINT NOT NULL DEFAULT 0,
+  process_time TIMESTAMP DEFAULT NULL,
+  process_comments VARCHAR(255) DEFAULT NULL,
+  get_time TIMESTAMP DEFAULT NULL,
+  sendback_address VARCHAR(200) DEFAULT NULL,
+  sendback_amount VARCHAR(100) NOT NULL DEFAULT 0,
+  sendback_time TIMESTAMP DEFAULT NULL,
+  sendback_coin_name VARCHAR(20) DEFAULT NULL,
+  sendback_tx_hash VARCHAR(100) DEFAULT NULL,
+  sendback_contract_ret VARCHAR(20) DEFAULT NULL,
+  tg_notice_status_receive CHAR(1) NOT NULL DEFAULT 'N',
+  tg_notice_status_send CHAR(1) NOT NULL DEFAULT 'N',
+  current_exchange_rate DECIMAL(8,2) NOT NULL DEFAULT '0.00',
+  current_huan_yuzhi_amount DECIMAL(14,2) NOT NULL DEFAULT '0.00',
+  PRIMARY KEY (rid),
+  UNIQUE (tx_hash),
+  -- INDEX (transferfrom_address) -- PostgreSQL 需要单独创建索引,
+  -- INDEX (transferto_address) -- PostgreSQL 需要单独创建索引
+);
+
+--
+-- Dumping data for table t_transit_wallet_trade_list
+--
+
+
+
+--
+-- Dumping events for database 'trxswapbot'
+--
+
+--
+-- Dumping routines for database 'trxswapbot'
+--
+;
+;
+-- Dump completed on 2023-12-03  0:35:06
+
+ALTER TABLE t_energy_ai_trusteeship ADD max_buy_quantity INT NOT NULL DEFAULT 0 AFTER total_buy_quantity;
+ALTER TABLE t_energy_ai_trusteeship ADD back_comments VARCHAR(255) NULL AFTER comments;
+
+
+ALTER TABLE t_energy_platform_bot ADD is_open_bishu CHAR(1) NOT NULL DEFAULT 'Y' AFTER per_energy_day;
+
+
+ALTER TABLE t_energy_platform_bot ADD per_bishu_usdt_price DECIMAL(4,2) NOT NULL DEFAULT 0.5 AFTER is_open_bishu;
+
+ALTER TABLE t_energy_platform_bot ADD per_bishu_energy_quantity int NOT NULL DEFAULT 65000 AFTER per_bishu_usdt_price;
+
+ALTER TABLE t_energy_platform_bot ADD per_energy_day_bishu INT NULL DEFAULT 1 AFTER per_bishu_energy_quantity;
+
+
+
+drop table if exists t_energy_ai_bishu;
+
+/*==============================================================*/
+/* Table: t_energy_ai_bishu                                     */
+/*==============================================================*/
+CREATE TABLE IF NOT EXISTS t_energy_ai_bishu
+(
+   rid                  SERIAL NOT NULL,
+   bot_rid              INTEGER NOT NULL,
+   tg_uid               VARCHAR(100) DEFAULT NULL,
+   wallet_addr          VARCHAR(100) NOT NULL,
+   status               SMALLINT NOT NULL DEFAULT 0,
+   current_bandwidth_quantity BIGINT NOT NULL DEFAULT 0,
+   current_energy_quantity BIGINT NOT NULL DEFAULT 0,
+   is_buy               CHAR(1) NOT NULL DEFAULT 'N',
+   is_notice            CHAR(1) NOT NULL DEFAULT 'N',
+   is_notice_admin      CHAR(1) NOT NULL DEFAULT 'N',
+   total_buy_usdt       DECIMAL(14,2) NOT NULL DEFAULT 0,
+   max_buy_quantity     INTEGER NOT NULL DEFAULT 0,
+   total_buy_quantity   INTEGER NOT NULL DEFAULT 0,
+   total_buy_energy_quantity BIGINT NOT NULL DEFAULT 0,
+   last_buy_time        TIMESTAMP DEFAULT NULL,
+   comments             VARCHAR(3000) DEFAULT NULL,
+   back_comments        VARCHAR(200) DEFAULT NULL,
+   create_time          TIMESTAMP NOT NULL,
+   update_time          TIMESTAMP DEFAULT NULL,
+   energy_platform_rid  INTEGER DEFAULT NULL,
+   PRIMARY KEY (rid)
+);
+
+/*==============================================================*/
+/* Index: idx_energy_ai_bishu_2                                 */
+/*==============================================================*/
+create index idx_energy_ai_bishu_2 on t_energy_ai_bishu
+(
+   bot_rid
+);
+
+
+ALTER TABLE t_energy_platform_bot ADD bishu_recovery_type TINYINT NOT NULL DEFAULT 1 AFTER per_energy_day_bishu;
+
+ALTER TABLE t_energy_platform_bot ADD bishu_daili_type TINYINT NOT NULL DEFAULT 1 AFTER bishu_recovery_type;
+
+ALTER TABLE t_energy_ai_bishu ADD energy_platform_rid int NULL AFTER back_comments;
+
+ALTER TABLE t_monitor_wallet ADD monitor_usdt_transaction VARCHAR(5) NOT NULL DEFAULT 'YY' AFTER balance_amount;
+ALTER TABLE t_monitor_wallet ADD monitor_trx_transaction VARCHAR(5) NOT NULL DEFAULT 'YY' AFTER monitor_usdt_transaction;
+ALTER TABLE t_monitor_wallet ADD monitor_approve_transaction VARCHAR(5) NOT NULL DEFAULT 'YY' AFTER monitor_trx_transaction;
+ALTER TABLE t_monitor_wallet ADD monitor_multi_transaction VARCHAR(5) NOT NULL DEFAULT 'YY' AFTER monitor_approve_transaction;
+ALTER TABLE t_monitor_wallet ADD monitor_pledge_transaction VARCHAR(5) NOT NULL DEFAULT 'YY' AFTER monitor_multi_transaction;
+
+
+ALTER TABLE t_energy_platform_bot ADD ai_trusteeship_recovery_type TINYINT NOT NULL DEFAULT 1 AFTER per_energy_day;
+
+
+/*==============================================================*/
+/* Table: t_energy_third_part                                   */
+/*==============================================================*/
+CREATE TABLE IF NOT EXISTS t_energy_third_part
+(
+   rid                  SERIAL NOT NULL,
+   order_type           SMALLINT NOT NULL,
+   tg_uid               BIGINT NOT NULL,
+   platform_rid         INTEGER NOT NULL,
+   bot_rid              INTEGER NOT NULL,
+   cishu_energy         INTEGER NOT NULL,
+   wallet_addr          VARCHAR(50) NOT NULL,
+   before_trx           DECIMAL(16,6) NOT NULL,
+   change_trx           DECIMAL(16,6) NOT NULL,
+   after_trx            DECIMAL(16,6) NOT NULL,
+   order_time           TIMESTAMP NOT NULL,
+   process_status       SMALLINT NOT NULL DEFAULT 0,
+   process_time         TIMESTAMP DEFAULT NULL,
+   process_comments     VARCHAR(2000) DEFAULT NULL,
+   PRIMARY KEY (rid)
+)
+
+/*==============================================================*/
+/* Index: idx_energy_third_part_1                               */
+/*==============================================================*/
+create index idx_energy_third_part_1 on t_energy_third_part
+(
+   tg_uid
+);
+
+drop table if exists t_collection_wallet;
+
+/*==============================================================*/
+/* Table: t_collection_wallet                                   */
+/*==============================================================*/
+CREATE TABLE IF NOT EXISTS t_collection_wallet
+(
+   rid                  SERIAL NOT NULL,
+   bot_rid              INTEGER NOT NULL,
+   chain_type           VARCHAR(10) NOT NULL,
+   wallet_addr          VARCHAR(200) NOT NULL,
+   wallet_addr_privatekey VARCHAR(2000) DEFAULT NULL,
+   permission_id        SMALLINT NOT NULL DEFAULT 0,
+   status               SMALLINT NOT NULL DEFAULT 1,
+   tg_notice_obj        VARCHAR(200) DEFAULT NULL,
+   trx_balance          DECIMAL(18,6) DEFAULT 0,
+   usdt_balance         DECIMAL(18,6) DEFAULT 0,
+   trx_collection_amount DECIMAL(18,6) DEFAULT 0,
+   usdt_collection_amount DECIMAL(18,6) DEFAULT 0,
+   trx_reserve_amount   DECIMAL(18,6) DEFAULT 0,
+   usdt_reserve_amount  DECIMAL(18,6) DEFAULT 0,
+   collection_wallet_addr VARCHAR(200) DEFAULT NULL,
+   last_collection_time TIMESTAMP DEFAULT NULL,
+   create_time          TIMESTAMP NOT NULL,
+   update_time          TIMESTAMP DEFAULT NULL,
+   comments             VARCHAR(200) DEFAULT NULL,
+   collection_type      SMALLINT NOT NULL DEFAULT 0,
+   PRIMARY KEY (rid)
+);
+
+
+drop table if exists t_collection_wallet_list;
+
+/*==============================================================*/
+/* Table: t_collection_wallet_list                              */
+/*==============================================================*/
+CREATE TABLE IF NOT EXISTS t_collection_wallet_list
+(
+   rid                  SERIAL NOT NULL,
+   wallet_addr          VARCHAR(200) NOT NULL,
+   collection_wallet_addr VARCHAR(200) NOT NULL,
+   coin_name            VARCHAR(50) NOT NULL,
+   collection_amount    DECIMAL(18,6) NOT NULL,
+   collection_time      TIMESTAMP NOT NULL,
+   tx_hash              VARCHAR(200) DEFAULT NULL,
+   is_notice            CHAR(1) NOT NULL DEFAULT 'N',
+   PRIMARY KEY (rid)
+);
+
+/*==============================================================*/
+/* Index: idx_collection_wallet_list_2                          */
+/*==============================================================*/
+create index idx_collection_wallet_list_2 on t_collection_wallet_list
+(
+   collection_wallet_addr
+);
+
+drop table if exists t_admin_login_log;
+
+/*==============================================================*/
+/* Table: t_admin_login_log                                     */
+/*==============================================================*/
+CREATE TABLE IF NOT EXISTS t_admin_login_log
+(
+   rid                  SERIAL NOT NULL,
+   admin_name           VARCHAR(100) NOT NULL,
+   login_ip             VARCHAR(1000) DEFAULT NULL,
+   login_time           TIMESTAMP DEFAULT NULL,
+   PRIMARY KEY (rid)
+);
+
+drop table if exists t_energy_special;
+
+/*==============================================================*/
+/* Table: t_energy_special                                      */
+/*==============================================================*/
+CREATE TABLE IF NOT EXISTS t_energy_special
+(
+   rid                  SERIAL NOT NULL,
+   bot_rid              INTEGER DEFAULT NULL,
+   tg_uid               BIGINT DEFAULT NULL,
+   wallet_addr          VARCHAR(50) NOT NULL,
+   wallet_energy        BIGINT NOT NULL DEFAULT 0,
+   max_energy           BIGINT NOT NULL DEFAULT 0,
+   send_energy          BIGINT NOT NULL DEFAULT 0,
+   per_energy           INTEGER NOT NULL DEFAULT 0,
+   less_than_energy     INTEGER NOT NULL DEFAULT 0,
+   status               SMALLINT NOT NULL DEFAULT 0,
+   total_usdt_recharge  DECIMAL(14,2) NOT NULL DEFAULT 0,
+   total_trx_recharge   DECIMAL(14,2) NOT NULL DEFAULT 0,
+   seq_sn               INTEGER NOT NULL DEFAULT 0,
+   comments             VARCHAR(200) DEFAULT NULL,
+   PRIMARY KEY (rid)
+);
+
+alter table t_energy_special comment '特殊地址能量设置';
+
+/*==============================================================*/
+/* Index: idx_energy_special_1                                  */
+/*==============================================================*/
+create unique index idx_energy_special_1 on t_energy_special
+(
+   wallet_addr
+);
+
+drop table if exists t_energy_special_list;
+
+/*==============================================================*/
+/* Table: t_energy_special_list                                 */
+/*==============================================================*/
+CREATE TABLE IF NOT EXISTS t_energy_special_list
+(
+   rid                  SERIAL NOT NULL,
+   bot_rid              INTEGER DEFAULT NULL,
+   tg_uid               BIGINT DEFAULT NULL,
+   wallet_addr          VARCHAR(50) NOT NULL,
+   send_wallet_addr     VARCHAR(50) NOT NULL,
+   before_energy        BIGINT DEFAULT NULL,
+   daili_energy         INTEGER DEFAULT NULL,
+   daili_hash           VARCHAR(100) DEFAULT NULL,
+   daili_trx            DECIMAL(18,6) DEFAULT NULL,
+   status               SMALLINT NOT NULL DEFAULT 1,
+   daili_time           TIMESTAMP DEFAULT NULL,
+   huishou_time         TIMESTAMP DEFAULT NULL,
+   huishou_hash         VARCHAR(100) DEFAULT NULL,
+   PRIMARY KEY (rid)
+);
+
+alter table t_energy_special_list comment '特殊地址能量明细';
+
+/*==============================================================*/
+/* Index: idx_energy_special_list_1                             */
+/*==============================================================*/
+create index idx_energy_special_list_1 on t_energy_special_list
+(
+   wallet_addr
+);
+
+ALTER TABLE t_energy_platform_bot ADD agent_tg_uid BIGINT NULL AFTER update_time;
+ALTER TABLE t_energy_platform_bot ADD agent_per_price DECIMAL(18,6) NULL AFTER agent_tg_uid;
+ALTER TABLE t_energy_platform_package ADD agent_trx_price DECIMAL(14,2) NOT NULL DEFAULT 0 AFTER usdt_price;
+
+ALTER TABLE t_energy_ai_trusteeship ADD agent_tg_uid BIGINT NULL AFTER update_time;
+ALTER TABLE t_energy_platform_bot ADD bishu_stop_day INT NOT NULL DEFAULT 0 AFTER bishu_daili_type;
+ALTER TABLE t_energy_ai_bishu ADD bishu_stop_day INT NOT NULL DEFAULT 0;
+
+ALTER TABLE t_premium_platform_order ADD tg_notice_user CHAR(1) NOT NULL DEFAULT 'N' AFTER tx_hash;
+ALTER TABLE t_premium_platform_order ADD tg_notice_admin CHAR(1) NOT NULL DEFAULT 'N' AFTER tg_notice_user;
+
