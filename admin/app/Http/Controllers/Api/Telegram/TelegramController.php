@@ -16,6 +16,7 @@ use App\Models\Telegram\TelegramBotKeyreply;
 use App\Models\Telegram\TelegramBotKeyboard;
 use App\Models\Telegram\TelegramBotKeyreplyKeyboard;
 use App\Models\Telegram\TelegramBotUser;
+use App\Models\Telegram\TelegramBotCommand;
 use App\Models\Telegram\FmsRechargeOrder;
 use App\Models\Energy\EnergyPlatformPackage;
 use App\Models\Energy\EnergyPlatform;
@@ -56,6 +57,86 @@ class TelegramController extends Controller
                 $str);
     
         return $str;
+    }
+    
+    /**
+     * 用于关键词匹配：移除所有 emoji 和符号，只保留中文/字母/数字
+     * 解决 "❇️智能托管"、"🔠购买靓号" 等带 emoji 的关键词无法匹配数据库 "智能托管"、"购买靓号" 的问题
+     */
+    public function filterTextForKeywordMatch($str)
+    {
+        if (empty($str)) {
+            return $str;
+        }
+        // 1. 移除零宽字符（可能影响匹配）
+        $str = preg_replace('/[\x{200B}-\x{200D}\x{FEFF}\x{2060}]/u', '', $str);
+        // 2. 先移除 4 字节及以上的字符（大部分 emoji，如 🔠）
+        $str = preg_replace_callback('/./u', function (array $match) {
+            return strlen($match[0]) >= 4 ? '' : $match[0];
+        }, $str);
+        // 3. 移除常见符号和 emoji（3 字节）：变体选择符、杂项符号(含❇)、装饰符号等
+        $str = preg_replace('/[\x{FE00}-\x{FE0F}\x{2600}-\x{26FF}\x{2700}-\x{27BF}\x{2300}-\x{23FF}\x{2B50}\x{2728}\x{274C}\x{274E}\x{2705}\x{2747}]/u', '', $str);
+        return trim($str);
+    }
+    
+    /**
+     * 标准化 Telegram HTML 格式
+     * 确保所有 HTML 标签符合 Telegram HTML 规范
+     * 
+     * Telegram HTML 支持的标签格式说明：
+     * - 粗体：<b>文字内容</b> 或 <strong>文字内容</strong> （推荐使用 <b>）
+     * - 斜体：<i>文字内容</i> 或 <em>文字内容</em> （推荐使用 <i>）
+     * - 下划线：<u>文字内容</u> 或 <ins>文字内容</ins> （推荐使用 <u>）
+     * - 删除线：<s>文字内容</s> 或 <strike>文字内容</strike> 或 <del>文字内容</del> （推荐使用 <s>）
+     * - 遮挡码：<span class="tg-spoiler">文字内容</span> 或 <tg-spoiler>文字内容</tg-spoiler> （推荐使用 <tg-spoiler>）
+     * - 超链接：<a href="链接地址">文字内容</a>
+     * - TG用户链接：<a href="tg://user?id=123456789">文字内容</a>
+     * - 等宽(点击复制)：<code>文字内容</code>
+     * - 多行等宽(点击复制)：<pre>文字内容</pre>
+     * - 代码块(点击复制)：<pre><code class="language-python">文字内容</code></pre>
+     * 
+     * 注意事项：
+     * - 所有标签必须正确闭合
+     * - 标签可以嵌套（如 <b><i>文字</i></b> 是允许的）
+     * - 特殊字符在标签外需要转义：< 转义为 &lt;，> 转义为 &gt;，& 转义为 &amp;
+     * - 换行使用 \n，Telegram HTML 模式会自动处理换行
+     * 
+     * @param string $text 需要标准化的文本
+     * @return string 标准化后的文本
+     */
+    public function normalizeTelegramHtml($text)
+    {
+        if(empty($text)){
+            return $text;
+        }
+        
+        // 1. 将字面量的 \n（两个字符：反斜杠+n）转换为真正的换行符（一个字符）
+        // 数据库存储的 \n 可能是字面量字符串，需要转换
+        $text = str_replace('\\n', "\n", $text);
+        
+        // 2. 统一换行符：将 \r\n 和 \r 统一转换为 \n
+        // Telegram HTML 模式支持 \n 自动换行，不需要转换为 <br>
+        $text = str_replace(["\r\n", "\r"], "\n", $text);
+        
+        // 3. 标准化 HTML 标签：将不规范的标签转换为 Telegram 推荐格式
+        // <strong> -> <b>, <em> -> <i>, <ins> -> <u>, <strike>/<del> -> <s>
+        $text = preg_replace('/<strong\b([^>]*)>(.*?)<\/strong>/is', '<b$1>$2</b>', $text);
+        $text = preg_replace('/<em\b([^>]*)>(.*?)<\/em>/is', '<i$1>$2</i>', $text);
+        $text = preg_replace('/<ins\b([^>]*)>(.*?)<\/ins>/is', '<u$1>$2</u>', $text);
+        $text = preg_replace('/<strike\b([^>]*)>(.*?)<\/strike>/is', '<s$1>$2</s>', $text);
+        $text = preg_replace('/<del\b([^>]*)>(.*?)<\/del>/is', '<s$1>$2</s>', $text);
+        
+        // 4. 标准化遮挡码标签
+        $text = preg_replace('/<span\s+class=["\']tg-spoiler["\']\s*>(.*?)<\/span>/is', '<tg-spoiler>$1</tg-spoiler>', $text);
+        
+        // 5. 清理代码块中的 class 属性（Telegram 不支持 class 属性）
+        // <pre><code class="language-xxx"> -> <pre><code>
+        $text = preg_replace('/<code\s+class=["\'][^"\']*["\']\s*>/i', '<code>', $text);
+        
+        // 6. 确保所有标签正确闭合（Telegram 要求严格闭合）
+        // 代码中已经正确使用了 <b>, <code>, <u> 等标签，符合 Telegram HTML 规范
+        
+        return $text;
     }
      
     //机器人通知
@@ -457,16 +538,28 @@ class TelegramController extends Controller
                 
                 return '';
             }else{
-                $message = str_replace(["'","<",">","&","\\"],'',mb_substr($result['message']['text'],0,100));
+                // 保留原始消息用于关键词匹配，只截取长度
+                // 检查是否有文本消息
+                if(!isset($result['message']['text'])){
+                    return '';
+                }
+                $message = mb_substr($result['message']['text'],0,100);
                 $chatid = $result['message']['chat']['id'];
             }
             
-            //替换消息中的@机器人的字符串
-            $message = trim(str_replace('@'.$data->bot_username,'',$message));
-            $message = $this->filter_Emoji($message);
+            //替换消息中的@机器人的字符串（但保留 emoji 和特殊字符用于关键词匹配）
+            $messageForMatch = trim(str_replace('@'.$data->bot_username,'',$message));
+            // 保存原始消息用于匹配（不过滤 emoji，因为关键词可能包含 emoji）
+            $originalMessage = $messageForMatch;
+            // 清理后的消息用于其他处理（但保留空格和换行）
+            $cleanedMessage = str_replace(["'","<",">","&","\\"],'',$messageForMatch);
+            // 不过滤 emoji，因为关键词可能包含 emoji（如 ❇️智能托管）
+            $message = $cleanedMessage;
             
             #判断如果是/start命令,因为私聊机器人第一次发送的命令就是/start,则判断是否记录新成员
-            if($message == '/start'){
+            // 使用清理后的消息判断命令（命令不包含 emoji）
+            $commandMessage = $this->filter_Emoji($cleanedMessage);
+            if($commandMessage == '/start'){
                 //如果是机器人,不处理
                 if(isset($result['message']['chat']['type'])){
                     if($result['message']['chat']['type'] == 'private'){
@@ -486,6 +579,37 @@ class TelegramController extends Controller
                             'status' => 'member',
                         ];
                         $userreturn = $TelegramBotUserServices->userfollow($userpara);
+                        
+                        // 自动设置命令菜单（三条横杠按钮）
+                        try {
+                            $commandData = TelegramBotCommand::where('bot_rid', $bot_rid)->get();
+                            if($commandData->count() > 0){
+                                $commandsone = [];
+                                foreach ($commandData as $k => $v) {
+                                    if($v->chat_type == 1 || $v->chat_type == 0){ // 私聊或全部
+                                        $commandone = [];
+                                        $commandone['command'] = $v->command;
+                                        $commandone['description'] = $v->description;
+                                        $commandsone[] = $commandone;
+                                    }
+                                }
+                                if(!empty($commandsone)){
+                                    $encodedCommandsone = json_encode($commandsone);
+                                    $sendmessageurl = "https://api.telegram.org/bot". $data->bot_token ."/setMyCommands?commands=".urlencode($encodedCommandsone)."&scope=".urlencode('{"type":"all_private_chats"}');
+                                    $res = Get_Curl($sendmessageurl);
+                                    \Log::info('自动设置命令菜单', [
+                                        'bot_rid' => $bot_rid,
+                                        'commands_count' => count($commandsone),
+                                        'response' => $res,
+                                    ]);
+                                }
+                            }
+                        } catch (\Throwable $e) {
+                            \Log::warning('设置命令菜单失败', [
+                                'bot_rid' => $bot_rid,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
                     }
                 }
             }
@@ -2411,7 +2535,7 @@ class TelegramController extends Controller
                             ->where('a.callback_data', $message)
                             ->where('a.status',0)
                             ->where('b.status',0)
-                            ->select('a.rid','a.package_name','a.energy_amount','a.trx_price','a.show_notes','b.receive_wallet','b.is_open_ai_trusteeship','b.is_open_bishu')
+                            ->select('a.rid','a.package_name','a.energy_amount','a.trx_price','a.show_notes','b.receive_wallet','b.is_open_ai_trusteeship')
                             ->first();
                 
                 if(empty($packageData)){
@@ -5709,18 +5833,65 @@ class TelegramController extends Controller
             }  
             
             #判断消息和回复内容（PostgreSQL 兼容：使用 LIKE 匹配逗号分隔的关键字）
-            $escapedMessage = str_replace("'", "''", $message); // 转义单引号防止 SQL 注入
+            // 首先使用原始消息（包含 emoji）进行匹配
+            $escapedOriginalMessage = str_replace("'", "''", $originalMessage); // 转义单引号防止 SQL 注入
             $keyreply = TelegramBotKeyreply::where('bot_rid', $bot_rid)
                 ->where('status', 0)
-                ->whereRaw("(',' || monitor_word || ',' LIKE ?)", [",%,{$escapedMessage},%"])
+                ->whereRaw("(',' || monitor_word || ',' LIKE ?)", [",%,{$escapedOriginalMessage},%"])
                 ->first();
+            
+            // 如果第一次匹配失败，尝试使用清理后的消息（移除特殊字符）再次匹配
+            if(empty($keyreply) && isset($cleanedMessage) && $cleanedMessage != $originalMessage){
+                $escapedCleanedMessage = str_replace("'", "''", $cleanedMessage);
+                $keyreply = TelegramBotKeyreply::where('bot_rid', $bot_rid)
+                    ->where('status', 0)
+                    ->whereRaw("(',' || monitor_word || ',' LIKE ?)", [",%,{$escapedCleanedMessage},%"])
+                    ->first();
+            }
+            
+            // 如果还是失败，尝试使用过滤 emoji/符号 后的纯文本匹配（作为最后尝试）
+            // 解决 "💹闪兑TRX"、"❇️智能托管"、"🔠购买靓号" 等带 emoji 的关键词无法匹配的问题
+            if(empty($keyreply)){
+                $filteredMessage = $this->filterTextForKeywordMatch($originalMessage);
+                if(!empty($filteredMessage)){
+                    $escapedFilteredMessage = str_replace("'", "''", $filteredMessage);
+                    $keyreply = TelegramBotKeyreply::where('bot_rid', $bot_rid)
+                        ->where('status', 0)
+                        ->whereRaw("(',' || monitor_word || ',' LIKE ?)", [",%,{$escapedFilteredMessage},%"])
+                        ->orderBy('rid')
+                        ->first();
+                    // 若 SQL LIKE 仍失败（如编码差异），尝试 PHP 逐条匹配
+                    if(empty($keyreply)){
+                        $allKeyreplies = TelegramBotKeyreply::where('bot_rid', $bot_rid)->where('status', 0)->orderBy('rid')->get();
+                        foreach($allKeyreplies as $kr){
+                            $keywords = array_map('trim', explode(',', $kr->monitor_word ?? ''));
+                            if(in_array($filteredMessage, $keywords)){
+                                $keyreply = $kr;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
             
             \Log::info('Telegram 关键字匹配', [
                 'bot_rid' => $bot_rid,
-                'message' => $message,
+                'original_message' => $originalMessage ?? $message,
+                'cleaned_message' => $cleanedMessage ?? '',
+                'filtered_message' => $message ?? '',
                 'keyreply_found' => !empty($keyreply),
                 'keyreply_rid' => $keyreply->rid ?? null,
+                'keyreply_opt_type' => $keyreply->opt_type ?? null,
             ]);
+            
+            // 调试：记录关键词匹配详情
+            if(!empty($keyreply)){
+                \Log::info('关键词匹配成功', [
+                    'keyreply_rid' => $keyreply->rid,
+                    'opt_type' => $keyreply->opt_type,
+                    'reply_content_length' => strlen($keyreply->reply_content ?? ''),
+                ]);
+            }
 
         } catch (\Throwable $e) {
             llog($e);
@@ -5732,8 +5903,11 @@ class TelegramController extends Controller
         }
         
         //"1" => "回复消息(通用)", "2" => "回复ID", "3" => "回复消息(通用)+能量按钮", "4" => "回复消息(私聊)+会员按钮", "5" => "回复消息(私聊)+充值按钮", "6" => "回复消息(私聊)+监控按钮", "7" => "回复消息(私聊)+商品按钮", "8" => "回复消息(私聊)+个人中心"
-        if(in_array($keyreply->opt_type,[4,5,6,7,8])){
-            //该命令只能私聊机器人
+        // 说明：
+        // - opt_type 4（购买会员）允许在群里直接展示购买入口，提升转化，不再强制要求私聊
+        // - opt_type 5,6,7,8 仍然只能在私聊里使用，群里点击时提示私聊机器人
+        if(in_array($keyreply->opt_type,[5,6,7,8])){
+            //该命令只能私聊机器人（不包含 opt_type 4）
             if(mb_substr($chatid,0,1) == '-'){
                 //内联按钮
                 $keyboard = [
@@ -5760,10 +5934,18 @@ class TelegramController extends Controller
         
         //回复内容
         if(in_array($keyreply->opt_type,[1,3,4,5,6,7,8,9,10,11])){
-            $replytext = $keyreply->reply_content;
-            $replyphoto = $keyreply->reply_photo;
+            // opt_type 11 使用特殊处理，不使用数据库中的 reply_content，会在后面单独处理
+            if($keyreply->opt_type == 11){
+                // 跳过这里的处理，opt_type 11 会在后面单独处理
+                $replytext = '';
+                $replyphoto = '';
+            } else {
+                $replytext = $keyreply->reply_content;
+                $replyphoto = $keyreply->reply_photo;
+            }
             
-            if (strpos($replytext, 'trxusdtrate') !== false || strpos($replytext, 'trxusdtwallet') !== false || strpos($replytext, 'tgbotadmin') !== false || strpos($replytext, 'trxusdtshownotes') !== false || strpos($replytext, 'tgbotname') !== false || strpos($replytext, 'trx10usdtrate') !== false || strpos($replytext, 'trx100usdtrate') !== false || strpos($replytext, 'trx1000usdtrate') !== false) {
+            // 只有当 replytext 不为空时才处理变量替换
+            if(!empty($replytext) && (strpos($replytext, 'trxusdtrate') !== false || strpos($replytext, 'trxusdtwallet') !== false || strpos($replytext, 'tgbotadmin') !== false || strpos($replytext, 'trxusdtshownotes') !== false || strpos($replytext, 'tgbotname') !== false || strpos($replytext, 'trx10usdtrate') !== false || strpos($replytext, 'trx100usdtrate') !== false || strpos($replytext, 'trx1000usdtrate') !== false)) {
                 //替换变量
                 $walletcoin = TransitWalletCoin::from('t_transit_wallet_coin as a')
                             ->join('t_transit_wallet as b','a.transit_wallet_id','b.rid')
@@ -5799,10 +5981,21 @@ class TelegramController extends Controller
                     //替换结束
                 }
             }
+            
+            // 处理换行格式并标准化 HTML 格式
+            // Telegram HTML 模式支持 \n 自动换行，不需要转换为 <br>
+            // 统一换行符并确保 HTML 标签符合 Telegram HTML 规范
+            if(!empty($replytext)){
+                $replytext = $this->normalizeTelegramHtml($replytext);
+            }
             $keyboardList = [];
-
-            //回复内容时,查询关联键盘
-            if($keyreply->opt_type == 1){
+            
+            // opt_type 11 会在后面单独处理，这里跳过键盘处理
+            // opt_type 4,5,6,7,8 会在下面单独处理并 return
+            // 只有 opt_type 1,3,9,10 会到这里处理键盘
+            if($keyreply->opt_type != 11){
+                //回复内容时,查询关联键盘
+                if($keyreply->opt_type == 1){
                 #查询键盘,放入
                 $keyboardList = TelegramBotKeyreplyKeyboard::from('t_telegram_bot_keyreply_keyboard as a')
                             ->join('t_telegram_bot_keyboard as b','a.keyboard_rid','b.rid')
@@ -5823,7 +6016,7 @@ class TelegramController extends Controller
                                 })
                             ->where('b.bot_rid', $bot_rid)
                             ->where('b.status', 0)
-                            ->selectRaw('package_name as keyboard_name,2 as keyboard_type,2 as inline_type,callback_data as keyboard_value,is_open_ai_trusteeship,is_open_bishu')
+                            ->selectRaw('package_name as keyboard_name,2 as keyboard_type,2 as inline_type,callback_data as keyboard_value,is_open_ai_trusteeship')
                             ->orderBy('a.seq_sn','desc')
                             ->get();
             //回复消息(私聊)+会员按钮
@@ -5835,8 +6028,8 @@ class TelegramController extends Controller
                 }
                 setexRedis('buypremium'.$chatid,'one',900);
                 
-                #查询会员放入
-                $keyboardList = PremiumPlatformPackage::from('t_premium_platform_package as a')
+                #查询会员放入 - 使用 DB::table() 避免 Eloquent 模型字段访问问题
+                $keyboardList = DB::table('t_premium_platform_package as a')
                             ->join('t_premium_platform as b','a.premium_platform_rid','b.rid')
                             ->where('a.bot_rid', $bot_rid)
                             ->where('a.status', 0)
@@ -6295,9 +6488,17 @@ class TelegramController extends Controller
                 ]);
                 
                 return '';
+            }
+            } // 结束 if($keyreply->opt_type != 11)
+
+            // opt_type 11 (智能托管) 单独处理（在 if($keyreply->opt_type != 11) 块外）
+            if($keyreply->opt_type == 11){
+                \Log::info('处理 opt_type 11 (智能托管)', [
+                    'bot_rid' => $bot_rid,
+                    'chatid' => $chatid,
+                    'is_group' => mb_substr($chatid,0,1) == '-',
+                ]);
                 
-            //"回复消息(通用)+能量按钮(智能托管)"
-            }elseif($keyreply->opt_type == 11){
                 //群组不能使用
                 if(mb_substr($chatid,0,1) == '-'){
                     $replytext = "<b>能量智能托管说明</b>\n"
@@ -6358,7 +6559,6 @@ class TelegramController extends Controller
                                 ."<b>请保证余额充足,点击下方可充值余额！</b>";
                         }
                         
-                        
                         //内联按钮
                         $keyboard = [
                             'inline_keyboard' => [
@@ -6376,56 +6576,110 @@ class TelegramController extends Controller
                                 ]
                             ]
                         ];
-                        
                     }
                 }
+                
+                // 标准化 HTML 格式
+                if(!empty($replytext)){
+                    $replytext = $this->normalizeTelegramHtml($replytext);
+                }
+                
                 $encodedKeyboard = json_encode($keyboard);
                 
-                $response = $telegram->sendMessage([
-                    'chat_id' => $chatid, 
-                    'text' => $replytext, 
-                    'parse_mode' => 'HTML',
-                    'allow_sending_without_reply' => true,
-                    'reply_markup' => $encodedKeyboard
+                \Log::info('准备发送 opt_type 11 消息', [
+                    'replytext_length' => strlen($replytext),
+                    'has_keyboard' => !empty($keyboard),
                 ]);
+                
+                try {
+                    $response = $telegram->sendMessage([
+                        'chat_id' => $chatid, 
+                        'text' => $replytext, 
+                        'parse_mode' => 'HTML',
+                        'allow_sending_without_reply' => true,
+                        'reply_markup' => $encodedKeyboard
+                    ]);
+                    
+                    \Log::info('opt_type 11 消息发送成功', [
+                        'response_id' => $response->getMessageId() ?? null,
+                    ]);
+                } catch (\Throwable $e) {
+                    \Log::error('opt_type 11 消息发送失败', [
+                        'error' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
+                    ]);
+                }
                 
                 return '';
             }
 
+            // 对于 opt_type 1,3,4,9,10 等需要键盘的情况，继续处理
+            // opt_type 5,6,7,8 已经在前面处理并 return，不会到这里
+            // opt_type 4（购买会员）允许在群里使用，需要继续处理键盘和发送消息
+            if(in_array($keyreply->opt_type,[1,3,4,9,10]) && !empty($replytext)){
             $keyboard = [];
+            $replyKeyboard = []; // 快速回复键盘（ReplyKeyboard）
             
             //有键盘的时候显示
             if($keyboardList->count() > 0){
-                $keyboardone = [];
-                $keyboardtwo = [];
-                $keyboardthree = [];
-                $keyboard = [];
-                $s = 0;
+                $keyboardone = []; // 用于内联按钮的临时变量
+                $keyboard = []; // 内联按钮数组
+                $s = 0; // 内联按钮行索引
+                
+                // 获取第一个项的类型，用于判断是快速回复键盘还是内联按钮
+                $firstItem = !empty($keyboardList) ? (is_array($keyboardList[0]) ? $keyboardList[0] : (array)$keyboardList[0]) : [];
+                if(is_object($keyboardList[0]) && method_exists($keyboardList[0], 'toArray')){
+                    $firstItem = $keyboardList[0]->toArray();
+                }elseif(is_object($keyboardList[0]) && method_exists($keyboardList[0], 'getAttributes')){
+                    $firstItem = array_merge($keyboardList[0]->getAttributes(), $keyboardList[0]->getOriginal());
+                }
+                
+                // 判断键盘类型：1=快速回复键盘，2=内联按钮
+                $isReplyKeyboard = !empty($firstItem) && isset($firstItem['keyboard_type']) && $firstItem['keyboard_type'] == 1;
                 
                 foreach ($keyboardList as $k => $v) {
-                    //键盘
-                    if($v->keyboard_type == 1 && !empty($v->keyboard_name)){
-                        if(count($keyboardone) == 3){
-                            if(count($keyboardtwo) == 3){
-                                array_push($keyboardthree,$v->keyboard_name);
-                            }else{
-                                array_push($keyboardtwo,$v->keyboard_name);
-                            }
-                        }else{
-                            array_push($keyboardone,$v->keyboard_name);
+                    // 转换为数组格式（如果是对象）
+                    // 对于 Eloquent 模型，使用 toArray() 或 getAttributes() 来获取所有属性
+                    if(is_object($v) && method_exists($v, 'toArray')){
+                        $vArray = $v->toArray();
+                    }elseif(is_object($v) && method_exists($v, 'getAttributes')){
+                        $vArray = array_merge($v->getAttributes(), $v->getOriginal());
+                    }else{
+                        $vArray = is_array($v) ? $v : (array)$v;
+                    }
+                    
+                    // 如果还是获取不到，尝试直接访问属性
+                    if(empty($vArray['keyboard_name']) && is_object($v)){
+                        $vArray['keyboard_name'] = $v->keyboard_name ?? $v->package_name ?? null;
+                        $vArray['keyboard_type'] = $v->keyboard_type ?? null;
+                        $vArray['inline_type'] = $v->inline_type ?? null;
+                        $vArray['keyboard_value'] = $v->keyboard_value ?? $v->callback_data ?? null;
+                    }
+                    
+                    //键盘（快速回复键盘）- keyboard_type = 1
+                    if(isset($vArray['keyboard_type']) && $vArray['keyboard_type'] == 1 && !empty($vArray['keyboard_name'])){
+                        // 快速回复键盘：每行最多 3 个按钮，按顺序添加
+                        // 如果当前没有行，或者当前行已经有 3 个按钮，创建新行
+                        if(empty($replyKeyboard) || count($replyKeyboard[count($replyKeyboard) - 1]) >= 3){
+                            $replyKeyboard[] = [];
                         }
                         
-                    //内联按钮
-                    }elseif($v->keyboard_type == 2 && !empty($v->keyboard_name) && !empty($v->keyboard_value)){
+                        // 添加按钮到当前最后一行
+                        $currentRowIndex = count($replyKeyboard) - 1;
+                        $replyKeyboard[$currentRowIndex][] = $vArray['keyboard_name'];
+                        
+                    //内联按钮 - keyboard_type = 2
+                    }elseif(isset($vArray['keyboard_type']) && $vArray['keyboard_type'] == 2 && !empty($vArray['keyboard_name']) && !empty($vArray['keyboard_value'])){
                         //url
-                        if($v->inline_type == 1){
-                            $keyboardone['text'] = $v->keyboard_name;
-                            $keyboardone['url'] = $v->keyboard_value;
+                        if(isset($vArray['inline_type']) && $vArray['inline_type'] == 1){
+                            $keyboardone['text'] = $vArray['keyboard_name'];
+                            $keyboardone['url'] = $vArray['keyboard_value'];
                             
                         //回调
                         }else{
-                            $keyboardone['text'] = $v->keyboard_name;
-                            $keyboardone['callback_data'] = $v->keyboard_value;
+                            $keyboardone['text'] = $vArray['keyboard_name'];
+                            $keyboardone['callback_data'] = $vArray['keyboard_value'];
                         }
                         
                         if(!empty($keyboard)){
@@ -6439,67 +6693,93 @@ class TelegramController extends Controller
                     }
                 }
                 
-                //放入智能托管按钮
-                $isputaitrusteeship = 'N';
-                if(isset($keyboardList[0]['is_open_ai_trusteeship']) && $keyboardList[0]['is_open_ai_trusteeship'] == 'Y'){
-                    //如果是群聊,则放入机器人地址
-                    if(mb_substr($chatid,0,1) == '-'){
-                        //内联按钮
-                        $keyboardone['text'] = '❇️智能托管';
-                        $keyboardone['url'] = 'https://t.me/'.$data->bot_username;
-                    }else{
-                        //内联按钮
-                        $keyboardone['text'] = '❇️智能托管';
-                        $keyboardone['callback_data'] = 'aitrusteeship';
-                    }
-                    $s = $s == 0?0:($s + 1);
-                    $keyboard[$s][] = $keyboardone;
-                    $isputaitrusteeship = 'Y';
-                }
-                
-                if(isset($keyboardList[0]['is_open_bishu']) && $keyboardList[0]['is_open_bishu'] == 'Y'){
-                    //如果是群聊,则放入机器人地址
-                    // if(mb_substr($chatid,0,1) == '-'){
-                    //     //内联按钮
-                    //     $keyboardone['text'] = '🖌笔数套餐';
-                    //     $keyboardone['url'] = 'https://t.me/'.$data->bot_username;
-                    // }else{
-                        //内联按钮
-                        $keyboardone = [];
-                        $keyboardone['text'] = '🖌笔数套餐';
-                        $keyboardone['callback_data'] = 'energybishu';
-                    // }
-                    if($isputaitrusteeship == 'N'){
+                //放入智能托管按钮（仅对内联按钮有效）
+                if(!$isReplyKeyboard){
+                    $isputaitrusteeship = 'N';
+                    if(!empty($firstItem) && isset($firstItem['is_open_ai_trusteeship']) && $firstItem['is_open_ai_trusteeship'] == 'Y'){
+                        //如果是群聊,则放入机器人地址
+                        if(mb_substr($chatid,0,1) == '-'){
+                            //内联按钮
+                            $keyboardone['text'] = '❇️智能托管';
+                            $keyboardone['url'] = 'https://t.me/'.$data->bot_username;
+                        }else{
+                            //内联按钮
+                            $keyboardone['text'] = '❇️智能托管';
+                            $keyboardone['callback_data'] = 'aitrusteeship';
+                        }
                         $s = $s == 0?0:($s + 1);
+                        $keyboard[$s][] = $keyboardone;
+                        $isputaitrusteeship = 'Y';
                     }
                     
-                    $keyboard[$s][] = $keyboardone;
+                    // is_open_bishu 字段不存在，注释掉相关逻辑
+                    // if(isset($keyboardList[0]['is_open_bishu']) && $keyboardList[0]['is_open_bishu'] == 'Y'){
+                    if(false){ // 临时禁用，因为 is_open_bishu 字段不存在
+                        //如果是群聊,则放入机器人地址
+                        // if(mb_substr($chatid,0,1) == '-'){
+                        //     //内联按钮
+                        //     $keyboardone['text'] = '🖌笔数套餐';
+                        //     $keyboardone['url'] = 'https://t.me/'.$data->bot_username;
+                        // }else{
+                            //内联按钮
+                            $keyboardone = [];
+                            $keyboardone['text'] = '🖌笔数套餐';
+                            $keyboardone['callback_data'] = 'energybishu';
+                        // }
+                        if($isputaitrusteeship == 'N'){
+                            $s = $s == 0?0:($s + 1);
+                        }
+                        
+                        $keyboard[$s][] = $keyboardone;
+                    }
                 }
                 
-                //键盘
-                if($keyboardList[0]['keyboard_type'] == 1){
-                    array_push($keyboard,$keyboardone);
-                    array_push($keyboard,$keyboardtwo);
-                    array_push($keyboard,$keyboardthree);
-                    
+                //键盘（检查 $keyboardList 是否为空）
+                if($isReplyKeyboard && !empty($replyKeyboard)){
+                    // 快速回复键盘（ReplyKeyboard）- keyboard_type = 1
+                    // 构建键盘数组，每个子数组是一行按钮
                     $reply_markup = Keyboard::make([
-                        'keyboard' => $keyboard, 
+                        'keyboard' => $replyKeyboard, 
                         'resize_keyboard' => true, 
                         'one_time_keyboard' => false,
                         'selective' => true
-                    ]); 
+                    ]);
+                    // 调试：记录快速回复键盘构建
+                    \Log::info('构建快速回复键盘', [
+                        'opt_type' => $keyreply->opt_type ?? null,
+                        'keyboard_rows' => count($replyKeyboard),
+                        'keyboard' => $replyKeyboard,
+                    ]);
                 //内联按钮
-                }else{
+                }elseif(!empty($keyboard)){
+                    // 有内联按钮
                     $reply_markup = [
                         'inline_keyboard' => $keyboard
                     ];
                     $reply_markup = json_encode($reply_markup);
+                    // 调试：记录内联按钮构建
+                    \Log::info('构建内联按钮', [
+                        'opt_type' => $keyreply->opt_type ?? null,
+                        'keyboard_count' => count($keyboard),
+                        'keyboard' => $keyboard,
+                    ]);
+                }else{
+                    // 没有键盘，不设置 reply_markup（让 Telegram 使用默认键盘）
+                    $reply_markup = null;
+                    // 调试：记录为什么没有键盘
+                    \Log::info('未构建键盘', [
+                        'opt_type' => $keyreply->opt_type ?? null,
+                        'keyboard_empty' => empty($keyboard),
+                        'replyKeyboard_empty' => empty($replyKeyboard),
+                        'keyboardList_count' => $keyboardList->count() ?? 0,
+                        'firstItem_keyboard_type' => $firstItem['keyboard_type'] ?? null,
+                    ]);
                 }
                 
             //没有键盘
             }else{
-                //键盘保持不变
-                $reply_markup = Keyboard::forceReply(['force_reply'=>false,'input_field_placeholder'=>""]);
+                // 没有键盘，不设置 reply_markup（让 Telegram 使用默认键盘）
+                $reply_markup = null;
                 //键盘清空
                 // $reply_markup = $telegram->replyKeyboardHide([
                 //     'keyboard' => $keyboard, 
@@ -6510,54 +6790,68 @@ class TelegramController extends Controller
             
             #异常处理
             try {
+                // 调试：记录发送前的状态
+                \Log::info('准备发送消息', [
+                    'opt_type' => $keyreply->opt_type ?? null,
+                    'replytext_empty' => empty($replytext),
+                    'replytext_length' => strlen($replytext ?? ''),
+                    'replyphoto_empty' => empty($replyphoto),
+                    'has_reply_markup' => $reply_markup !== null,
+                    'keyboard_count' => !empty($keyboardList) ? $keyboardList->count() : 0,
+                ]);
+                
+                // 构建发送参数
+                $sendParams = [
+                    'chat_id' => $chatid, 
+                    'parse_mode' => 'HTML',
+                    'allow_sending_without_reply' => true,
+                ];
+                
+                // 如果有 reply_markup，添加到参数中
+                if($reply_markup !== null){
+                    $sendParams['reply_markup'] = $reply_markup;
+                }
+                
                 if($inlinecall == 'Y'){
                     #发送图片
                     if(!empty($replyphoto)){
-                        $response = $telegram->sendPhoto([
-                            'chat_id' => $chatid, 
-                            'photo' => InputFile::create($replyphoto, 'demo'),
-                            'caption' => $replytext, 
-                            'parse_mode' => 'HTML',
-                            'allow_sending_without_reply' => true,
-                            'reply_markup' => $reply_markup
-                        ]);
+                        $sendParams['photo'] = InputFile::create($replyphoto, 'demo');
+                        $sendParams['caption'] = $replytext;
+                        $response = $telegram->sendPhoto($sendParams);
                     }else{
-                        $response = $telegram->sendMessage([
-                            'chat_id' => $chatid, 
-                            'text' => $replytext, 
-                            'parse_mode' => 'HTML',
-                            'allow_sending_without_reply' => true,
-                            'reply_markup' => $reply_markup
-                        ]);
+                        $sendParams['text'] = $replytext;
+                        $response = $telegram->sendMessage($sendParams);
                     }
                     
                 }else{
                     #发送图片
                     if(!empty($replyphoto)){
-                        $response = $telegram->sendPhoto([
-                            'chat_id' => $chatid, 
-                            'photo' => InputFile::create($replyphoto, 'demo'),
-                            'caption' => $replytext, 
-                            'reply_to_message_id' => $result['message']['message_id'],
-                            'parse_mode' => 'HTML',
-                            'allow_sending_without_reply' => true,
-                            'reply_markup' => $reply_markup
-                        ]);
+                        $sendParams['photo'] = InputFile::create($replyphoto, 'demo');
+                        $sendParams['caption'] = $replytext;
+                        $sendParams['reply_to_message_id'] = $result['message']['message_id'];
+                        $response = $telegram->sendPhoto($sendParams);
                     }else{
-                        $response = $telegram->sendMessage([
-                            'chat_id' => $chatid, 
-                            'text' => $replytext, 
-                            'reply_to_message_id' => $result['message']['message_id'],
-                            'parse_mode' => 'HTML',
-                            'allow_sending_without_reply' => true,
-                            'reply_markup' => $reply_markup
-                        ]);
+                        $sendParams['text'] = $replytext;
+                        $sendParams['reply_to_message_id'] = $result['message']['message_id'];
+                        $response = $telegram->sendMessage($sendParams);
                     }
                 }
                 
+                // 调试：记录发送结果
+                \Log::info('消息发送完成', [
+                    'response_id' => $response->getMessageId() ?? null,
+                    'success' => !empty($response),
+                ]);
+                
             } catch (\Throwable $e) {
+                \Log::error('发送消息失败', [
+                    'error' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                ]);
                 return '';
             }
+            } // 结束 if(in_array($keyreply->opt_type,[1,3,9,10]) && !empty($replytext))
         
         //查ID
         }elseif($keyreply->opt_type == 2){

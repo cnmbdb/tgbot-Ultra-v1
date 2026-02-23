@@ -19,7 +19,7 @@ class PollTelegramMessages
     public function execute()
     {
         // 添加执行时间限制，避免任务卡住导致被跳过
-        set_time_limit(4); // 4秒超时，确保在5秒间隔内完成
+        set_time_limit(3); // 3秒超时，确保在3秒间隔内完成
         
         try {
             // 使用 error_log 直接输出，确保能看到日志
@@ -66,7 +66,7 @@ class PollTelegramMessages
                     
                     $updates = $telegram->getUpdates([
                         'offset' => $lastUpdateId + 1,
-                        'timeout' => 1, // 1秒超时，避免阻塞
+                        'timeout' => 1, // 1秒超时，平衡响应速度和避免冲突
                         'limit' => 100
                     ]);
                     
@@ -181,8 +181,8 @@ class PollTelegramMessages
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($requestData));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 3); // 减少总超时时间，提升响应速度
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 1); // 减少连接超时时间
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
                 'Content-Type: application/json',
             ]);
