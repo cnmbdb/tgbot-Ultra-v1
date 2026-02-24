@@ -61,18 +61,34 @@ class EnergyPlatformController extends Controller
     //添加
     public function add(Request $request)
     {
-        $res = EnergyPlatform::create([
-            'poll_group' => $request->poll_group,
-            'platform_name' => $request->platform_name,
-            'platform_uid' => $request->platform_uid,
-            'alert_platform_balance' => $request->alert_platform_balance ?? 0,
-            'tg_notice_obj' => $request->tg_notice_obj ?? '',
-            'tg_notice_bot_rid' => $request->tg_notice_bot_rid ?? '',
-            'seq_sn' => $request->seq_sn ?? 0,
-            'comments' => $request->comments ?? '',
-            'create_time' => nowDate()
-        ]);
-        return $res ? $this->responseData(200, '添加成功') : $this->responseData(400, '添加失败');
+        DB::beginTransaction();
+        try {
+            $data = [
+                'poll_group' => $request->poll_group,
+                'platform_name' => $request->platform_name,
+                'platform_uid' => $request->platform_uid,
+                'alert_platform_balance' => $request->alert_platform_balance ?? 0,
+                'tg_notice_obj' => $request->tg_notice_obj ?? '',
+                'tg_notice_bot_rid' => $request->tg_notice_bot_rid ?? '',
+                'seq_sn' => $request->seq_sn ?? 0,
+                'comments' => $request->comments ?? '',
+                'create_time' => nowDate()
+            ];
+            
+            // 如果提供了 platform_apikey，需要加密保存（NL-API 平台需要）
+            if(!empty($request->platform_apikey)){
+                $rsa_services = new RsaServices();
+                $data['platform_apikey'] = $rsa_services->publicEncrypt($request->platform_apikey);
+                $data['permission_id'] = $request->permission_id ?? 0;
+            }
+            
+            $res = EnergyPlatform::create($data);
+            DB::commit();
+            return $res ? $this->responseData(200, '添加成功') : $this->responseData(400, '添加失败');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->responseData(400, '添加失败：'.$e->getMessage());
+        }
     }
     
     //删除

@@ -28,11 +28,13 @@
                                 'poll_group':['轮询组','select',[PollGroup],''],
                                 'platform_name':['能量平台','select',[PlatformName],''],
                                 'platform_uid':['平台用户UID','text',''],
+                                'platform_apikey':['平台用户apikey','text','','NL-API平台填写API密码，其他平台见说明'],
+                                'permission_id':['签名权限ID','text','0','仅自己质押代理需要'],
                                 'alert_platform_balance':['余额预警值','text','','0表示不预警'],
                                 'tg_notice_bot_rid':['TG通知机器人','select',[botData],''],
                                 'tg_notice_obj':['TG通知对象','text','','多个用英文逗号隔开'],
                                 'seq_sn':['轮询排序','text','0',''],
-                                'comments':['备注','textarea','','']
+                                'comments':['备注','textarea','','NL-API平台可填写：nl_api_url=https://tgnl-home.hfz.pw']
                                 },
                                 '{{route("admin.energy.platform.add")}}',get_online_data)">添加能量平台
                     </button>
@@ -44,10 +46,11 @@
                     3. <b>第三个(自己质押代理)</b>：添加之前，需要先前往<a href="https://www.tronlink.org/" target="_blank">TronLink钱包</a>质押能量。添加时，平台用户UID填写为质押的钱包地址，平台用户apikey填写为质押的钱包私钥。如果能量地址多签了，则需要修改签名权限ID，不然签名不成功<p>
                     4. <b>平台已关闭：</b>第四个能量平台(trongas.io)：添加之前，需要先前往 <a href="https://trongas.io/home" target="_blank">https://trongas.io/home</a> 注册用户，平台用户UID填写为用户账号，平台用户apikey填写为用户密码。使用前需要先给平台账号充值<p>
                     5. <b>平台已关闭：</b>第五个能量平台(机器人开发代理)：使用开发者的能量，平台用户UID填写TG用户的ID即可，同时需要关注开发者的机器人。该模式的能量价格详情咨询开发者(仅有笔数模式和1小时闪租65000和131000能量，注意笔数代理模式只能选自动)！<p>
-                    6. 第4个能量平台(Sohu搜狐)：添加之前，需要先前往 <a href="https://t.me/sohu" target="_blank">https://t.me/sohu</a> ，联系搜狐客服开通账号，并把服务器IP发送给客服添加白名单，否则无法请求。添加时，平台用户UID可随意填写一个自己的标识，平台用户apikey填写为api令牌。<p>
-                    7. 使用之前需要先往平台充值trx余额或者自己质押，仅 <b>TG管理员用户ID</b> 对应的用户才可使用能量相关命令，命令见主页<p>
-                    8. 平台用户余额每5秒更新一次，余额低于预警值时发送tg消息告警(10分钟告警一次)，当平台选择为自己质押代理时，平台用户余额表示自己地址剩余的可用能量数量<p>
-                    9. 轮询排序：数值越大，优先级越高。平台用户余额大于0的时候，才会轮询。如果是自己质押，则平台用户余额需要大于质押能量数量
+                    6. 第6个能量平台(Sohu搜狐)：添加之前，需要先前往 <a href="https://t.me/sohu" target="_blank">https://t.me/sohu</a> ，联系搜狐客服开通账号，并把服务器IP发送给客服添加白名单，否则无法请求。添加时，平台用户UID可随意填写一个自己的标识，平台用户apikey填写为api令牌。<p>
+                    7. <b>第7个能量平台(NL-API)</b>：连接tgnl-home能量池系统。添加时，平台用户UID填写为tgnl-home生成的API用户名，平台用户apikey填写为tgnl-home生成的API密码。备注可填写：nl_api_url=https://tgnl-home.hfz.pw（可选，默认使用环境变量配置）<p>
+                    8. 使用之前需要先往平台充值trx余额或者自己质押，仅 <b>TG管理员用户ID</b> 对应的用户才可使用能量相关命令，命令见主页<p>
+                    9. 平台用户余额每5秒更新一次，余额低于预警值时发送tg消息告警(10分钟告警一次)，当平台选择为自己质押代理时，平台用户余额表示自己地址剩余的可用能量数量<p>
+                    10. 轮询排序：数值越大，优先级越高。平台用户余额大于0的时候，才会轮询。如果是自己质押，则平台用户余额需要大于质押能量数量
                 </div>
 
                 <div class="project-list">
