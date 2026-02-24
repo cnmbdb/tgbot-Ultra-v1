@@ -504,7 +504,10 @@ CREATE TABLE public.t_energy_platform_bot (
     trx_price_energy_65000 integer,
     per_energy_day integer,
     create_time timestamp without time zone NOT NULL,
-    update_time timestamp without time zone
+    update_time timestamp without time zone,
+    agent_tg_uid bigint,
+    agent_per_price numeric(18,6),
+    bishu_stop_day integer DEFAULT 0 NOT NULL
 );
 
 
@@ -3078,7 +3081,7 @@ SELECT pg_catalog.setval('public.t_energy_ai_trusteeship_rid_seq', 1, false);
 -- Name: t_energy_platform_bot_rid_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.t_energy_platform_bot_rid_seq', 1, false);
+SELECT pg_catalog.setval('public.t_energy_platform_bot_rid_seq', 3, true);
 
 
 --
