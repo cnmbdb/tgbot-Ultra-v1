@@ -338,6 +338,80 @@ class GetEnergyPlatformBalance
                             }
                         }
                     }
+                    
+                    //NL-API平台（tgnl-home能量池系统）
+                    elseif($v['platform_name'] == 7){
+                        // 获取tgnl-home域名，优先从环境变量，其次从comments字段
+                        $nlApiBaseUrl = env('NL_API_BASE_URL', 'https://tgnl-home.hfz.pw');
+                        if(empty($nlApiBaseUrl) && !empty($v['comments'])){
+                            // 尝试从comments中解析域名（格式：nl_api_url=https://xxx.com）
+                            if(preg_match('/nl_api_url=([^\s]+)/i', $v['comments'], $matches)){
+                                $nlApiBaseUrl = trim($matches[1]);
+                            }
+                        }
+                        
+                        if(empty($nlApiBaseUrl)){
+                            $this->log('energyplatformbalance',$v['rid'].'NL-API域名未配置');
+                            continue;
+                        }
+                        
+                        // platform_uid 作为 API username
+                        $apiUsername = $v['platform_uid'];
+                        // platform_apikey 解密后作为 API password
+                        $apiPassword = $rsa_services->privateDecrypt($v['platform_apikey']);
+                        
+                        if(empty($apiUsername) || empty($apiPassword)){
+                            $this->log('energyplatformbalance',$v['rid'].'NL-API账户或密码未配置');
+                            continue;
+                        }
+                        
+                        // 调用 /v1/get_api_user_info 获取余额
+                        $balance_url = rtrim($nlApiBaseUrl, '/') . '/v1/get_api_user_info?username=' . urlencode($apiUsername) . '&password=' . urlencode($apiPassword);
+                        $res = Get_Pay($balance_url);
+                        
+                        if(empty($res)){
+                            $this->log('energyplatformbalance',$v['rid'].'NL-API平台请求失败');
+                        }else{
+                            $res = json_decode($res,true);
+                            // 检查是否有错误
+                            if(isset($res['error'])){
+                                $this->log('energyplatformbalance',$v['rid'].'NL-API平台请求失败:'.$res['error']);
+                            }elseif(isset($res['当前余额(TRX)'])){
+                                // 成功获取余额
+                                $balance = floatval($res['当前余额(TRX)']);
+                                $balance = $balance <= 0 ?0:$balance;
+                                
+                                $updatedata7['platform_balance'] = $balance;
+                                
+                                //间隔10分钟通知一次
+                                if($balance <= $v['alert_platform_balance'] && $v['alert_platform_balance'] > 0 && strtotime($v['last_alert_time']) + 600 <= strtotime(nowDate())){
+                                    $updatedata7['last_alert_time'] = nowDate();
+                                    
+                                    //余额通知管理员
+                                    if($v['tg_notice_obj'] && !empty($v['tg_notice_obj'])){
+                                        $replytext = "能量平台(NL-API)，余额不足，请立即前往能量池系统充值！\n"
+                                                    ."能量平台ID：".$v['rid']."\n"
+                                                    ."API用户名：".$apiUsername."\n"
+                                                    ."当前余额：".$balance." TRX\n"
+                                                    ."告警金额：".$v['alert_platform_balance']." TRX\n\n"
+                                                    ."不处理会一直告警通知！间隔10分钟告警一次";
+                                                    
+                                        $sendlist = explode(',',$v['tg_notice_obj']);
+                        
+                                        foreach ($sendlist as $x => $y) {
+                                            $sendmessageurl = 'https://api.telegram.org/bot'.$v['bot_token'].'/sendMessage?chat_id='.$y.'&text='.urlencode($replytext).'&parse_mode=HTML';
+                                            
+                                            Get_Pay($sendmessageurl);
+                                        }
+                                    }
+                                }
+                                
+                                EnergyPlatform::where('rid',$v['rid'])->update($updatedata7);
+                            }else{
+                                $this->log('energyplatformbalance',$v['rid'].'NL-API平台请求失败2:'.json_encode($res));
+                            }
+                        }
+                    }
                 }
             }
             

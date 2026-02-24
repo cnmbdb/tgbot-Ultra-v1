@@ -12,7 +12,7 @@ use App\Http\Services\RsaServices;
 
 class EnergyPlatformController extends Controller
 {
-    public $PlatformName = ['1' => 'Neee.cc','2' => 'RentEnergysBot','3' => '自己质押代理','4' => 'trongas.io(平台已关闭)','5' => '机器人开发代理(平台已关闭)','6' => 'Sohu搜狐'];
+    public $PlatformName = ['1' => 'Neee.cc','2' => 'RentEnergysBot','3' => '自己质押代理','4' => 'trongas.io(平台已关闭)','5' => '机器人开发代理(平台已关闭)','6' => 'Sohu搜狐','7' => 'NL-API'];
     public $Status = ['开启','关闭'];
     public $PollGroup = ['A' => 'A组','B' => 'B组','C' => 'C组','D' => 'D组','E' => 'E组','F' => 'F组','G' => 'G组'];
     

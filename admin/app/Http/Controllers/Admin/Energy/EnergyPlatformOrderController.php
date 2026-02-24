@@ -14,7 +14,7 @@ use App\Http\Services\RsaServices;
 class EnergyPlatformOrderController extends Controller
 {
     public $EnergyDay = ['0' => '1小时','1' => '1天','3' => '3天','30' => '30天'];
-    public $PlatformName = ['1' => 'Neee.cc','2' => 'RentEnergysBot','3' => '自己质押代理','4' => 'trongas.io','5' => '机器人开发代理'];
+    public $PlatformName = ['1' => 'Neee.cc','2' => 'RentEnergysBot','3' => '自己质押代理','4' => 'trongas.io','5' => '机器人开发代理','7' => 'NL-API'];
     public $SourceType = ['1' => '人工下单','2' => '自动下单','3' => '智能托管', '4' => '笔数套餐'];
     public $RecoveryStatus = ['1' => '不用回收','2' => '待回收','3' => '已回收'];
     
