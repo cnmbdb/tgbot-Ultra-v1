@@ -63,23 +63,53 @@ class EnergyPlatformController extends Controller
     {
         DB::beginTransaction();
         try {
+            // 处理 poll_group（character 类型，固定长度）
+            $poll_group = !empty($request->poll_group) ? substr(trim($request->poll_group), 0, 1) : 'A';
+            
+            // 处理 platform_name（smallint 类型）
+            $platform_name = !empty($request->platform_name) ? intval($request->platform_name) : 1;
+            
+            // 处理 platform_uid（可以为空）
+            $platform_uid = !empty($request->platform_uid) ? trim($request->platform_uid) : null;
+            
+            // 处理 alert_platform_balance（numeric 类型，不能为空）
+            $alert_platform_balance = (isset($request->alert_platform_balance) && $request->alert_platform_balance !== '' && $request->alert_platform_balance !== null) 
+                ? floatval($request->alert_platform_balance) 
+                : 0;
+            
+            // 处理 seq_sn（integer 类型，不能为空）
+            $seq_sn = (isset($request->seq_sn) && $request->seq_sn !== '' && $request->seq_sn !== null) 
+                ? intval($request->seq_sn) 
+                : 0;
+            
+            // 处理 tg_notice_bot_rid（integer 类型，可以为空）
+            $tg_notice_bot_rid = (isset($request->tg_notice_bot_rid) && $request->tg_notice_bot_rid !== '' && $request->tg_notice_bot_rid !== null) 
+                ? intval($request->tg_notice_bot_rid) 
+                : null;
+            
             $data = [
-                'poll_group' => $request->poll_group,
-                'platform_name' => $request->platform_name,
-                'platform_uid' => $request->platform_uid,
-                'alert_platform_balance' => $request->alert_platform_balance ?? 0,
+                'poll_group' => $poll_group,
+                'platform_name' => $platform_name,
+                'platform_uid' => $platform_uid,
+                'alert_platform_balance' => $alert_platform_balance,
                 'tg_notice_obj' => $request->tg_notice_obj ?? '',
-                'tg_notice_bot_rid' => $request->tg_notice_bot_rid ?? '',
-                'seq_sn' => $request->seq_sn ?? 0,
+                'tg_notice_bot_rid' => $tg_notice_bot_rid,
+                'seq_sn' => $seq_sn,
                 'comments' => $request->comments ?? '',
                 'create_time' => nowDate()
             ];
             
             // 如果提供了 platform_apikey，需要加密保存（NL-API 平台需要）
             if(!empty($request->platform_apikey)){
-                $rsa_services = new RsaServices();
-                $data['platform_apikey'] = $rsa_services->publicEncrypt($request->platform_apikey);
-                $data['permission_id'] = $request->permission_id ?? 0;
+                try {
+                    $rsa_services = new RsaServices();
+                    $data['platform_apikey'] = $rsa_services->publicEncrypt($request->platform_apikey);
+                    $data['permission_id'] = $request->permission_id ?? 0;
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    \Log::error('RSA加密失败: '.$e->getMessage());
+                    return $this->responseData(400, 'API密钥加密失败：'.$e->getMessage());
+                }
             }
             
             $res = EnergyPlatform::create($data);
@@ -87,6 +117,7 @@ class EnergyPlatformController extends Controller
             return $res ? $this->responseData(200, '添加成功') : $this->responseData(400, '添加失败');
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('添加能量平台失败: '.$e->getMessage().' | 堆栈: '.$e->getTraceAsString());
             return $this->responseData(400, '添加失败：'.$e->getMessage());
         }
     }

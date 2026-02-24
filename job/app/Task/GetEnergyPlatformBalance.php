@@ -370,45 +370,61 @@ class GetEnergyPlatformBalance
                         $res = Get_Pay($balance_url);
                         
                         if(empty($res)){
-                            $this->log('energyplatformbalance',$v['rid'].'NL-API平台请求失败');
+                            $this->log('energyplatformbalance',$v['rid'].'NL-API平台请求失败:返回为空');
                         }else{
                             $res = json_decode($res,true);
                             // 检查是否有错误
                             if(isset($res['error'])){
                                 $this->log('energyplatformbalance',$v['rid'].'NL-API平台请求失败:'.$res['error']);
-                            }elseif(isset($res['当前余额(TRX)'])){
-                                // 成功获取余额
-                                $balance = floatval($res['当前余额(TRX)']);
-                                $balance = $balance <= 0 ?0:$balance;
-                                
-                                $updatedata7['platform_balance'] = $balance;
-                                
-                                //间隔10分钟通知一次
-                                if($balance <= $v['alert_platform_balance'] && $v['alert_platform_balance'] > 0 && strtotime($v['last_alert_time']) + 600 <= strtotime(nowDate())){
-                                    $updatedata7['last_alert_time'] = nowDate();
-                                    
-                                    //余额通知管理员
-                                    if($v['tg_notice_obj'] && !empty($v['tg_notice_obj'])){
-                                        $replytext = "能量平台(NL-API)，余额不足，请立即前往能量池系统充值！\n"
-                                                    ."能量平台ID：".$v['rid']."\n"
-                                                    ."API用户名：".$apiUsername."\n"
-                                                    ."当前余额：".$balance." TRX\n"
-                                                    ."告警金额：".$v['alert_platform_balance']." TRX\n\n"
-                                                    ."不处理会一直告警通知！间隔10分钟告警一次";
-                                                    
-                                        $sendlist = explode(',',$v['tg_notice_obj']);
-                        
-                                        foreach ($sendlist as $x => $y) {
-                                            $sendmessageurl = 'https://api.telegram.org/bot'.$v['bot_token'].'/sendMessage?chat_id='.$y.'&text='.urlencode($replytext).'&parse_mode=HTML';
-                                            
-                                            Get_Pay($sendmessageurl);
-                                        }
-                                    }
+                            }else{
+                                // 尝试多种可能的余额字段名
+                                $balance = 0;
+                                if(isset($res['当前余额(TRX)'])){
+                                    $balance = floatval($res['当前余额(TRX)']);
+                                }elseif(isset($res['当前余额 (TRX)'])){
+                                    $balance = floatval($res['当前余额 (TRX)']);
+                                }elseif(isset($res['余额'])){
+                                    $balance = floatval($res['余额']);
+                                }elseif(isset($res['balance'])){
+                                    $balance = floatval($res['balance']);
+                                }elseif(isset($res['trx_balance'])){
+                                    $balance = floatval($res['trx_balance']);
                                 }
                                 
-                                EnergyPlatform::where('rid',$v['rid'])->update($updatedata7);
-                            }else{
-                                $this->log('energyplatformbalance',$v['rid'].'NL-API平台请求失败2:'.json_encode($res));
+                                if($balance > 0){
+                                    $balance = $balance <= 0 ?0:$balance;
+                                    
+                                    $updatedata7['platform_balance'] = $balance;
+                                    
+                                    //间隔10分钟通知一次
+                                    if($balance <= $v['alert_platform_balance'] && $v['alert_platform_balance'] > 0 && strtotime($v['last_alert_time']) + 600 <= strtotime(nowDate())){
+                                        $updatedata7['last_alert_time'] = nowDate();
+                                        
+                                        //余额通知管理员
+                                        if($v['tg_notice_obj'] && !empty($v['tg_notice_obj'])){
+                                            $replytext = "能量平台(NL-API)，余额不足，请立即前往能量池系统充值！\n"
+                                                        ."能量平台ID：".$v['rid']."\n"
+                                                        ."API用户名：".$apiUsername."\n"
+                                                        ."当前余额：".$balance." TRX\n"
+                                                        ."告警金额：".$v['alert_platform_balance']." TRX\n\n"
+                                                        ."不处理会一直告警通知！间隔10分钟告警一次";
+                                                        
+                                            $sendlist = explode(',',$v['tg_notice_obj']);
+                            
+                                            foreach ($sendlist as $x => $y) {
+                                                $sendmessageurl = 'https://api.telegram.org/bot'.$v['bot_token'].'/sendMessage?chat_id='.$y.'&text='.urlencode($replytext).'&parse_mode=HTML';
+                                                
+                                                Get_Pay($sendmessageurl);
+                                            }
+                                        }
+                                    }
+                                    
+                                    EnergyPlatform::where('rid',$v['rid'])->update($updatedata7);
+                                    $this->log('energyplatformbalance',$v['rid'].'NL-API平台余额更新成功:'.$balance.' TRX');
+                                }else{
+                                    // 记录返回数据以便调试
+                                    $this->log('energyplatformbalance',$v['rid'].'NL-API平台返回数据:'.json_encode($res, JSON_UNESCAPED_UNICODE));
+                                }
                             }
                         }
                     }

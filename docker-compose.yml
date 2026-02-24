@@ -29,7 +29,15 @@ services:
       # 挂载配置文件，确保表名配置生效
       - ./admin/config/permission.php:/var/www/html/config/permission.php:ro
       # 本地开发：挂载代码目录，修改后立即生效（无需重新构建镜像）
-      - ./admin:/var/www/html
+      # 注意：vendor 目录不挂载，使用镜像中的依赖
+      - ./admin/app:/var/www/html/app
+      - ./admin/bootstrap:/var/www/html/bootstrap
+      - ./admin/config:/var/www/html/config
+      - ./admin/database:/var/www/html/database
+      - ./admin/public:/var/www/html/public
+      - ./admin/resources:/var/www/html/resources
+      - ./admin/routes:/var/www/html/routes
+      - ./admin/tests:/var/www/html/tests
     depends_on:
       - postgres
       - redis
@@ -73,7 +81,11 @@ services:
       - DB_PREFIX=t_
     volumes:
       - job_storage:/opt/www/runtime
-      - ./job:/opt/www
+      # 本地开发：挂载代码目录，修改后重启服务即可生效
+      # 注意：vendor 目录不挂载，使用镜像中的依赖
+      - ./job/app:/opt/www/app
+      - ./job/config:/opt/www/config
+      - ./job/bin:/opt/www/bin
     depends_on:
       - postgres
       - redis

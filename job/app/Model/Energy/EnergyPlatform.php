@@ -15,7 +15,7 @@ class EnergyPlatform extends Model
      *
      * @var string
      */
-    protected $table = 'energy_platform';
+    protected $table = 't_energy_platform';
 
     public $primaryKey  = 'rid';
 
