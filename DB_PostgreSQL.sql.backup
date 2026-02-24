@@ -756,7 +756,7 @@ CREATE TABLE t_sys_config (
 --
 
 ;
-INSERT INTO t_sys_config VALUES (1,'job_url','{\"url\":\"https:\\/\\/job44.xxx.pro\"}','任务域名url','1','2022-05-05 12:55:54','1','2022-05-05 12:55:54'),(2,'ton_url','{\"url\":\"https:\\/\\/pytonpay.walletim.vip\\/api\\/premium\"}','ton支付接口url(不需要开通tg会员,用不到这个接口)','1','2022-05-05 12:55:54','1','2022-05-05 12:55:54');
+INSERT INTO t_sys_config VALUES (1,'job_url','{\"url\":\"http:\\/\\/tgbot-job:9503\"}','任务域名url','1','2022-05-05 12:55:54','1','2022-05-05 12:55:54'),(2,'ton_url','{\"url\":\"http:\\/\\/host.docker.internal:4444\\/api\\/premium\"}','ton支付接口url(不需要开通tg会员,用不到这个接口)','1','2022-05-05 12:55:54','1','2022-05-05 12:55:54');
 UN
 
 --
