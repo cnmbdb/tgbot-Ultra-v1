@@ -20,6 +20,8 @@ services:
     environment:
       # API-Web 服务地址（从环境变量或 .env 文件读取）
       - API_WEB_URL=${API_WEB_URL:-http://host.docker.internal:4444}
+      # NL-API 能量池系统地址
+      - NL_API_BASE_URL=${NL_API_BASE_URL:-https://tgnl-home.hfz.pw}
     volumes:
       - admin_storage:/var/www/html/storage
       - admin_cache:/var/www/html/bootstrap/cache
@@ -55,6 +57,8 @@ services:
     environment:
       # API-Web 服务地址（从环境变量或 .env 文件读取）
       - API_WEB_URL=${API_WEB_URL:-http://host.docker.internal:4444}
+      # NL-API 能量池系统地址
+      - NL_API_BASE_URL=${NL_API_BASE_URL:-https://tgnl-home.hfz.pw}
       # Redis 配置
       - REDIS_HOST=redis
       - REDIS_PORT=6379
