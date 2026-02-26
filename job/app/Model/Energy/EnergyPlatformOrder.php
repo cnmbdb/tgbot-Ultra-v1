@@ -15,7 +15,7 @@ class EnergyPlatformOrder extends Model
      *
      * @var string
      */
-    protected $table = 'energy_platform_order';
+    protected $table = 't_energy_platform_order';
 
     public $primaryKey  = 'rid';
 

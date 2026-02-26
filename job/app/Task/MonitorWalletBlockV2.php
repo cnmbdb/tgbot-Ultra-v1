@@ -397,23 +397,23 @@ class MonitorWalletBlockV2
         //转账
         }elseif(in_array($type,[1,2,3,4])){
             $url = 'https://apilist.tronscanapi.com/api/accountv2?address='.$monitoraddress;
-                        
-            $api_key = config('apikey.tronapikey');
-            $apikeyrand = $api_key[array_rand($api_key)];
-            $heders = [
-                "TRON-PRO-API-KEY:".$apikeyrand
-            ];
+
+            $apikeyrand = getRandomTronApiKey('tronscan');
+            $heders = [];
+            if ($apikeyrand) {
+                $heders[] = "TRON-PRO-API-KEY:".$apikeyrand;
+            }
             
             $res = Get_Pay($url,null,$heders);
             $accountBalance = "未知";
             if(empty($res)){
                 //为空则查询一次grid api
                 $url = 'https://api.trongrid.io/v1/accounts/'.$monitoraddress;
-                $api_key = config('apikey.gridapikey');
-                $apikeyrand = $api_key[array_rand($api_key)];
-                $heders = [
-                    'TRON-PRO-API-KEY:'.$apikeyrand
-                ];
+                $apikeyrand = getRandomTronApiKey('trongrid');
+                $heders = [];
+                if ($apikeyrand) {
+                    $heders[] = 'TRON-PRO-API-KEY:'.$apikeyrand;
+                }
                 $res = Get_Pay($url,null,$heders);
                 if(empty($res)){
                     //为空则不处理

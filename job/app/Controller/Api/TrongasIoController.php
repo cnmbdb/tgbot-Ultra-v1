@@ -18,7 +18,7 @@ class TrongasIoController extends AbstractController
     	if(!empty($receiveAddress)){
     	    //查地址通知
         	$bishu = EnergyAiBishu::from('t_energy_ai_bishu as a')
-                    ->leftJoin('energy_platform_bot as b','a.bot_rid','b.bot_rid')
+                    ->leftJoin('t_energy_platform_bot as b','a.bot_rid','b.bot_rid')
                     ->leftJoin('t_telegram_bot as c','a.bot_rid','c.rid')
                     ->where('a.wallet_addr',$receiveAddress)
                     ->select('a.rid','a.tg_uid','a.wallet_addr','c.bot_token','a.is_notice_admin','a.is_notice','b.tg_admin_uid','b.tg_notice_obj_send','c.bot_username','c.bot_admin_username','b.per_bishu_energy_quantity','a.bot_rid','a.max_buy_quantity','a.total_buy_quantity')

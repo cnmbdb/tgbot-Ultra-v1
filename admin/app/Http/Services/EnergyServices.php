@@ -20,7 +20,9 @@ class EnergyServices
             return ['code' => '400', 'msg' => '未配置能量平台,联系管理员'];
         }
         
-        //轮询,自己质押时判断能量是否足够,用平台则判断平台的trx
+        // 轮询:
+        // - 自己质押(3): 判断能量是否足够（platform_balance >= energy_amount）
+        // - 其它平台(1,2,4,5,6,7): 判断平台的 TRX 余额是否 > 0（包括 NL-API）
         $model = EnergyPlatform::where('poll_group',$pfbotdata['poll_group'])
                 ->where('status',0)
                 ->whereNotNull('platform_apikey')
@@ -29,7 +31,8 @@ class EnergyServices
                          $query1->where('platform_name', 3)->where('platform_balance', '>=', $request['energy_amount']);
                     });
                     $query->orwhere(function ($query2) {
-                         $query2->orwhereIn('platform_name', [1,2,4,5,6])->where('platform_balance', '>', 0);
+                         // 1=Neee.cc, 2=RentEnergysBot, 4=trongas.io, 5=开发者代理, 6=搜狐, 7=NL-API
+                         $query2->orwhereIn('platform_name', [1,2,4,5,6,7])->where('platform_balance', '>', 0);
                      });
                  })
                 ->orderBy('seq_sn','desc')
@@ -204,6 +207,58 @@ class EnergyServices
                     $balance_url = $balance_url.'/api/thirdpart/shanzuorder';
                     $res = Get_Curl($balance_url,$param);
                     
+                //NL-API平台（tgnl-home能量池系统）
+                }elseif($v->platform_name == 7){
+                    // 获取tgnl-home域名，优先从环境变量，其次从comments字段
+                    $nlApiBaseUrl = env('NL_API_BASE_URL', 'https://tgnl-home.hfz.pw');
+                    if(empty($nlApiBaseUrl) && !empty($v->comments)){
+                        // 尝试从comments中解析域名（格式：nl_api_url=https://xxx.com）
+                        if(preg_match('/nl_api_url=([^\s]+)/i', $v->comments, $matches)){
+                            $nlApiBaseUrl = trim($matches[1]);
+                        }
+                    }
+                    
+                    if(empty($nlApiBaseUrl)){
+                        $errorMessage = $errorMessage."能量平台：".$v->rid." NL-API域名未配置。";
+                        continue;
+                    }
+                    
+                    // platform_uid 作为 API username
+                    $apiUsername = $v->platform_uid;
+                    // platform_apikey 解密后作为 API password
+                    $apiPassword = $rsa_services->privateDecrypt($v->platform_apikey);
+                    
+                    if(empty($apiUsername) || empty($apiPassword)){
+                        $errorMessage = $errorMessage."能量平台：".$v->rid." NL-API账户或密码未配置。";
+                        continue;
+                    }
+                    
+                    // 转换天数：tgnl-home 上游对 day=0 返回“天数错误”，这里将 0(1小时) 映射为 1
+                    // 兼容：1=1天，3=3天，30=30天
+                    $day = intval($request['energy_day'] ?? 0);
+                    if($day == 3){
+                        $day = 3;
+                    }elseif($day == 30){
+                        $day = 30;
+                    }else{
+                        $day = 1;
+                    }
+                    
+                    $param = [
+                        'username' => $apiUsername,
+                        'password' => $apiPassword,
+                        'energy' => $request['energy_amount'],
+                        'day' => $day,
+                        'receiver_address' => $request['receive_address']
+                    ];
+                    
+                    $balance_url = rtrim($nlApiBaseUrl, '/') . '/v1/delegate_meal';
+                    $header = [
+                        "Content-Type: application/json",
+                        "Accept: application/json"
+                    ];
+                    $res = Get_Curl($balance_url, json_encode($param), $header);
+                    
                 }else{
                     // return ['code' => '400', 'msg' => '能量平台不存在,联系管理员'];
                     //能量平台接口不存在,轮询下一个
@@ -218,7 +273,7 @@ class EnergyServices
                     continue;
                 }else{
                     $res = json_decode($res,true);
-                    if((isset($res['status']) && $res['status'] == 200 && $v->platform_name == 1) || (isset($res['status']) && $res['status'] == 'success' && $v->platform_name == 2) || (isset($res['code']) && $res['code'] == 200 && $v->platform_name == 3) || (isset($res['code']) && $res['code'] == 10000 && $v->platform_name == 4) || (isset($res['code']) && $res['code'] == 200 && $v->platform_name == 5) || (isset($res['code']) && $res['code'] == 1 && $v->platform_name == 6)){
+                    if((isset($res['status']) && $res['status'] == 200 && $v->platform_name == 1) || (isset($res['status']) && $res['status'] == 'success' && $v->platform_name == 2) || (isset($res['code']) && $res['code'] == 200 && $v->platform_name == 3) || (isset($res['code']) && $res['code'] == 10000 && $v->platform_name == 4) || (isset($res['code']) && $res['code'] == 200 && $v->platform_name == 5) || (isset($res['code']) && $res['code'] == 1 && $v->platform_name == 6) || (($v->platform_name == 7 && (isset($res['success']) && $res['success'] === true) || isset($res['tx_hash']) || isset($res['txHash'])))){
                         if($v->platform_name == 1){
                             $data['orderNo'] = $res['data']['order_no'];
                             $data['use_trx'] = 0;
@@ -243,6 +298,11 @@ class EnergyServices
                             $data['orderNo'] = $res['data']['order_sn'];
                             $data['use_trx'] = $res['data']['amount'];
                             
+                        }elseif($v->platform_name == 7){
+                            // NL-API返回的订单号（可能是tx_hash或其他标识）
+                            $data['orderNo'] = $res['tx_hash'] ?? $res['txHash'] ?? $res['order_id'] ?? 'NL-'.time();
+                            $data['use_trx'] = 0; // NL-API平台内部扣费，这里不记录TRX
+                            
                         }else{
                             $data['orderNo'] = '未知'.time();
                             $data['use_trx'] = 0;
@@ -265,6 +325,8 @@ class EnergyServices
                             $msg = '失败,返回:'.json_encode($res);
                         }elseif($v->platform_name == 6){
                             $msg = '失败,返回:'.json_encode($res);
+                        }elseif($v->platform_name == 7){
+                            $msg = '失败,返回:'.(isset($res['error']) ? $res['error'] : json_encode($res));
                         }
                         // return ['code' => '400', 'msg' => $msg];
                         //能量平台下单失败,轮询下一个

@@ -504,7 +504,16 @@ CREATE TABLE public.t_energy_platform_bot (
     trx_price_energy_65000 integer,
     per_energy_day integer,
     create_time timestamp without time zone NOT NULL,
-    update_time timestamp without time zone
+    update_time timestamp without time zone,
+    agent_tg_uid bigint,
+    agent_per_price numeric(18,6),
+    bishu_stop_day integer DEFAULT 0 NOT NULL,
+    is_open_bishu character(1) DEFAULT 'Y'::bpchar NOT NULL,
+    per_bishu_usdt_price numeric(4,2) DEFAULT 0.50 NOT NULL,
+    per_bishu_energy_quantity integer DEFAULT 65000 NOT NULL,
+    per_energy_day_bishu integer DEFAULT 1,
+    bishu_recovery_type smallint DEFAULT 1 NOT NULL,
+    bishu_daili_type smallint DEFAULT 1 NOT NULL
 );
 
 
@@ -591,7 +600,8 @@ CREATE TABLE public.t_energy_platform_package (
     update_time timestamp without time zone,
     callback_data character varying(50) NOT NULL,
     show_notes character varying(1000) DEFAULT NULL::character varying,
-    package_pic character varying(200) DEFAULT NULL::character varying
+    package_pic character varying(200) DEFAULT NULL::character varying,
+    agent_trx_price numeric(14,2) DEFAULT 0.00 NOT NULL
 );
 
 
@@ -2478,18 +2488,18 @@ INSERT INTO public.t_energy_platform_bot VALUES (3, 1, 'A', '6666666', 0, 'ttttt
 -- Data for Name: t_energy_platform_package; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-INSERT INTO public.t_energy_platform_package VALUES (1, 1, 1, '免费1笔|1小时(对方有U)', 32000, 0, 3.00, 0.50, 0, 99, NULL, '2023-08-16 22:53:45', NULL, '2024-02-25 16:45:59', 'energy_bc7edcf8e85bdffadac37e41f2feb369', '付款成功将获得<b>1笔</b>免费USDT转账手续费(60分钟内使用)\n能量数量: <b>32000</b>\n对比节省：<b>10.2559 TRX</b>\n⚠️↓↓↓<b>支付金额不能错误，否则无法到账</b>↓↓↓', NULL);
-INSERT INTO public.t_energy_platform_package VALUES (2, 1, 1, '免费1笔|1小时(对方无U)', 65000, 0, 6.00, 1.00, 0, 98, NULL, '2023-08-16 23:27:14', NULL, '2024-02-25 16:46:23', 'energy_bc7edcf8e85bdffadac37e41f2feb364', '付款成功将获得<b>1笔/1小时</b>免费USDT转账手续费(1小时内使用，转给无USDT地址)\n能量数量: <b>65000</b>\n对比节省: <b>20.2677 TRX</b>\n⚠️↓↓↓<b>支付金额不能错误，否则无法到账</b>↓↓↓', NULL);
-INSERT INTO public.t_energy_platform_package VALUES (3, 1, 1, '3笔|1小时(对方有U)', 96000, 0, 9.00, 1.50, 0, 97, NULL, '2023-08-16 23:31:54', NULL, '2024-02-25 16:47:32', 'energy_bc7edcf8e85bdffadac37e41f2feb362', '付款成功将获得<b>3</b>笔免费USDT转账手续费(1个小时内使用)\n能量数量: <b>96000</b>\n对比节省：<b>33 TRX</b>\n⚠️↓↓↓<b>支付金额不能错误，否则无法到账</b>↓↓↓', NULL);
-INSERT INTO public.t_energy_platform_package VALUES (4, 1, 1, '4笔|1小时(对方有U)', 128000, 0, 12.00, 2.00, 0, 96, NULL, '2023-08-16 23:34:19', NULL, '2024-02-25 16:48:09', 'energy_bc7edcf8e85bdffadac37e41f2feb361', '付款成功将获得<b>4笔/小时</b>免费USDT转账手续费(1小时内使用)\n能量数量: <b>128000</b>\n对比节省: <b>44 TRX</b>\n⚠️↓↓↓<b>支付金额不能错误，否则无法到账</b>↓↓↓', NULL);
-INSERT INTO public.t_energy_platform_package VALUES (5, 1, 1, '5笔|1小时(对方有U)', 160000, 0, 15.00, 2.50, 0, 95, NULL, '2023-08-17 00:28:58', NULL, '2024-02-25 16:49:01', 'energy_2c1ec34ee36b27b35403e4f9f18ee5ff', '付款成功将获得<b>5笔/小时</b>免费USDT转账手续费(1小时内使用)\n能量数量: <b>160000</b>\n对比节省: <b>55 TRX</b>\n⚠️↓↓↓<b>支付金额不能错误，否则无法到账</b>↓↓↓', NULL);
-INSERT INTO public.t_energy_platform_package VALUES (6, 1, 1, '6笔|1小时(对方有U)', 192000, 0, 18.00, 3.00, 0, 94, NULL, '2023-08-19 00:42:04', NULL, '2024-02-25 16:49:35', 'energy_481639fd1b584be1e5dac45630e3f736', '付款成功将获得<b>6笔/小时</b>免费USDT转账手续费(1小时内使用)\n能量数量: <b>192000</b>\n对比节省: <b>66 TRX</b>\n⚠️↓↓↓<b>支付金额不能错误，否则无法到账</b>↓↓↓', NULL);
-INSERT INTO public.t_energy_platform_package VALUES (7, 1, 1, '7笔|1小时(对方有U)', 224000, 0, 21.00, 3.50, 0, 93, NULL, '2023-08-19 00:44:29', NULL, '2024-02-25 16:50:02', 'energy_bacf03cebf12a8ac5a428ee7fe90d7cb', '付款成功将获得<b>7笔/小时</b>免费USDT转账手续费(1小时内使用)\n能量数量: <b>224000</b>\n对比节省：<b>77 TRX</b>\n⚠️↓↓↓<b>支付金额不能错误，否则无法到账</b>↓↓↓', NULL);
-INSERT INTO public.t_energy_platform_package VALUES (8, 1, 1, '8笔|1小时(对方有U)', 256000, 0, 24.00, 4.00, 0, 92, NULL, '2023-08-19 00:45:57', NULL, '2024-02-25 16:50:33', 'energy_c70b1fbe610b9ef365181cb3c22804be', '付款成功将获得<b>8笔/小时</b>免费USDT转账手续费(1小时内使用)\n能量数量: <b>256000</b>\n对比节省: <b>88 TRX</b>\n⚠️↓↓↓<b>支付金额不能错误，否则无法到账</b>↓↓↓', NULL);
-INSERT INTO public.t_energy_platform_package VALUES (9, 1, 1, '9笔|1小时(对方有U)', 288000, 0, 27.00, 4.50, 0, 91, NULL, '2023-08-19 00:47:25', NULL, '2024-02-25 16:51:04', 'energy_d5e8ca3fb78447942819d507ca3e55f1', '付款成功将获得<b>9笔/小时</b>免费USDT转账手续费(1小时内使用)\n能量数量: <b>288000</b>\n对比节省：<b>99 TRX</b>\n⚠️↓↓↓<b>支付金额不能错误，否则无法到账</b>↓↓↓', NULL);
-INSERT INTO public.t_energy_platform_package VALUES (10, 1, 1, '10笔|1小时(对方有U)', 320000, 0, 30.00, 5.00, 0, 90, NULL, '2023-08-19 00:48:48', NULL, '2024-02-25 16:51:59', 'energy_fe4a5f5119c39f7089ee412749b080aa', '付款成功将获得<b>10笔/小时</b>免费USDT转账手续费(1小时内使用)\n能量数量: <b>320000</b>\n对比节省: <b>110 TRX</b>\n⚠️↓↓↓<b>支付金额不能错误，否则无法到账</b>↓↓↓', NULL);
-INSERT INTO public.t_energy_platform_package VALUES (11, 1, 1, '20笔|1小时(对方有U)', 640000, 0, 60.00, 10.00, 0, 89, NULL, '2023-08-19 00:52:47', NULL, '2024-02-25 16:53:45', 'energy_2e4d7f44481ee72fdd824058bdee5dea', '付款成功将获得<b>20笔/小时</b>免费USDT转账手续费(1小时内使用)\n能量数量: <b>640000</b>\n对比节省: <b>240 TRX</b>\n⚠️↓↓↓<b>支付金额不能错误，否则无法到账</b>↓↓↓', NULL);
-INSERT INTO public.t_energy_platform_package VALUES (12, 1, 1, '50笔|1小时(对方有U)', 1600000, 0, 150.00, 25.00, 0, 88, NULL, '2023-08-19 00:54:29', NULL, '2024-02-25 16:54:57', 'energy_f632ffe6a47ae7e778c897fda0c3ae0f', '付款成功将获得<b>50笔/小时</b>免费USDT转账手续费(1小时内使用)\n能量数量: <b>320000</b>\n对比节省: <b>580 TRX</b>\n⚠️↓↓↓<b>支付金额不能错误，否则无法到账</b>↓↓↓', NULL);
+INSERT INTO public.t_energy_platform_package VALUES (1, 1, 1, '免费1笔|1小时(对方有U)', 32000, 0, 3.00, 0.50, 0, 99, NULL, '2023-08-16 22:53:45', NULL, '2024-02-25 16:45:59', 'energy_bc7edcf8e85bdffadac37e41f2feb369', '付款成功将获得<b>1笔</b>免费USDT转账手续费(60分钟内使用)\n能量数量: <b>32000</b>\n对比节省：<b>10.2559 TRX</b>\n⚠️↓↓↓<b>支付金额不能错误，否则无法到账</b>↓↓↓', NULL, 0.00);
+INSERT INTO public.t_energy_platform_package VALUES (2, 1, 1, '免费1笔|1小时(对方无U)', 65000, 0, 6.00, 1.00, 0, 98, NULL, '2023-08-16 23:27:14', NULL, '2024-02-25 16:46:23', 'energy_bc7edcf8e85bdffadac37e41f2feb364', '付款成功将获得<b>1笔/1小时</b>免费USDT转账手续费(1小时内使用，转给无USDT地址)\n能量数量: <b>65000</b>\n对比节省: <b>20.2677 TRX</b>\n⚠️↓↓↓<b>支付金额不能错误，否则无法到账</b>↓↓↓', NULL, 0.00);
+INSERT INTO public.t_energy_platform_package VALUES (3, 1, 1, '3笔|1小时(对方有U)', 96000, 0, 9.00, 1.50, 0, 97, NULL, '2023-08-16 23:31:54', NULL, '2024-02-25 16:47:32', 'energy_bc7edcf8e85bdffadac37e41f2feb362', '付款成功将获得<b>3</b>笔免费USDT转账手续费(1个小时内使用)\n能量数量: <b>96000</b>\n对比节省：<b>33 TRX</b>\n⚠️↓↓↓<b>支付金额不能错误，否则无法到账</b>↓↓↓', NULL, 0.00);
+INSERT INTO public.t_energy_platform_package VALUES (4, 1, 1, '4笔|1小时(对方有U)', 128000, 0, 12.00, 2.00, 0, 96, NULL, '2023-08-16 23:34:19', NULL, '2024-02-25 16:48:09', 'energy_bc7edcf8e85bdffadac37e41f2feb361', '付款成功将获得<b>4笔/小时</b>免费USDT转账手续费(1小时内使用)\n能量数量: <b>128000</b>\n对比节省: <b>44 TRX</b>\n⚠️↓↓↓<b>支付金额不能错误，否则无法到账</b>↓↓↓', NULL, 0.00);
+INSERT INTO public.t_energy_platform_package VALUES (5, 1, 1, '5笔|1小时(对方有U)', 160000, 0, 15.00, 2.50, 0, 95, NULL, '2023-08-17 00:28:58', NULL, '2024-02-25 16:49:01', 'energy_2c1ec34ee36b27b35403e4f9f18ee5ff', '付款成功将获得<b>5笔/小时</b>免费USDT转账手续费(1小时内使用)\n能量数量: <b>160000</b>\n对比节省: <b>55 TRX</b>\n⚠️↓↓↓<b>支付金额不能错误，否则无法到账</b>↓↓↓', NULL, 0.00);
+INSERT INTO public.t_energy_platform_package VALUES (6, 1, 1, '6笔|1小时(对方有U)', 192000, 0, 18.00, 3.00, 0, 94, NULL, '2023-08-19 00:42:04', NULL, '2024-02-25 16:49:35', 'energy_481639fd1b584be1e5dac45630e3f736', '付款成功将获得<b>6笔/小时</b>免费USDT转账手续费(1小时内使用)\n能量数量: <b>192000</b>\n对比节省: <b>66 TRX</b>\n⚠️↓↓↓<b>支付金额不能错误，否则无法到账</b>↓↓↓', NULL, 0.00);
+INSERT INTO public.t_energy_platform_package VALUES (7, 1, 1, '7笔|1小时(对方有U)', 224000, 0, 21.00, 3.50, 0, 93, NULL, '2023-08-19 00:44:29', NULL, '2024-02-25 16:50:02', 'energy_bacf03cebf12a8ac5a428ee7fe90d7cb', '付款成功将获得<b>7笔/小时</b>免费USDT转账手续费(1小时内使用)\n能量数量: <b>224000</b>\n对比节省：<b>77 TRX</b>\n⚠️↓↓↓<b>支付金额不能错误，否则无法到账</b>↓↓↓', NULL, 0.00);
+INSERT INTO public.t_energy_platform_package VALUES (8, 1, 1, '8笔|1小时(对方有U)', 256000, 0, 24.00, 4.00, 0, 92, NULL, '2023-08-19 00:45:57', NULL, '2024-02-25 16:50:33', 'energy_c70b1fbe610b9ef365181cb3c22804be', '付款成功将获得<b>8笔/小时</b>免费USDT转账手续费(1小时内使用)\n能量数量: <b>256000</b>\n对比节省: <b>88 TRX</b>\n⚠️↓↓↓<b>支付金额不能错误，否则无法到账</b>↓↓↓', NULL, 0.00);
+INSERT INTO public.t_energy_platform_package VALUES (9, 1, 1, '9笔|1小时(对方有U)', 288000, 0, 27.00, 4.50, 0, 91, NULL, '2023-08-19 00:47:25', NULL, '2024-02-25 16:51:04', 'energy_d5e8ca3fb78447942819d507ca3e55f1', '付款成功将获得<b>9笔/小时</b>免费USDT转账手续费(1小时内使用)\n能量数量: <b>288000</b>\n对比节省：<b>99 TRX</b>\n⚠️↓↓↓<b>支付金额不能错误，否则无法到账</b>↓↓↓', NULL, 0.00);
+INSERT INTO public.t_energy_platform_package VALUES (10, 1, 1, '10笔|1小时(对方有U)', 320000, 0, 30.00, 5.00, 0, 90, NULL, '2023-08-19 00:48:48', NULL, '2024-02-25 16:51:59', 'energy_fe4a5f5119c39f7089ee412749b080aa', '付款成功将获得<b>10笔/小时</b>免费USDT转账手续费(1小时内使用)\n能量数量: <b>320000</b>\n对比节省: <b>110 TRX</b>\n⚠️↓↓↓<b>支付金额不能错误，否则无法到账</b>↓↓↓', NULL, 0.00);
+INSERT INTO public.t_energy_platform_package VALUES (11, 1, 1, '20笔|1小时(对方有U)', 640000, 0, 60.00, 10.00, 0, 89, NULL, '2023-08-19 00:52:47', NULL, '2024-02-25 16:53:45', 'energy_2e4d7f44481ee72fdd824058bdee5dea', '付款成功将获得<b>20笔/小时</b>免费USDT转账手续费(1小时内使用)\n能量数量: <b>640000</b>\n对比节省: <b>240 TRX</b>\n⚠️↓↓↓<b>支付金额不能错误，否则无法到账</b>↓↓↓', NULL, 0.00);
+INSERT INTO public.t_energy_platform_package VALUES (12, 1, 1, '50笔|1小时(对方有U)', 1600000, 0, 150.00, 25.00, 0, 88, NULL, '2023-08-19 00:54:29', NULL, '2024-02-25 16:54:57', 'energy_f632ffe6a47ae7e778c897fda0c3ae0f', '付款成功将获得<b>50笔/小时</b>免费USDT转账手续费(1小时内使用)\n能量数量: <b>320000</b>\n对比节省: <b>580 TRX</b>\n⚠️↓↓↓<b>支付金额不能错误，否则无法到账</b>↓↓↓', NULL, 0.00);
 
 
 --
@@ -3077,7 +3087,7 @@ SELECT pg_catalog.setval('public.t_energy_ai_trusteeship_rid_seq', 1, false);
 -- Name: t_energy_platform_bot_rid_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.t_energy_platform_bot_rid_seq', 1, false);
+SELECT pg_catalog.setval('public.t_energy_platform_bot_rid_seq', 3, true);
 
 
 --
@@ -3091,14 +3101,14 @@ SELECT pg_catalog.setval('public.t_energy_platform_order_rid_seq', 1, false);
 -- Name: t_energy_platform_package_rid_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.t_energy_platform_package_rid_seq', 1, false);
+SELECT pg_catalog.setval('public.t_energy_platform_package_rid_seq', 12, true);
 
 
 --
 -- Name: t_energy_platform_rid_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.t_energy_platform_rid_seq', 1, false);
+SELECT pg_catalog.setval('public.t_energy_platform_rid_seq', 4, true);
 
 
 --
@@ -3766,6 +3776,12 @@ ALTER TABLE ONLY public.t_transit_wallet_trade_list
 --
 
 CREATE INDEX idx_energy_third_part_1 ON public.t_energy_third_part USING btree (tg_uid);
+
+--
+-- Name: t_energy_wallet_trade_list_tx_hash_uindex; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX IF NOT EXISTS t_energy_wallet_trade_list_tx_hash_uindex ON public.t_energy_wallet_trade_list USING btree (tx_hash);
 
 
 --

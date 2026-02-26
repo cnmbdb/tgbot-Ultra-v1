@@ -1,9 +1,10 @@
 <?php
 
 return [
-    //tronapikey: tronscan(https://tronscan.org/#/myaccount/apiKeys) 的key适用于 https://apilist.tronscanapi.com
-    "tronapikey" => ['a0cea6ca-34f3-4e2b-b491-7e67dd0743c5','81a34a72-27cc-4226-a647-7195f0f035a0','e9ac8014-2a1a-491f-b7e3-8e48785ccbf4','123c45e5-02b7-4849-837d-b35c41980689','d113e5b1-7125-412d-a02d-56f9573fc435','72c0690b-88d3-40fc-aa77-115aea30016b','f93d1022-1868-45f6-98ef-7c3aafbcc40c','baa43bf8-fd4b-4419-933c-c4518d2d2d41','613dc7f2-37ee-45cd-a1a0-a65cb6c3a46e','482b857c-527b-486a-bf13-da0620d34a39','8d0ea05e-423b-4e39-ad02-21450da67c09','618107a2-120a-4a5b-841b-5f97b88ce075','f563385f-1165-471d-a5f4-3e1164a74982','77c8f0db-d3d6-4b9b-91d9-bbace3903bcd','7ac47953-47d5-4261-b6b5-8a0a1f213dbe','d1362314-e2d9-4829-87af-0bd9f7167e56','d95125fb-c406-4bbb-b75e-055f2c41a830','b8c964c9-7185-4f20-885c-ca114d12b88a','d190c168-398f-4b02-b0b0-08648ee0a165','76f57812-0961-472e-a665-534c0bd997f0','6e99586c-01e7-479d-8d8c-a27302c88e06'],
+    // tronapikey: tronscan(https://tronscan.org/#/myaccount/apiKeys) 申请的 key，适用于 https://apilist.tronscanapi.com
+    // 实际数据从 t_sys_config 或环境变量中读取（见 app/function.php::getTronApiKeys）
+    'tronapikey' => getTronApiKeys('tronscan'),
 
-    //gridapikey: trongrid(https://www.trongrid.io/) 的key适用于 tronweb-trongrid(https://api.trongrid.io)
-    "gridapikey" => ['75f05e86-b4c1-4dfa-8770-89a36496e71d','021f3c88-12e3-442b-81ef-c431e81298e7','a0eb7f4b-5220-43a4-8365-3a9bbee21b2f','49c76805-b72f-4cff-8761-fcf0de394bca','7c904bec-c7fc-4ba7-8df7-92412f3808f3','6c3978bf-e32e-4903-9dc9-cd20574f0eab','125d8380-2a7d-4935-871b-465e6702c268','59f035c0-f704-4c72-96db-4f25b9a0b5a0','503405fc-33b8-43a7-acc6-9e8d6f82229c','be5e34e7-443f-4bbd-9ee6-6c6cc2cf2fc9','5dda3fa9-6478-4325-95e1-49f349434bef','22dbad8d-890d-49e1-b0a4-50aa1ac43943','e795b95a-6345-4e64-8a25-f72f72dc7154','5eeaea9f-1800-4c65-b025-d2bfc0bb8742','c7369d0a-047a-490b-a1f3-2e798e93207a','7f63a35d-b595-4002-82ef-d6d0c0f2bbef','859d8d09-0e95-43ab-8a00-5c1de8fc83d5','5a63a5a7-6f5b-474c-a6a0-f923b70c5a3a','1afd4130-96ce-43e0-be16-fd8074372b4b','6cc437fd-b98f-4669-b175-ba769c6e5e70','8bc4d8a0-16f7-4077-8f16-efefb402e901','b46131eb-8374-4cad-9ad1-901fb846de75','aa3ba6ad-5e80-46aa-888d-f1363dacb8bc','b1c41b2f-52e4-4e15-b2bd-d8c114e0bd7a','e26e000e-e961-4f9c-8951-d8f174f1b7a8','a3a0b1f6-df53-447f-8e66-f59ced565c49','218ec993-42fb-40fb-91cc-45e9de59057f'],
+    // gridapikey: trongrid(https://www.trongrid.io/) 申请的 key，适用于 https://api.trongrid.io
+    'gridapikey' => getTronApiKeys('trongrid'),
 ];

@@ -1,6 +1,20 @@
 <?php
 
+// 兼容旧版 telegram-bot-sdk 对 Guzzle unwrap() 的调用（Guzzle 7 中已移除全局函数）
+// 这里定义命名空间函数 GuzzleHttp\Promise\unwrap，内部转发到 Utils::unwrap
+namespace GuzzleHttp\Promise {
+    if (!function_exists(__NAMESPACE__ . '\\unwrap')) {
+        function unwrap($promises)
+        {
+            return \GuzzleHttp\Promise\Utils::unwrap($promises);
+        }
+    }
+}
+
+namespace {
+
 use Illuminate\Support\Facades\Redis;
+use App\Models\System\SysConfig;
 
 if (!function_exists('res_422')) {
 
@@ -51,6 +65,59 @@ if (!function_exists('format_time')){
             $param['stime'][1] = date($format,$param['stime'][1]);
         if (isset($param['etime']))
             $param['etime'][1] = date($format,$param['etime'][1]+86400);
+    }
+}
+
+/**
+ * 从系统配置或环境变量中读取 TRON API key 列表
+ * $source: tronscan / trongrid
+ */
+if (!function_exists('getTronApiKeys')) {
+    function getTronApiKeys(string $source = 'tronscan'): array
+    {
+        $configKey = $source === 'trongrid' ? 'trongrid_api_keys' : 'tronscan_api_keys';
+
+        // 优先从 t_sys_config 读取（后台“配置信息”页面可维护）
+        try {
+            $conf = SysConfig::where('config_key', $configKey)->first();
+            if ($conf && isset($conf->config_val->keys)) {
+                $raw = $conf->config_val->keys;
+                if (!empty($raw)) {
+                    $items = array_map('trim', explode(',', $raw));
+                    $items = array_values(array_filter($items, static function ($v) {
+                        return $v !== '';
+                    }));
+                    if (!empty($items)) {
+                        return $items;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // 忽略，走环境变量兜底
+        }
+
+        // 兜底：从环境变量读取（英文逗号分隔）
+        $envKey = $source === 'trongrid' ? 'TRONGRID_API_KEYS' : 'TRONSCAN_API_KEYS';
+        $raw = env($envKey, '');
+        if ($raw === '' || $raw === null) {
+            return [];
+        }
+
+        $items = array_map('trim', explode(',', $raw));
+        return array_values(array_filter($items, static function ($v) {
+            return $v !== '';
+        }));
+    }
+}
+
+if (!function_exists('getRandomTronApiKey')) {
+    function getRandomTronApiKey(string $source = 'tronscan'): ?string
+    {
+        $keys = getTronApiKeys($source);
+        if (empty($keys)) {
+            return null;
+        }
+        return $keys[array_rand($keys)];
     }
 }
 
@@ -405,3 +472,4 @@ function getClientIP()
     return $ip_address;
 }
 
+}

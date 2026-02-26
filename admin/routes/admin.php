@@ -195,6 +195,9 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin'], function () {
                 Route::post('delete', 'EnergyPlatformController@delete')->name('admin.energy.platform.delete');
                 Route::post('change_status', 'EnergyPlatformController@change_status')->name('admin.energy.platform.change_status');
                 Route::post('updateapikey', 'EnergyPlatformController@updateapikey')->name('admin.energy.platform.updateapikey');
+                // NL-API 平台余额充值下单
+                Route::post('nlapi-recharge', 'EnergyPlatformController@nlApiRecharge')->name('admin.energy.platform.nlapi_recharge');
+                Route::get('nlapi-recharge-history', 'EnergyPlatformController@nlapiRechargeHistory')->name('admin.energy.platform.nlapi_recharge_history');
             });
             // 机器人能量
             Route::group(['prefix' => 'platformbot'], function () {

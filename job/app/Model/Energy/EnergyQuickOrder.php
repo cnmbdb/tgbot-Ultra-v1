@@ -15,7 +15,7 @@ class EnergyQuickOrder extends Model
      *
      * @var string
      */
-    protected $table = 'energy_quick_order';
+    protected $table = 't_energy_quick_order';
 
     public $primaryKey  = 'rid';
 

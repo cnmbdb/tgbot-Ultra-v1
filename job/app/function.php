@@ -170,6 +170,62 @@ if (!function_exists('complete_pic')) {
 }
 
 /**
+ * 从 t_sys_config 或环境变量中获取 TRON API key 列表
+ * $source: tronscan / trongrid
+ */
+if (!function_exists('getTronApiKeys')) {
+    function getTronApiKeys(string $source = 'tronscan'): array
+    {
+        $configKey = $source === 'trongrid' ? 'trongrid_api_keys' : 'tronscan_api_keys';
+
+        // 优先从 t_sys_config 读取（由后台“配置信息”维护）
+        try {
+            $row = Db::table('t_sys_config')->where('config_key', $configKey)->first();
+            if ($row && !empty($row->config_val)) {
+                $decoded = json_decode($row->config_val, true);
+                if (json_last_error() === JSON_ERROR_NONE && isset($decoded['keys'])) {
+                    $raw = $decoded['keys'];
+                    if (!empty($raw)) {
+                        $items = array_map('trim', explode(',', $raw));
+                        $items = array_values(array_filter($items, static function ($v) {
+                            return $v !== '';
+                        }));
+                        if (!empty($items)) {
+                            return $items;
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // 忽略，走环境变量兜底
+        }
+
+        // 兜底：从环境变量读取
+        $envKey = $source === 'trongrid' ? 'TRONGRID_API_KEYS' : 'TRONSCAN_API_KEYS';
+        $raw = env($envKey, '');
+        if ($raw === '' || $raw === null) {
+            return [];
+        }
+
+        $items = array_map('trim', explode(',', $raw));
+        return array_values(array_filter($items, static function ($v) {
+            return $v !== '';
+        }));
+    }
+}
+
+if (!function_exists('getRandomTronApiKey')) {
+    function getRandomTronApiKey(string $source = 'tronscan'): ?string
+    {
+        $keys = getTronApiKeys($source);
+        if (empty($keys)) {
+            return null;
+        }
+        return $keys[array_rand($keys)];
+    }
+}
+
+/**
  * 系统数据字典表
  * @param $type [0.读取 1.更新]
 */

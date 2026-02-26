@@ -15,7 +15,7 @@ class EnergyPlatformBot extends Model
      *
      * @var string
      */
-    protected $table = 'energy_platform_bot';
+    protected $table = 't_energy_platform_bot';
 
     public $primaryKey  = 'rid';
 

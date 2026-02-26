@@ -15,7 +15,7 @@ class EnergyThirdPart extends Model
      *
      * @var string
      */
-    protected $table = 'energy_third_part';
+    protected $table = 't_energy_third_part';
 
     public $primaryKey  = 'rid';
 

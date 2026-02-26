@@ -15,7 +15,7 @@ class GetAiEnergyWalletResource
         try {
             $data = EnergyAiTrusteeship::from('t_energy_ai_trusteeship as a')
                     ->Join('t_telegram_bot as b','a.bot_rid','b.rid')
-                    ->Join('energy_platform_bot as c','a.bot_rid','c.bot_rid')
+                    ->Join('t_energy_platform_bot as c','a.bot_rid','c.bot_rid')
                     ->Join('telegram_bot_user as d', function ($join) {
                                       $join->on('a.bot_rid', '=','d.bot_rid')->on('a.tg_uid', '=','d.tg_uid');
                                       })
@@ -35,12 +35,12 @@ class GetAiEnergyWalletResource
                         sleep(1); //不容易被api限制
                         $isSuccess = 'N'; //是否成功,调用trongrid
                         $url = 'https://apilist.tronscanapi.com/api/accountv2?address='.$v['wallet_addr'];
-                        
-                        $api_key = config('apikey.tronapikey');
-                        $apikeyrand = $api_key[array_rand($api_key)];
-                        $heders = [
-                            "TRON-PRO-API-KEY:".$apikeyrand
-                        ];
+
+                        $apikeyrand = getRandomTronApiKey('tronscan');
+                        $heders = [];
+                        if ($apikeyrand) {
+                            $heders[] = "TRON-PRO-API-KEY:".$apikeyrand;
+                        }
                         
                         $res = Get_Pay($url,null,$heders);
                         
@@ -72,12 +72,11 @@ class GetAiEnergyWalletResource
                         //上面接口查询失败,则查询trongrid
                         if($isSuccess == 'N'){
                             $balance_url = 'https://api.trongrid.io/wallet/getaccountresource';
-                            $tronapikey = config('apikey.gridapikey');
-                            $apikeyrand = $tronapikey[array_rand($tronapikey)];
-                            
-                            $heders = [
-                                "TRON-PRO-API-KEY:".$apikeyrand
-                            ];
+                            $apikeyrand = getRandomTronApiKey('trongrid');
+                            $heders = [];
+                            if ($apikeyrand) {
+                                $heders[] = "TRON-PRO-API-KEY:".$apikeyrand;
+                            }
                             
                             $param = [
                                 "address" => $v['wallet_addr'],
@@ -118,7 +117,7 @@ class GetAiEnergyWalletResource
         try {
             $data = EnergyAiBishu::from('t_energy_ai_bishu as a')
                     ->Join('t_telegram_bot as b','a.bot_rid','b.rid')
-                    ->Join('energy_platform_bot as c','a.bot_rid','c.bot_rid')
+                    ->Join('t_energy_platform_bot as c','a.bot_rid','c.bot_rid')
                     ->where('a.status',0)
                     ->where('c.is_open_bishu','Y')
                     ->where('a.is_buy','N')

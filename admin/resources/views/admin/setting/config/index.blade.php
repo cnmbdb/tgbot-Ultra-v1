@@ -107,6 +107,57 @@
                                                 <p class="tip"><i class="layui-icon layui-icon-tips"></i>API连接url</p>
                                             </td>
                                         </tr>
+
+                                        {{-- TRON API Key 配置：tronscan / trongrid --}}
+                                        <tr>
+                                            <th class="fu-title">TRONSCAN API Keys：</th>
+                                            <td>
+                                                <div>
+                                                    <div class="title-key flex">
+                                                        @php
+                                                            $tronscanConfig = $data->firstWhere('config_key', 'tronscan_api_keys');
+                                                            $tronscanKeys = $tronscanConfig && isset($tronscanConfig->config_val->keys)
+                                                                ? $tronscanConfig->config_val->keys
+                                                                : '';
+                                                        @endphp
+                                                        <input type="text" class="z-input" name="tronscan_api_keys[keys]" autocomplete="off" value="{{ $tronscanKeys }}" placeholder="多条 key 用英文逗号分隔">
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4">
+                                                <p class="tip">
+                                                    <i class="layui-icon layui-icon-tips"></i>
+                                                    用于访问 <code>https://apilist.tronscanapi.com</code>，多个 key 建议使用英文逗号分隔，系统会随机轮询使用。
+                                                </p>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <th class="fu-title">TRONGRID API Keys：</th>
+                                            <td>
+                                                <div>
+                                                    <div class="title-key flex">
+                                                        @php
+                                                            $trongridConfig = $data->firstWhere('config_key', 'trongrid_api_keys');
+                                                            $trongridKeys = $trongridConfig && isset($trongridConfig->config_val->keys)
+                                                                ? $trongridConfig->config_val->keys
+                                                                : '';
+                                                        @endphp
+                                                        <input type="text" class="z-input" name="trongrid_api_keys[keys]" autocomplete="off" value="{{ $trongridKeys }}" placeholder="多条 key 用英文逗号分隔">
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4">
+                                                <p class="tip">
+                                                    <i class="layui-icon layui-icon-tips"></i>
+                                                    用于访问 <code>https://api.trongrid.io</code> 等接口，多个 key 逗号分隔，系统会自动随机选择，降低限频风险。
+                                                </p>
+                                            </td>
+                                        </tr>
                                         
                                         <tr>
                                             <td colspan="4" class="text-center">

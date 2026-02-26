@@ -73,6 +73,10 @@ class EnergyPlatformPackageController extends Controller
         if(empty($request->package_name)){
             return $this->responseData(400, '套餐名称不能为空');
         }
+
+        // 兼容：表单空字符串会导致 PostgreSQL numeric/integer 字段写入报错
+        $seqSn = (isset($request->seq_sn) && $request->seq_sn !== '' && $request->seq_sn !== null) ? intval($request->seq_sn) : 0;
+        $agentTrxPrice = (isset($request->agent_trx_price) && $request->agent_trx_price !== '' && $request->agent_trx_price !== null) ? floatval($request->agent_trx_price) : 0;
         
         $res = EnergyPlatformPackage::create([
             'bot_rid' => $request->bot_rid,
@@ -81,8 +85,8 @@ class EnergyPlatformPackageController extends Controller
             'energy_amount' => $request->energy_amount,
             'energy_day' => $request->energy_day,
             'trx_price' => $request->trx_price ?? 0.1,
-            'agent_trx_price' => $request->agent_trx_price ?? 0,
-            'seq_sn' => $request->seq_sn ?? 0,
+            'agent_trx_price' => $agentTrxPrice,
+            'seq_sn' => $seqSn,
             'callback_data' => 'energy_'.md5(nowDate()),
             'show_notes' => $request->show_notes ?? '',
             'create_time' => nowDate()
@@ -118,6 +122,10 @@ class EnergyPlatformPackageController extends Controller
         if(empty($request->package_name)){
             return $this->responseData(400, '套餐名称不能为空');
         }
+
+        // 兼容：表单空字符串会导致 PostgreSQL numeric/integer 字段写入报错
+        $seqSn = (isset($request->seq_sn) && $request->seq_sn !== '' && $request->seq_sn !== null) ? intval($request->seq_sn) : 0;
+        $agentTrxPrice = (isset($request->agent_trx_price) && $request->agent_trx_price !== '' && $request->agent_trx_price !== null) ? floatval($request->agent_trx_price) : 0;
         
         $packageData = EnergyPlatformPackage::where('rid', $request->rid)->first();
         if(empty($packageData)){
@@ -128,7 +136,7 @@ class EnergyPlatformPackageController extends Controller
             $filedata = $upload->uploadfile($request->file('thumb'), 'news');
             $fileurl = $filedata['data']['url'];
         }else{
-            $fileurl = $packageData->reply_photo;
+            $fileurl = $packageData->package_pic;
         }
         
         DB::beginTransaction();  
@@ -140,8 +148,8 @@ class EnergyPlatformPackageController extends Controller
             $packageData->energy_amount = $request->energy_amount;
             $packageData->energy_day = $request->energy_day;
             $packageData->trx_price = $request->trx_price ?? 0.1;
-            $packageData->agent_trx_price = $request->agent_trx_price ?? 0;
-            $packageData->seq_sn = $request->seq_sn ?? 0;
+            $packageData->agent_trx_price = $agentTrxPrice;
+            $packageData->seq_sn = $seqSn;
             $packageData->show_notes = $request->show_notes ?? '';
             $packageData->package_pic = $fileurl;
             $packageData->update_time = nowDate();

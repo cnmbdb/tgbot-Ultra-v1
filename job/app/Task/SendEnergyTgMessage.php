@@ -15,7 +15,7 @@ class SendEnergyTgMessage
         //自助下单成功
         try {
             $data = EnergyWalletTradeList::from('t_energy_wallet_trade_list as a')
-                    ->leftJoin('energy_platform_bot as b','a.energy_platform_bot_rid','b.rid')
+                    ->leftJoin('t_energy_platform_bot as b','a.energy_platform_bot_rid','b.rid')
                     ->leftJoin('t_telegram_bot as c','b.bot_rid','c.rid')
                     ->leftJoin('energy_platform_package as d','a.energy_package_rid','d.rid')
                     ->where('a.tg_notice_status_receive','N')
@@ -141,7 +141,7 @@ class SendEnergyTgMessage
         //钱包余额支付下单通知
         try {
             $data = EnergyQuickOrder::from('t_energy_quick_order as a')
-                    ->leftJoin('energy_platform_bot as b','a.bot_rid','b.bot_rid')
+                    ->leftJoin('t_energy_platform_bot as b','a.bot_rid','b.bot_rid')
                     ->leftJoin('t_telegram_bot as c','a.bot_rid','c.rid')
                     ->where('a.is_notice','Y')
                     ->select('a.rid','a.tg_uid','a.wallet_addr','a.energy_amount','c.bot_token','a.is_notice','a.comments','c.bot_username','c.bot_admin_username','a.bot_rid','b.tg_notice_obj_send')
@@ -221,7 +221,7 @@ class SendEnergyTgMessage
         //智能托管通知
         try {
             $data = EnergyAiTrusteeship::from('t_energy_ai_trusteeship as a')
-                    ->leftJoin('energy_platform_bot as b','a.bot_rid','b.bot_rid')
+                    ->leftJoin('t_energy_platform_bot as b','a.bot_rid','b.bot_rid')
                     ->leftJoin('t_telegram_bot as c','a.bot_rid','c.rid')
                     ->where('a.is_notice','Y')
                     ->orWhere('a.is_notice_admin','Y')
@@ -339,7 +339,7 @@ class SendEnergyTgMessage
         //笔数套餐通知
         try {
             $data = EnergyAiBishu::from('t_energy_ai_bishu as a')
-                    ->leftJoin('energy_platform_bot as b','a.bot_rid','b.bot_rid')
+                    ->leftJoin('t_energy_platform_bot as b','a.bot_rid','b.bot_rid')
                     ->leftJoin('t_telegram_bot as c','a.bot_rid','c.rid')
                     ->where('a.is_notice','Y')
                     ->orWhere('a.is_notice_admin','Y')
