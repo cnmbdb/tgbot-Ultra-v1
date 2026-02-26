@@ -97,7 +97,9 @@ class HandleEnergyOrder
                     }
                     
                     $energy_amount = $res->energy_amount;
-                    //轮询,自己质押时判断能量是否足够,用平台则判断平台的trx
+                    // 轮询:
+                    // - 自己质押(3): 判断能量是否足够（platform_balance >= energy_amount）
+                    // - 其它平台(1,2,4,5,6,7): 判断平台 TRX 余额是否 > 0（包括 NL-API）
                     $model = EnergyPlatform::where('poll_group',$v->poll_group)
                             ->where('status',0)
                             ->whereNotNull('platform_apikey')
@@ -106,7 +108,8 @@ class HandleEnergyOrder
                                      $query1->where('platform_name', 3)->where('platform_balance', '>=', $energy_amount);
                                 });
                                 $query->orwhere(function ($query2) {
-                                     $query2->orwhereIn('platform_name', [1,2,4,5,6])->where('platform_balance', '>', '0');
+                                     // 1=Neee.cc,2=RentEnergysBot,4=trongas.io,5=开发者代理,6=搜狐,7=NL-API
+                                     $query2->orwhereIn('platform_name', [1,2,4,5,6,7])->where('platform_balance', '>', '0');
                                  });
                              })
                             ->orderBy('seq_sn','desc')
@@ -310,6 +313,66 @@ class HandleEnergyOrder
                                 $balance_url = $balance_url.'/api/thirdpart/shanzuorder';
                                 $dlres = Get_Pay($balance_url,$param);
                             }
+                            //NL-API平台（tgnl-home能量池系统）
+                            elseif($v1->platform_name == 7){
+                                // 获取tgnl-home域名，优先从环境变量，其次从comments字段
+                                $nlApiBaseUrl = env('NL_API_BASE_URL', 'https://tgnl-home.hfz.pw');
+                                if(empty($nlApiBaseUrl) && !empty($v1->comments)){
+                                    // 尝试从comments中解析域名（格式：nl_api_url=https://xxx.com）
+                                    if(preg_match('/nl_api_url=([^\s]+)/i', $v1->comments, $matches)){
+                                        $nlApiBaseUrl = trim($matches[1]);
+                                    }
+                                }
+
+                                if(empty($nlApiBaseUrl)){
+                                    $errorMessage = $errorMessage."能量平台：".$v1->rid." NL-API域名未配置。";
+                                    $save_data = [];
+                                    $save_data['status'] = 4;      //下单失败
+                                    $save_data['process_time'] = $time;      //处理时间
+                                    $save_data['comments'] = $time.$errorMessage;      //处理备注
+                                    EnergyQuickOrder::where('rid',$v->rid)->update($save_data);
+                                    continue;
+                                }
+
+                                // platform_uid 作为 API username
+                                $apiUsername = $v1->platform_uid;
+                                // $signstr 已经是解密后的 platform_apikey，作为 API password
+                                $apiPassword = $signstr;
+
+                                if(empty($apiUsername) || empty($apiPassword)){
+                                    $errorMessage = $errorMessage."能量平台：".$v1->rid." NL-API账户或密码未配置。";
+                                    $save_data = [];
+                                    $save_data['status'] = 4;      //下单失败
+                                    $save_data['process_time'] = $time;      //处理时间
+                                    $save_data['comments'] = $time.$errorMessage;      //处理备注
+                                    EnergyQuickOrder::where('rid',$v->rid)->update($save_data);
+                                    continue;
+                                }
+
+                                // 转换天数：0=1小时，1=1天，3=3天
+                                if($energy_day == 1){
+                                    $day = 1;
+                                }elseif($energy_day == 3){
+                                    $day = 3;
+                                }else{
+                                    $day = 0; // 默认1小时
+                                }
+
+                                $param = [
+                                    'username' => $apiUsername,
+                                    'password' => $apiPassword,
+                                    'energy' => $energy_amount,
+                                    'day' => $day,
+                                    'receiver_address' => $v->wallet_addr
+                                ];
+
+                                $balance_url = rtrim($nlApiBaseUrl, '/') . '/v1/delegate_meal';
+                                $header = [
+                                    "Content-Type: application/json",
+                                    "Accept: application/json"
+                                ];
+                                $dlres = Get_Pay($balance_url, json_encode($param), $header);
+                            }
                             
                             if(empty($dlres)){
                                 // $save_data = [];
@@ -332,7 +395,15 @@ class HandleEnergyOrder
                             }else{
                                 $dlres = json_decode($dlres,true);
                                 
-                                if((isset($dlres['status']) && $dlres['status'] == 200 && $v1->platform_name == 1) || (isset($dlres['status']) && $dlres['status'] == 'success' && $v1->platform_name == 2) || (isset($dlres['code']) && $dlres['code'] == 200 && $v1->platform_name == 3) || (isset($dlres['code']) && $dlres['code'] == 10000 && $v1->platform_name == 4) || (isset($dlres['code']) && $dlres['code'] == 200 && $v1->platform_name == 5) || (isset($dlres['code']) && $dlres['code'] == 1 && $v1->platform_name == 6)){
+                                if(
+                                    (isset($dlres['status']) && $dlres['status'] == 200 && $v1->platform_name == 1) ||
+                                    (isset($dlres['status']) && $dlres['status'] == 'success' && $v1->platform_name == 2) ||
+                                    (isset($dlres['code']) && $dlres['code'] == 200 && $v1->platform_name == 3) ||
+                                    (isset($dlres['code']) && $dlres['code'] == 10000 && $v1->platform_name == 4) ||
+                                    (isset($dlres['code']) && $dlres['code'] == 200 && $v1->platform_name == 5) ||
+                                    (isset($dlres['code']) && $dlres['code'] == 1 && $v1->platform_name == 6) ||
+                                    ($v1->platform_name == 7 && ((isset($dlres['success']) && $dlres['success'] === true) || isset($dlres['tx_hash']) || isset($dlres['txHash'])))
+                                ){
                                     if($v1->platform_name == 1){
                                         $orderNo = $dlres['data']['order_no'];
                                         $use_trx = 0;
@@ -351,6 +422,10 @@ class HandleEnergyOrder
                                     }elseif($v1->platform_name == 6){
                                         $orderNo = $dlres['data']['order_sn'];
                                         $use_trx = $dlres['data']['amount'];
+                                    }elseif($v1->platform_name == 7){
+                                        // NL-API 可能返回 tx_hash/txHash 和 cost_trx
+                                        $orderNo = $dlres['tx_hash'] ?? $dlres['txHash'] ?? ('NLAPI_'.time());
+                                        $use_trx = $dlres['cost_trx'] ?? 0;
                                     }
                                     $insert_data = [];
                                     $insert_data['energy_platform_rid'] = $v1->rid;
@@ -395,6 +470,8 @@ class HandleEnergyOrder
                                     }elseif($v1->platform_name == 5){
                                         $msg = ' 下单失败,接口返回:'.json_encode($dlres);
                                     }elseif($v1->platform_name == 6){
+                                        $msg = ' 下单失败,接口返回:'.json_encode($dlres);
+                                    }elseif($v1->platform_name == 7){
                                         $msg = ' 下单失败,接口返回:'.json_encode($dlres);
                                     }
                                     $errorMessage = $errorMessage."能量平台：".$v1->platform_name.$msg;

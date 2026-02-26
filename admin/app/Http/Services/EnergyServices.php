@@ -20,7 +20,9 @@ class EnergyServices
             return ['code' => '400', 'msg' => '未配置能量平台,联系管理员'];
         }
         
-        //轮询,自己质押时判断能量是否足够,用平台则判断平台的trx
+        // 轮询:
+        // - 自己质押(3): 判断能量是否足够（platform_balance >= energy_amount）
+        // - 其它平台(1,2,4,5,6,7): 判断平台的 TRX 余额是否 > 0（包括 NL-API）
         $model = EnergyPlatform::where('poll_group',$pfbotdata['poll_group'])
                 ->where('status',0)
                 ->whereNotNull('platform_apikey')
@@ -29,7 +31,8 @@ class EnergyServices
                          $query1->where('platform_name', 3)->where('platform_balance', '>=', $request['energy_amount']);
                     });
                     $query->orwhere(function ($query2) {
-                         $query2->orwhereIn('platform_name', [1,2,4,5,6])->where('platform_balance', '>', 0);
+                         // 1=Neee.cc, 2=RentEnergysBot, 4=trongas.io, 5=开发者代理, 6=搜狐, 7=NL-API
+                         $query2->orwhereIn('platform_name', [1,2,4,5,6,7])->where('platform_balance', '>', 0);
                      });
                  })
                 ->orderBy('seq_sn','desc')
