@@ -190,4 +190,212 @@ class EnergyPlatformController extends Controller
             return $this->responseData(400, '更新失败'.$e->getMessage());
         }
     }
+
+    /**
+     * NL-API 平台余额充值：为指定 API 账号创建能量池充值订单
+     *
+     * 前端弹窗会传入：
+     * - rid: 能量平台 rid（必须是 platform_name = 7 的 NL-API 平台）
+     * - amount: 充值 TRX 金额（整数）
+     *
+     * 本方法会调用 tgnl-home 的 /api/api-recharge-orders 接口创建充值订单，
+     * 返回支付地址、应付金额（带两位随机小数）、过期时间等信息，用于生成二维码和倒计时。
+     */
+    public function nlApiRecharge(Request $request)
+    {
+        $rid = intval($request->input('rid', 0));
+        $amount = intval($request->input('amount', 0));
+
+        if ($rid <= 0 || $amount <= 0) {
+            return $this->responseData(400, '参数错误：平台ID或充值金额不合法');
+        }
+
+        // 固定收款地址（与 tgnl-home 目前运营中的收款地址保持一致）
+        $paymentAddress = 'TJdtCWfm4iaqcQVMJchrobkbP5Y9yqNpPf';
+
+        // 查询 NL-API 能量平台配置
+        $platform = EnergyPlatform::where('rid', $rid)->first();
+        if (!$platform) {
+            return $this->responseData(400, '能量平台不存在');
+        }
+        if (intval($platform->platform_name) !== 7) {
+            return $this->responseData(400, '仅支持 NL-API 平台充值');
+        }
+
+        $apiUsername = $platform->platform_uid;
+        if (empty($apiUsername)) {
+            return $this->responseData(400, 'NL-API 平台未配置 API 用户名');
+        }
+
+        // NL-API 基础地址：优先环境变量，其次从备注中解析 nl_api_url=...
+        $nlApiBaseUrl = env('NL_API_BASE_URL', 'https://tgnl-home.hfz.pw');
+        if (empty($nlApiBaseUrl) && !empty($platform->comments)) {
+            if (preg_match('/nl_api_url=([^\s]+)/i', $platform->comments, $matches)) {
+                $nlApiBaseUrl = trim($matches[1]);
+            }
+        }
+        if (empty($nlApiBaseUrl)) {
+            return $this->responseData(400, 'NL-API 域名未配置');
+        }
+
+        // 组装请求参数
+        $payload = [
+            'apiUsername'       => $apiUsername,
+            'paymentAddress'    => $paymentAddress,
+            'amountTrx'         => $amount,   // tgnl-home 会自动加上随机两位小数
+            'telegramChatId'    => null,
+            'telegramMessageId' => null,
+        ];
+
+        $url = rtrim($nlApiBaseUrl, '/') . '/api/api-recharge-orders';
+        $header = [
+            'Content-Type: application/json',
+            'Accept: application/json',
+        ];
+
+        try {
+            $raw = Get_Curl($url, json_encode($payload), $header);
+        } catch (\Throwable $e) {
+            return $this->responseData(400, '创建充值订单失败：' . $e->getMessage());
+        }
+
+        if (empty($raw)) {
+            return $this->responseData(400, '创建充值订单失败：接口返回为空');
+        }
+
+        $res = json_decode($raw, true);
+        if (!is_array($res) || empty($res['success']) || empty($res['data'])) {
+            $msg = isset($res['error']) ? $res['error'] : '能量池接口返回异常';
+            return $this->responseData(400, '创建充值订单失败：' . $msg);
+        }
+
+        $data = $res['data'];
+        $orderId       = $data['orderId']    ?? '';
+        $amountTrx     = $data['amountTrx']  ?? 0;
+        $expiresAt     = $data['expiresAt']  ?? '';
+        $createdAt     = $data['createdAt']  ?? '';
+        $payAddress    = $data['paymentAddress'] ?? $paymentAddress;
+
+        if (empty($orderId) || empty($amountTrx) || empty($expiresAt)) {
+            return $this->responseData(400, '创建充值订单失败：返回数据不完整');
+        }
+
+        // 构造 tron: 协议 URI，方便生成二维码
+        $tronUri = sprintf('tron:%s?amount=%s', $payAddress, $amountTrx);
+
+        return $this->responseData(200, 'success', [
+            'order_id'        => $orderId,
+            'api_username'    => $apiUsername,
+            'payment_address' => $payAddress,
+            'amount_trx'      => $amountTrx,
+            'expires_at'      => $expiresAt,
+            'created_at'      => $createdAt,
+            'tron_uri'        => $tronUri,
+        ]);
+    }
+
+    /**
+     * 获取 NL-API 充值历史记录
+     * 
+     * 调用 tgnl-home 的 GET /api/api-recharge-orders 接口，查询指定 API 账号的充值订单历史
+     * 返回最近 10 条订单，包含状态（pending=进行中、paid=已成功、expired=已过期、cancelled=已取消）
+     */
+    public function nlapiRechargeHistory(Request $request)
+    {
+        $rid = intval($request->input('rid', 0));
+
+        if ($rid <= 0) {
+            return $this->responseData(400, '参数错误：平台ID不合法');
+        }
+
+        // 查询 NL-API 能量平台配置
+        $platform = EnergyPlatform::where('rid', $rid)->first();
+        if (!$platform) {
+            return $this->responseData(400, '能量平台不存在');
+        }
+        if (intval($platform->platform_name) !== 7) {
+            return $this->responseData(400, '仅支持 NL-API 平台');
+        }
+
+        $apiUsername = $platform->platform_uid;
+        if (empty($apiUsername)) {
+            return $this->responseData(400, 'NL-API 平台未配置 API 用户名');
+        }
+
+        // NL-API 基础地址：优先环境变量，其次从备注中解析 nl_api_url=...
+        $nlApiBaseUrl = env('NL_API_BASE_URL', 'https://tgnl-home.hfz.pw');
+        if (empty($nlApiBaseUrl) && !empty($platform->comments)) {
+            if (preg_match('/nl_api_url=([^\s]+)/i', $platform->comments, $matches)) {
+                $nlApiBaseUrl = trim($matches[1]);
+            }
+        }
+        if (empty($nlApiBaseUrl)) {
+            return $this->responseData(400, 'NL-API 域名未配置');
+        }
+
+        // 调用 tgnl-home 查询充值订单历史
+        $url = rtrim($nlApiBaseUrl, '/') . '/api/api-recharge-orders?apiUsername=' . urlencode($apiUsername);
+        $header = [
+            'Accept: application/json',
+        ];
+
+        try {
+            $raw = Get_Curl($url, null, $header); // 使用 GET 请求（不传 data 参数）
+        } catch (\Throwable $e) {
+            return $this->responseData(400, '查询充值历史失败：' . $e->getMessage());
+        }
+
+        if (empty($raw)) {
+            return $this->responseData(400, '查询充值历史失败：接口返回为空');
+        }
+
+        $res = json_decode($raw, true);
+        if (!is_array($res) || empty($res['success']) || !isset($res['data'])) {
+            $msg = isset($res['error']) ? $res['error'] : '能量池接口返回异常';
+            return $this->responseData(400, '查询充值历史失败：' . $msg);
+        }
+
+        $orders = $res['data'];
+        if (!is_array($orders)) {
+            $orders = [];
+        }
+
+        // 只返回最近 10 条，并按时间倒序
+        $orders = array_slice($orders, 0, 10);
+
+        // 格式化订单数据，映射状态
+        $formattedOrders = [];
+        foreach ($orders as $order) {
+            $status = $order['status'] ?? 'pending';
+            $statusText = '未知';
+            $statusColor = '#999';
+            
+            if ($status === 'pending') {
+                $statusText = '进行中';
+                $statusColor = '#FFB800'; // 黄色
+            } elseif ($status === 'paid') {
+                $statusText = '已成功';
+                $statusColor = '#5FB878'; // 绿色
+            } elseif ($status === 'expired' || $status === 'cancelled') {
+                $statusText = $status === 'expired' ? '已过期' : '已取消';
+                $statusColor = '#999'; // 灰色
+            }
+
+            $formattedOrders[] = [
+                'order_id' => $order['id'] ?? '',
+                'amount_trx' => $order['amount_trx'] ?? 0,
+                'status' => $status,
+                'status_text' => $statusText,
+                'status_color' => $statusColor,
+                'created_at' => $order['created_at'] ?? '',
+                'expires_at' => $order['expires_at'] ?? '',
+                'paid_at' => $order['paid_at'] ?? null,
+            ];
+        }
+
+        return $this->responseData(200, 'success', [
+            'api_username' => $apiUsername,
+            'orders' => $formattedOrders,
+        ]);
+    }
 }

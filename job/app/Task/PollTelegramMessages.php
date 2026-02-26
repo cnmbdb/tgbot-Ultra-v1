@@ -8,7 +8,6 @@ use App\Model\Telegram\TelegramBot;
 use App\Library\Log;
 use Hyperf\Crontab\Annotation\Crontab;
 use Hyperf\DbConnection\Db;
-use Telegram\Bot\Api;
 
 /**
  * 本地开发模式：使用长轮询获取 Telegram 消息
@@ -18,8 +17,8 @@ class PollTelegramMessages
 {
     public function execute()
     {
-        // 添加执行时间限制，避免任务卡住导致被跳过
-        set_time_limit(3); // 3秒超时，确保在3秒间隔内完成
+        // 添加执行时间限制，避免任务卡住导致被跳过（本地开发适当放宽）
+        set_time_limit(5);
         
         try {
             // 使用 error_log 直接输出，确保能看到日志
@@ -37,19 +36,21 @@ class PollTelegramMessages
         
         foreach ($bots as $bot) {
             try {
-                $telegram = new Api($bot->bot_token);
-                
-                // 本地开发：先删除 Webhook（如果设置了），才能使用 getUpdates
+                // 使用 Telegram HTTP 接口，避免 SDK 与 Hyperf Collection 类型冲突
+                $baseUrl = 'https://api.telegram.org/bot' . $bot->bot_token . '/';
+
+                // 本地开发：尝试删除 Webhook（如果线上配置过 Webhook，getUpdates 会无效）
                 try {
-                    $webhookInfo = $telegram->getWebhookInfo();
-                    if (!empty($webhookInfo->getUrl())) {
-                        // 删除 Webhook，使用 getUpdates
-                        $telegram->removeWebhook();
-                    }
-                } catch (\Exception $e) {
+                    $ch = curl_init();
+                    curl_setopt($ch, CURLOPT_URL, $baseUrl . 'deleteWebhook');
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+                    curl_exec($ch);
+                    curl_close($ch);
+                } catch (\Throwable $e) {
                     // 忽略错误，继续
                 }
-                
+
                 // 获取最后处理的 update_id（使用数据库，避免 Redis 连接问题）
                 $lastUpdateId = 0;
                 try {
@@ -60,56 +61,55 @@ class PollTelegramMessages
                     // 如果字段不存在，使用 0
                 }
                 
-                // 使用 getUpdates 获取新消息（短超时，避免阻塞）
+                // 使用 getUpdates 获取新消息（直接通过 HTTP 调用）
                 try {
                     error_log("PollTelegramMessages: 开始获取消息 [{$bot->rid}], last_update_id: {$lastUpdateId}");
-                    
-                    $updates = $telegram->getUpdates([
+
+                    $params = http_build_query([
                         'offset' => $lastUpdateId + 1,
-                        'timeout' => 1, // 1秒超时，平衡响应速度和避免冲突
-                        'limit' => 100
+                        // 本地开发：降低超时时间，加快返回速度（配合进程 0.5s 间隔）
+                        'timeout' => 0,
+                        'limit' => 100,
                     ]);
-                    
+
+                    $ch = curl_init();
+                    curl_setopt($ch, CURLOPT_URL, $baseUrl . 'getUpdates?' . $params);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+                    $response = curl_exec($ch);
+                    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    $curlError = curl_error($ch);
+                    curl_close($ch);
+
+                    if ($httpCode !== 200 || empty($response)) {
+                        error_log("PollTelegramMessages: getUpdates HTTP错误 [{$bot->rid}] code={$httpCode}, error={$curlError}");
+                        continue;
+                    }
+
+                    $data = json_decode($response, true);
+                    if (!($data['ok'] ?? false)) {
+                        error_log("PollTelegramMessages: getUpdates 返回错误 [{$bot->rid}]: " . substr($response, 0, 500));
+                        continue;
+                    }
+
+                    $updates = $data['result'] ?? [];
                     if (empty($updates)) {
                         error_log("PollTelegramMessages: 没有新消息 [{$bot->rid}]");
                         continue;
                     }
-                    
+
                     error_log("PollTelegramMessages: 收到 " . count($updates) . " 条新消息 [bot_rid: {$bot->rid}]");
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     error_log("PollTelegramMessages: getUpdates 失败 [{$bot->rid}]: " . $e->getMessage() . " | " . $e->getFile() . ":" . $e->getLine());
                     continue;
                 }
                 
-                // 处理每个更新（SDK 返回 Update 对象）
+                // 处理每个更新（此处 $updates 为数组）
                 foreach ($updates as $update) {
                     try {
-                        // 获取 update_id（Telegram SDK 的 Update 对象）
-                        if (method_exists($update, 'getUpdateId')) {
-                            $updateId = $update->getUpdateId();
-                        } elseif (method_exists($update, 'get') && $update->get('update_id')) {
-                            $updateId = $update->get('update_id');
-                        } elseif (is_array($update) && isset($update['update_id'])) {
-                            $updateId = $update['update_id'];
-                        } else {
-                            $updateId = 0;
-                        }
-                        
-                        // 获取 update 数据
-                        if (method_exists($update, 'toArray')) {
-                            $updateData = $update->toArray();
-                        } elseif (method_exists($update, 'all')) {
-                            $updateData = $update->all();
-                        } elseif (is_array($update)) {
-                            $updateData = $update;
-                        } else {
-                            $updateData = (array) $update;
-                        }
-                        
-                        // 添加 update_id 到数据中（如果还没有）
-                        if (!isset($updateData['update_id']) && $updateId > 0) {
-                            $updateData['update_id'] = $updateId;
-                        }
+                        // $update 是数组，直接读取 update_id
+                        $updateId = $update['update_id'] ?? 0;
+                        $updateData = $update;
                         
                         $this->processUpdate($bot->rid, $updateData);
                         
@@ -194,7 +194,8 @@ class PollTelegramMessages
             error_log("PollTelegramMessages: 调用 getdata [bot_rid: {$botRid}, url: {$url}, http_code: {$httpCode}]");
             
             if ($httpCode !== 200) {
-                error_log("处理消息返回非200状态码: {$httpCode}, 响应: " . substr($response, 0, 500));
+                $respPreview = is_string($response) ? substr($response, 0, 500) : json_encode($response);
+                error_log("处理消息返回非200状态码: {$httpCode}, 响应: " . $respPreview);
             }
         } catch (\Exception $e) {
             error_log("处理消息失败: " . $e->getMessage() . " | " . $e->getFile() . ":" . $e->getLine());

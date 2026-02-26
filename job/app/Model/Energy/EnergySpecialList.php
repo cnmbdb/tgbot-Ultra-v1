@@ -15,7 +15,7 @@ class EnergySpecialList extends Model
      *
      * @var string
      */
-    protected $table = 'energy_special_list';
+    protected $table = 't_energy_special_list';
 
     public $primaryKey  = 'rid';
 

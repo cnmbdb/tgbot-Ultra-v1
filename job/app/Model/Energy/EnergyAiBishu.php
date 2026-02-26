@@ -15,7 +15,7 @@ class EnergyAiBishu extends Model
      *
      * @var string
      */
-    protected $table = 'energy_ai_bishu';
+    protected $table = 't_energy_ai_bishu';
 
     public $primaryKey  = 'rid';
 

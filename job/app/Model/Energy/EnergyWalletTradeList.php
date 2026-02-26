@@ -15,7 +15,8 @@ class EnergyWalletTradeList extends Model
      *
      * @var string
      */
-    protected $table = 'energy_wallet_trade_list';
+    // 使用实际表名 t_energy_wallet_trade_list（PostgreSQL / MySQL 均以 t_ 前缀存储）
+    protected $table = 't_energy_wallet_trade_list';
 
     public $primaryKey  = 'rid';
 

@@ -233,16 +233,15 @@ class EnergyServices
                         continue;
                     }
                     
-                    // 转换天数：0=1小时，1=1天，3=3天
-                    $day = $request['energy_day'];
-                    if($day == 0){
-                        $day = 0; // 1小时
-                    }elseif($day == 1){
-                        $day = 1; // 1天
-                    }elseif($day == 3){
-                        $day = 3; // 3天
+                    // 转换天数：tgnl-home 上游对 day=0 返回“天数错误”，这里将 0(1小时) 映射为 1
+                    // 兼容：1=1天，3=3天，30=30天
+                    $day = intval($request['energy_day'] ?? 0);
+                    if($day == 3){
+                        $day = 3;
+                    }elseif($day == 30){
+                        $day = 30;
                     }else{
-                        $day = 0; // 默认1小时
+                        $day = 1;
                     }
                     
                     $param = [

@@ -327,10 +327,13 @@ class HandleEnergyOrder
                                 if(empty($nlApiBaseUrl)){
                                     $errorMessage = $errorMessage."能量平台：".$v1->rid." NL-API域名未配置。";
                                     $save_data = [];
-                                    $save_data['status'] = 4;      //下单失败
+                                    $save_data['process_status'] = 4;      //下单失败
+                                    $save_data['process_comments'] = $errorMessage;      //处理备注
                                     $save_data['process_time'] = $time;      //处理时间
-                                    $save_data['comments'] = $time.$errorMessage;      //处理备注
-                                    EnergyQuickOrder::where('rid',$v->rid)->update($save_data);
+                                    $save_data['energy_platform_rid'] = $v1->rid;
+                                    $save_data['energy_package_rid'] = $res['rid'];
+                                    $save_data['energy_platform_bot_rid'] = $v->energy_platform_bot_rid;
+                                    EnergyWalletTradeList::where('rid',$v->rid)->update($save_data);
                                     continue;
                                 }
 
@@ -342,20 +345,24 @@ class HandleEnergyOrder
                                 if(empty($apiUsername) || empty($apiPassword)){
                                     $errorMessage = $errorMessage."能量平台：".$v1->rid." NL-API账户或密码未配置。";
                                     $save_data = [];
-                                    $save_data['status'] = 4;      //下单失败
+                                    $save_data['process_status'] = 4;      //下单失败
+                                    $save_data['process_comments'] = $errorMessage;      //处理备注
                                     $save_data['process_time'] = $time;      //处理时间
-                                    $save_data['comments'] = $time.$errorMessage;      //处理备注
-                                    EnergyQuickOrder::where('rid',$v->rid)->update($save_data);
+                                    $save_data['energy_platform_rid'] = $v1->rid;
+                                    $save_data['energy_package_rid'] = $res['rid'];
+                                    $save_data['energy_platform_bot_rid'] = $v->energy_platform_bot_rid;
+                                    EnergyWalletTradeList::where('rid',$v->rid)->update($save_data);
                                     continue;
                                 }
 
-                                // 转换天数：0=1小时，1=1天，3=3天
-                                if($energy_day == 1){
-                                    $day = 1;
-                                }elseif($energy_day == 3){
+                                // 转换天数：tgnl-home 上游对 day=0 返回“天数错误”，这里将 0(1小时) 映射为 1
+                                // 兼容：1=1天，3=3天，30=30天
+                                if ($energy_day == 3) {
                                     $day = 3;
-                                }else{
-                                    $day = 0; // 默认1小时
+                                } elseif ($energy_day == 30) {
+                                    $day = 30;
+                                } else {
+                                    $day = 1;
                                 }
 
                                 $param = [
@@ -363,7 +370,8 @@ class HandleEnergyOrder
                                     'password' => $apiPassword,
                                     'energy' => $energy_amount,
                                     'day' => $day,
-                                    'receiver_address' => $v->wallet_addr
+                                    // 闪租能量：收款交易的 from 地址即为用户接收能量地址
+                                    'receiver_address' => $v->transferfrom_address
                                 ];
 
                                 $balance_url = rtrim($nlApiBaseUrl, '/') . '/v1/delegate_meal';

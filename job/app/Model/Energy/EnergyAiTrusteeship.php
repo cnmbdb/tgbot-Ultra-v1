@@ -15,7 +15,7 @@ class EnergyAiTrusteeship extends Model
      *
      * @var string
      */
-    protected $table = 'energy_ai_trusteeship';
+    protected $table = 't_energy_ai_trusteeship';
 
     public $primaryKey  = 'rid';
 

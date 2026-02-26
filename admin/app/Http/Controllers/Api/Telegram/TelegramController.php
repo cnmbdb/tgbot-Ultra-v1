@@ -6954,13 +6954,12 @@ class TelegramController extends Controller
             //判断地址是否标记,强制给的时候不标记
             if($isQiangzhi == 'N' ){
                 $checkAddrUrl = 'https://apilist.tronscanapi.com/api/account/tag?address='.$message[0];
-                
-                $tronapikey = config('apikey.tronapikey');
-                $apikeyrand = $tronapikey[array_rand($tronapikey)];
-                
-                $heders = [
-                    'TRON-PRO-API-KEY:'.$apikeyrand
-                ];
+
+                $apikeyrand = getRandomTronApiKey('tronscan');
+                $heders = [];
+                if ($apikeyrand) {
+                    $heders[] = 'TRON-PRO-API-KEY:'.$apikeyrand;
+                }
                 
                 $checkRes = Get_Curl($checkAddrUrl,null,$heders);
                 
@@ -6984,12 +6983,11 @@ class TelegramController extends Controller
             
             #查usdt或者余额是否足够
             $balance_url = 'https://api.trongrid.io/v1/accounts/'.$message[0];      //查地址
-            $tronapikey = config('apikey.gridapikey');
-            $apikeyrand = $tronapikey[array_rand($tronapikey)];
-            
-            $heders = [
-                "TRON-PRO-API-KEY:".$apikeyrand
-            ];
+            $apikeyrand = getRandomTronApiKey('trongrid');
+            $heders = [];
+            if ($apikeyrand) {
+                $heders[] = "TRON-PRO-API-KEY:".$apikeyrand;
+            }
             
             $res = Get_Curl($balance_url,null,$heders);
             
@@ -7114,12 +7112,11 @@ class TelegramController extends Controller
                         break;
                 }
                 
-                $tronapikey = config('apikey.tronapikey');
-                $apikeyrand = $tronapikey[array_rand($tronapikey)];
-                
-                $heders = [
-                    "TRON-PRO-API-KEY:".$apikeyrand
-                ];
+                $apikeyrand = getRandomTronApiKey('tronscan');
+                $heders = [];
+                if ($apikeyrand) {
+                    $heders[] = "TRON-PRO-API-KEY:".$apikeyrand;
+                }
                 
                 $res = Get_Curl($url,null,$heders);
                 
@@ -7162,12 +7159,11 @@ class TelegramController extends Controller
                         break;
                 }
                 
-                $tronapikey = config('apikey.tronapikey');
-                $apikeyrand = $tronapikey[array_rand($tronapikey)];
-                
-                $heders = [
-                    "TRON-PRO-API-KEY:".$apikeyrand
-                ];
+                $apikeyrand = getRandomTronApiKey('tronscan');
+                $heders = [];
+                if ($apikeyrand) {
+                    $heders[] = "TRON-PRO-API-KEY:".$apikeyrand;
+                }
                 
                 $res = Get_Curl($url,null,$heders);
                 
@@ -7211,12 +7207,11 @@ class TelegramController extends Controller
         #异常处理
         try {
             $url = 'https://apilist.tronscanapi.com/api/account/approve/list?address='.$message[0].'&limit=50&start=0&type=project';      //查地址
-            $tronapikey = config('apikey.tronapikey');
-            $apikeyrand = $tronapikey[array_rand($tronapikey)];
-            
-            $heders = [
-                "TRON-PRO-API-KEY:".$apikeyrand
-            ];
+            $apikeyrand = getRandomTronApiKey('tronscan');
+            $heders = [];
+            if ($apikeyrand) {
+                $heders[] = "TRON-PRO-API-KEY:".$apikeyrand;
+            }
             
             $res = Get_Curl($url,null,$heders);
             
@@ -7309,12 +7304,11 @@ class TelegramController extends Controller
             
             #查usdt或者余额是否足够
             $balance_url = 'https://api.trongrid.io/v1/accounts/'.$message;      //查地址
-            $tronapikey = config('apikey.gridapikey');
-            $apikeyrand = $tronapikey[array_rand($tronapikey)];
-            
-            $heders = [
-                "TRON-PRO-API-KEY:".$apikeyrand
-            ];
+            $apikeyrand = getRandomTronApiKey('trongrid');
+            $heders = [];
+            if ($apikeyrand) {
+                $heders[] = "TRON-PRO-API-KEY:".$apikeyrand;
+            }
             
             $res = Get_Curl($balance_url,null,$heders);
             
@@ -7434,12 +7428,11 @@ class TelegramController extends Controller
             
             #查usdt或者余额是否足够
             $balance_url = 'https://api.trongrid.io/v1/accounts/'.$message;      //查地址
-            $tronapikey = config('apikey.gridapikey');
-            $apikeyrand = $tronapikey[array_rand($tronapikey)];
-            
-            $heders = [
-                "TRON-PRO-API-KEY:".$apikeyrand
-            ];
+            $apikeyrand = getRandomTronApiKey('trongrid');
+            $heders = [];
+            if ($apikeyrand) {
+                $heders[] = "TRON-PRO-API-KEY:".$apikeyrand;
+            }
             
             $res = Get_Curl($balance_url,null,$heders);
             
@@ -7543,12 +7536,11 @@ class TelegramController extends Controller
             
             #查钱包
             $balance_url = 'https://api.trongrid.io/v1/accounts/'.$message;      //查地址
-            $tronapikey = config('apikey.gridapikey');
-            $apikeyrand = $tronapikey[array_rand($tronapikey)];
-            
-            $heders = [
-                "TRON-PRO-API-KEY:".$apikeyrand
-            ];
+            $apikeyrand = getRandomTronApiKey('trongrid');
+            $heders = [];
+            if ($apikeyrand) {
+                $heders[] = "TRON-PRO-API-KEY:".$apikeyrand;
+            }
             
             $res = Get_Curl($balance_url,null,$heders);
             
@@ -7802,12 +7794,11 @@ class TelegramController extends Controller
         #异常处理
         try {
             $url = 'https://apilist.tronscanapi.com/api/accountv2?address='.$message;
-            $tronapikey = config('apikey.tronapikey');
-            $apikeyrand = $tronapikey[array_rand($tronapikey)];
-            
-            $heders = [
-                "TRON-PRO-API-KEY:".$apikeyrand
-            ];
+            $apikeyrand = getRandomTronApiKey('tronscan');
+            $heders = [];
+            if ($apikeyrand) {
+                $heders[] = "TRON-PRO-API-KEY:".$apikeyrand;
+            }
             
             $res = Get_Curl($url,null,$heders);
             
@@ -7911,12 +7902,11 @@ class TelegramController extends Controller
             //tronscan查询失败,查trongrid
             if($research == 'Y'){
                 $url = 'https://api.trongrid.io/v1/accounts/'.$message;
-                $tronapikey = config('apikey.gridapikey');
-                $apikeyrand = $tronapikey[array_rand($tronapikey)];
-                
-                $heders = [
-                    "TRON-PRO-API-KEY:".$apikeyrand
-                ];
+                $apikeyrand = getRandomTronApiKey('trongrid');
+                $heders = [];
+                if ($apikeyrand) {
+                    $heders[] = "TRON-PRO-API-KEY:".$apikeyrand;
+                }
                 
                 $res = Get_Curl($url,null,$heders);
                          

@@ -507,7 +507,13 @@ CREATE TABLE public.t_energy_platform_bot (
     update_time timestamp without time zone,
     agent_tg_uid bigint,
     agent_per_price numeric(18,6),
-    bishu_stop_day integer DEFAULT 0 NOT NULL
+    bishu_stop_day integer DEFAULT 0 NOT NULL,
+    is_open_bishu character(1) DEFAULT 'Y'::bpchar NOT NULL,
+    per_bishu_usdt_price numeric(4,2) DEFAULT 0.50 NOT NULL,
+    per_bishu_energy_quantity integer DEFAULT 65000 NOT NULL,
+    per_energy_day_bishu integer DEFAULT 1,
+    bishu_recovery_type smallint DEFAULT 1 NOT NULL,
+    bishu_daili_type smallint DEFAULT 1 NOT NULL
 );
 
 
@@ -3770,6 +3776,12 @@ ALTER TABLE ONLY public.t_transit_wallet_trade_list
 --
 
 CREATE INDEX idx_energy_third_part_1 ON public.t_energy_third_part USING btree (tg_uid);
+
+--
+-- Name: t_energy_wallet_trade_list_tx_hash_uindex; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX IF NOT EXISTS t_energy_wallet_trade_list_tx_hash_uindex ON public.t_energy_wallet_trade_list USING btree (tx_hash);
 
 
 --

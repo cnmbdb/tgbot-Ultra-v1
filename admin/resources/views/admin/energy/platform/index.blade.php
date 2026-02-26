@@ -89,6 +89,8 @@
     <script type="text/html" id="tpl_opt">
         <div class="layui-btn-group">
             @if( auth('admin')->user()->can('修改能量平台') || auth('admin')->user()->hasrole('超级管理员') )
+                {{-- 余额充值按钮（具体校验在后端完成） --}}
+                <button class="layui-btn layui-btn-sm layui-btn-normal" lay-event="nlapi_recharge" data-rid="@{{d.rid}}" data-uid="@{{d.platform_uid}}">余额充值</button>
                 <button class="layui-btn layui-btn-sm edit_button" onclick="javascript:tools_add('修改能量平台',
                     {
                         'rid':['','hidden','@{{ d.rid }}'],
@@ -169,7 +171,230 @@
                     }, '要修改功能项吗？'
                 );
             });
+
+            // 监听操作列事件（用于 NL-API 余额充值）
+            table.on('tool(userTable)', function (obj) {
+                var data = obj.data;
+                var layEvent = obj.event;
+
+                if (layEvent === 'nlapi_recharge') {
+                    if (data.platform_name != 7) {
+                        layui.layer.msg('仅支持 NL-API 平台充值', {icon: 2});
+                        return;
+                    }
+
+                    var apiUsername = data.platform_uid || '';
+                    var currentRid = data.rid;
+                    var currentDialogIndex = null;
+                    var countdownInterval = null;
+
+                    // 加载充值历史记录
+                    function loadRechargeHistory(callback) {
+                        layui.$.get("{{ route('admin.energy.platform.nlapi_recharge_history') }}", {
+                            rid: currentRid
+                        }, function (res) {
+                            if (res.code == 200 && res.data) {
+                                callback(res.data.orders || []);
+                            } else {
+                                callback([]);
+                            }
+                        }, 'json').fail(function () {
+                            callback([]);
+                        });
+                    }
+
+                    // 渲染历史记录表格
+                    function renderHistoryTable(orders) {
+                        if (!orders || orders.length === 0) {
+                            return '<div style="padding:10px; text-align:center; color:#999;">暂无充值记录</div>';
+                        }
+                        var html = '<table class="layui-table" style="margin:0;">';
+                        html += '<thead><tr><th>时间</th><th>金额(TRX)</th><th>状态</th></tr></thead>';
+                        html += '<tbody>';
+                        for (var i = 0; i < orders.length; i++) {
+                            var order = orders[i];
+                            var createdAt = order.created_at || '';
+                            var amount = parseFloat(order.amount_trx || 0).toFixed(2);
+                            var statusText = order.status_text || '未知';
+                            var statusColor = order.status_color || '#999';
+                            html += '<tr>';
+                            html += '<td>' + createdAt + '</td>';
+                            html += '<td>' + amount + '</td>';
+                            html += '<td><span style="color:' + statusColor + ';">' + statusText + '</span></td>';
+                            html += '</tr>';
+                        }
+                        html += '</tbody></table>';
+                        return html;
+                    }
+
+                    // 显示充值弹窗
+                    function showRechargeDialog(orders) {
+                        var historyHtml = renderHistoryTable(orders);
+                        var dialogHtml = '' +
+                            '<div style="padding:15px;">' +
+                            '  <div style="margin-bottom:15px;">' +
+                            '    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">' +
+                            '      <strong>本接口渠道历史充值记录（最近10条）</strong>' +
+                            '      <button class="layui-btn layui-btn-xs" id="refresh_history_btn">刷新状态</button>' +
+                            '    </div>' +
+                            '    <div id="history_table_container">' + historyHtml + '</div>' +
+                            '  </div>' +
+                            '  <hr style="margin:15px 0;">' +
+                            '  <div style="margin-bottom:15px;">' +
+                            '    <strong>API账号：</strong><span>' + apiUsername + '</span>' +
+                            '  </div>' +
+                            '  <div style="margin-bottom:15px;">' +
+                            '    <strong>充值地址：</strong>' +
+                            '    <div style="display:flex; align-items:center; margin-top:5px;">' +
+                            '      <input type="text" class="layui-input" style="width:200px; text-align:center; margin-right:5px;" readonly value="TJdtCWfm4iaqcQVMJchrobkbP5Y9yqNpPf" />' +
+                            '      <button class="layui-btn layui-btn-xs" onclick="copyToClipboard(\'TJdtCWfm4iaqcQVMJchrobkbP5Y9yqNpPf\')">复制</button>' +
+                            '    </div>' +
+                            '  </div>' +
+                            '  <div style="margin-bottom:15px;">' +
+                            '    <strong>充值金额（整数TRX）：</strong>' +
+                            '    <div style="display:flex; align-items:center; margin-top:5px;">' +
+                            '      <input type="number" class="layui-input" id="recharge_amount_input" style="width:150px; text-align:center; margin-right:5px;" min="1" step="1" placeholder="请输入整数" />' +
+                            '      <span style="font-weight:bold;">TRX</span>' +
+                            '    </div>' +
+                            '  </div>' +
+                            '  <div style="text-align:center;">' +
+                            '    <button class="layui-btn layui-btn-normal" id="generate_order_btn">生成订单</button>' +
+                            '  </div>' +
+                            '  <div id="payment_info_container" style="display:none; margin-top:20px; text-align:center;"></div>' +
+                            '</div>';
+
+                        currentDialogIndex = layui.layer.open({
+                            type: 1,
+                            title: 'NL-API 余额充值 - ' + apiUsername,
+                            area: ['600px', '700px'],
+                            content: dialogHtml,
+                            success: function (layero, index) {
+                                // 刷新历史记录按钮
+                                $('#refresh_history_btn').on('click', function () {
+                                    var btn = $(this);
+                                    btn.prop('disabled', true).text('刷新中...');
+                                    loadRechargeHistory(function (newOrders) {
+                                        $('#history_table_container').html(renderHistoryTable(newOrders));
+                                        btn.prop('disabled', false).text('刷新状态');
+                                    });
+                                });
+
+                                // 生成订单按钮
+                                $('#generate_order_btn').on('click', function () {
+                                    var amount = parseInt($('#recharge_amount_input').val(), 10);
+                                    if (!amount || amount <= 0) {
+                                        layui.layer.msg('请输入大于0的整数金额', {icon: 2});
+                                        return;
+                                    }
+
+                                    var btn = $(this);
+                                    btn.prop('disabled', true).text('生成中...');
+
+                                    layui.$.post("{{ route('admin.energy.platform.nlapi_recharge') }}", {
+                                        rid: currentRid,
+                                        amount: amount,
+                                        _token: '{{ csrf_token() }}'
+                                    }, function (res) {
+                                        btn.prop('disabled', false).text('生成订单');
+                                        if (res.code != 200) {
+                                            layui.layer.msg(res.msg || '创建充值订单失败', {icon: 2});
+                                            return;
+                                        }
+
+                                        var d = res.data || {};
+                                        var paymentAddress = d.payment_address || 'TJdtCWfm4iaqcQVMJchrobkbP5Y9yqNpPf';
+                                        var amountTrx = parseFloat(d.amount_trx || amount).toFixed(2);
+                                        var expiresAt = new Date(d.expires_at);
+                                        var currentTime = new Date();
+                                        var timeLeft = Math.max(0, Math.floor((expiresAt.getTime() - currentTime.getTime()) / 1000));
+
+                                        var qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=tron:' + paymentAddress + '?amount=' + amountTrx;
+
+                                        var paymentHtml = '' +
+                                            '<div style="padding:20px; text-align:center;">' +
+                                            '  <div style="margin-bottom:15px; font-weight:bold;">请扫描二维码或复制地址支付</div>' +
+                                            '  <img src="' + qrCodeUrl + '" style="width:200px; height:200px; margin-bottom:15px; border:1px solid #ddd;" />' +
+                                            '  <div style="margin-bottom:10px;">' +
+                                            '    <div style="font-weight:bold; margin-bottom:5px;">充值地址：</div>' +
+                                            '    <div style="display:flex; align-items:center; justify-content:center;">' +
+                                            '      <input type="text" class="layui-input" style="width:250px; text-align:center; margin-right:5px;" readonly value="' + paymentAddress + '" />' +
+                                            '      <button class="layui-btn layui-btn-xs" onclick="copyToClipboard(\'' + paymentAddress + '\')">复制</button>' +
+                                            '    </div>' +
+                                            '  </div>' +
+                                            '  <div style="margin-bottom:15px;">' +
+                                            '    <div style="font-weight:bold; margin-bottom:5px;">支付金额：</div>' +
+                                            '    <div style="display:flex; align-items:center; justify-content:center;">' +
+                                            '      <input type="text" class="layui-input" style="width:120px; text-align:center; margin-right:5px;" readonly value="' + amountTrx + '" />' +
+                                            '      <span style="font-weight:bold;">TRX</span>' +
+                                            '    </div>' +
+                                            '  </div>' +
+                                            '  <div style="font-size:14px; color:#FF5722; font-weight:bold;">支付倒计时：<span id="nlapi_recharge_countdown"></span></div>' +
+                                            '</div>';
+
+                                        $('#payment_info_container').html(paymentHtml).show();
+                                        $('#recharge_amount_input').prop('disabled', true);
+                                        $('#generate_order_btn').hide();
+
+                                        // 启动倒计时
+                                        var countdownElementId = 'nlapi_recharge_countdown';
+                                        var updateCountdown = function () {
+                                            var minutes = Math.floor(timeLeft / 60);
+                                            var seconds = timeLeft % 60;
+                                            $('#' + countdownElementId).text(
+                                                (minutes < 10 ? '0' : '') + minutes + ':' + (seconds < 10 ? '0' : '') + seconds
+                                            );
+
+                                            if (timeLeft <= 0) {
+                                                clearInterval(countdownInterval);
+                                                $('#' + countdownElementId).text('已过期，如未支付请重新生成订单');
+                                                layui.layer.msg('订单已过期，请重新生成订单', {icon: 5});
+                                            } else {
+                                                timeLeft--;
+                                            }
+                                        };
+                                        updateCountdown();
+                                        countdownInterval = setInterval(updateCountdown, 1000);
+
+                                        // 刷新历史记录（新订单会显示为"进行中"）
+                                        setTimeout(function () {
+                                            loadRechargeHistory(function (newOrders) {
+                                                $('#history_table_container').html(renderHistoryTable(newOrders));
+                                            });
+                                        }, 1000);
+                                    }, 'json').fail(function () {
+                                        btn.prop('disabled', false).text('生成订单');
+                                        layui.layer.msg('请求失败，请稍后重试', {icon: 2});
+                                    });
+                                });
+                            },
+                            end: function () {
+                                if (countdownInterval) {
+                                    clearInterval(countdownInterval);
+                                }
+                            }
+                        });
+                    }
+
+                    // 初始加载历史记录并显示弹窗
+                    var loadIndex = layui.layer.load(1, {shade: 0.1});
+                    loadRechargeHistory(function (orders) {
+                        layui.layer.close(loadIndex);
+                        showRechargeDialog(orders);
+                    });
+                }
+            });
         });
+
+        // 复制到剪贴板函数
+        function copyToClipboard(text) {
+            var input = document.createElement('textarea');
+            input.innerHTML = text;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+            layui.layer.msg('复制成功', {icon: 1, time: 1000});
+        }
 
         function get_online_data() {
             layui.use('table', function () {

@@ -22,6 +22,9 @@ class ConfigController extends Controller
     {
         $data = $request->all(); 
         foreach ($data as $k => $v) {
+            if (in_array($k, ['_token', 'config_type'])) {
+                continue;
+            }
             if($v == ''){
                 return $this->responseData(400, '请把内容全部填写');
             }
@@ -32,12 +35,39 @@ class ConfigController extends Controller
             $admin_id = Auth::guard('admin')->id();
             $time = nowDate();
             foreach ($data as $k => $v) {
+                if (in_array($k, ['_token', 'config_type'])) {
+                    continue;
+                }
                 if(is_array($v)){
                     $v = json_encode($v);
                 }
-                SysConfig::where('config_key',$k)->update([
-                        'config_val'=> $v
+
+                // 新增：支持新增配置项（如 TRON API key），如果不存在则创建
+                $config = SysConfig::where('config_key', $k)->first();
+                if ($config) {
+                    $config->config_val = $v;
+                    $config->update_by = (string)$admin_id;
+                    $config->update_time = $time;
+                    $config->save();
+                } else {
+                    // 仅为新 key 设置一个基础备注，避免 NOT NULL 约束报错
+                    $comments = '系统配置项 ' . $k;
+                    if ($k === 'tronscan_api_keys') {
+                        $comments = 'TRONSCAN API Keys，逗号分隔';
+                    } elseif ($k === 'trongrid_api_keys') {
+                        $comments = 'TRONGRID API Keys，逗号分隔';
+                    }
+
+                    SysConfig::create([
+                        'config_key'   => $k,
+                        'config_val'   => $v,
+                        'comments'     => $comments,
+                        'create_by'    => (string)$admin_id,
+                        'create_time'  => $time,
+                        'update_by'    => (string)$admin_id,
+                        'update_time'  => $time,
                     ]);
+                }
             }
 
             DB::commit();
