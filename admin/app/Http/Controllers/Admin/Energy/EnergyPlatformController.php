@@ -92,11 +92,11 @@ class EnergyPlatformController extends Controller
                 'platform_name' => $platform_name,
                 'platform_uid' => $platform_uid,
                 'alert_platform_balance' => $alert_platform_balance,
-                'tg_notice_obj' => $request->tg_notice_obj ?? '',
+            'tg_notice_obj' => $request->tg_notice_obj ?? '',
                 'tg_notice_bot_rid' => $tg_notice_bot_rid,
                 'seq_sn' => $seq_sn,
-                'comments' => $request->comments ?? '',
-                'create_time' => nowDate()
+            'comments' => $request->comments ?? '',
+            'create_time' => nowDate()
             ];
             
             // 如果提供了 platform_apikey，需要加密保存（NL-API 平台需要）
@@ -114,7 +114,7 @@ class EnergyPlatformController extends Controller
             
             $res = EnergyPlatform::create($data);
             DB::commit();
-            return $res ? $this->responseData(200, '添加成功') : $this->responseData(400, '添加失败');
+        return $res ? $this->responseData(200, '添加成功') : $this->responseData(400, '添加失败');
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('添加能量平台失败: '.$e->getMessage().' | 堆栈: '.$e->getTraceAsString());
