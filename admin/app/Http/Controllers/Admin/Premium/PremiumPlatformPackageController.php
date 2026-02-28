@@ -212,7 +212,7 @@ class PremiumPlatformPackageController extends Controller
             PremiumPlatformPackage::insertUsing([
                 'bot_rid', 'premium_platform_rid', 'package_name', 'package_month','usdt_price','callback_data','seq_sn','status','show_notes','package_pic','comments','create_time'
             ], PremiumPlatformPackage::selectRaw(
-                "$pasteData->bot_rid, $request->paste_premium_platform_rid, package_name, package_month, usdt_price, concat('premium_',md5(rand())), seq_sn, status, show_notes, package_pic, comments, sysdate()"
+                "$pasteData->bot_rid, $request->paste_premium_platform_rid, package_name, package_month, usdt_price, concat('premium_',md5(rand())), seq_sn, status, show_notes, package_pic, comments, now()"
             )->where('premium_platform_rid', $request->copy_premium_platform_rid));
             
             DB::commit();

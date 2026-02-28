@@ -219,7 +219,7 @@ class EnergyPlatformPackageController extends Controller
             EnergyPlatformPackage::insertUsing([
                 'bot_rid', 'package_type', 'package_name','energy_amount','energy_day','trx_price','agent_trx_price','status','seq_sn','create_time','callback_data','show_notes','package_pic'
             ], EnergyPlatformPackage::selectRaw(
-                "$request->paste_bot_rid, package_type, package_name, energy_amount, energy_day, trx_price, agent_trx_price, status, seq_sn, sysdate(),concat('energy_',md5(rand())), show_notes, package_pic"
+                "$request->paste_bot_rid, package_type, package_name, energy_amount, energy_day, trx_price, agent_trx_price, status, seq_sn, now(),concat('energy_',md5(rand())), show_notes, package_pic"
             )->where('bot_rid', $request->copy_bot_rid));
             
             DB::commit();
