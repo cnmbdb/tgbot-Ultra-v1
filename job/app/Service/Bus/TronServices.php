@@ -183,7 +183,7 @@ class TronServices
         try {
             # 签名
             $signTransaction = $tron->signTransaction($transaction);
-        }catch (TronException $e){
+        }catch (\IEXBase\TronAPI\Exception\TronException $e){
             return ['code' => 400,'msg' => "签名并且广播:". $e->getMessage()];
         }
 

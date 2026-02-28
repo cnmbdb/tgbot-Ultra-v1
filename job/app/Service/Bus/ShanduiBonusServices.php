@@ -158,13 +158,14 @@ class ShanduiBonusServices
                                 
                                 if($sendback_coin_name == 'trx'){
                                     $trxkey = array_search('_', array_column($withPriceTokens, 'tokenId'));
-                                    if($trxkey >= 0){
+                                    // array_search 找不到返回 false，这里需要显式判断 !== false
+                                    if($trxkey !== false){
                                         $balance = $withPriceTokens[$trxkey]['amount'];
                                     }
                                 }else{
                                     // 获取TRC20余额
                                     $usdtkey = array_search('TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', array_column($withPriceTokens, 'tokenId'));
-                                    if(is_bool($usdtkey)){
+                                    if($usdtkey === false){
                                         $balance = 0;
                                     }else{
                                         $balance = calculationExcept($withPriceTokens[$usdtkey]['balance'] ,$withPriceTokens[$usdtkey]['tokenDecimal']);

@@ -136,7 +136,8 @@ class SendTransitTgMessage
                         $notice_receive = 'Y';
                     }
                     
-                    if($notice_send == 'Y' || $notice_receive = 'Y'){
+                    // 只要任意一边需要标记为已通知，就更新记录
+                    if($notice_send == 'Y' || $notice_receive == 'Y'){
                         $save_data = [];
                         $save_data['tg_notice_status_receive'] = $notice_receive == 'Y' ? 'Y' : $v->tg_notice_status_receive;
                         $save_data['tg_notice_status_send'] = $notice_send == 'Y' ? 'Y' : $v->tg_notice_status_send;
