@@ -7,7 +7,11 @@ use App\Services\AipHttpClient;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
 use App\Models\Telegram\TelegramBot;
+use App\Models\Telegram\TelegramBotCommand;
 use App\Models\Telegram\TelegramBotKeyreply;
+use App\Models\Telegram\TelegramBotKeyreplyKeyboard;
+use App\Models\Telegram\TelegramBotAd;
+use App\Models\Telegram\TelegramBotAdKeyboard;
 use App\Models\Premium\PremiumPlatform;
 use App\Models\Energy\EnergyPlatformBot;
 use App\Models\Transit\TransitWallet;
@@ -15,6 +19,22 @@ use Telegram\Bot\Api;
 
 class TelegrambotController extends Controller
 {
+    /**
+     * 新增机器人时自动继承配置的模板机器人 rid（可在 .env 配置 TG_BOT_TEMPLATE_RID）
+     */
+    private function getBotTemplateRid(): int
+    {
+        return (int) (env('TG_BOT_TEMPLATE_RID', 1) ?: 1);
+    }
+
+    /**
+     * 是否在新增机器人时自动复制模板配置（可在 .env 配置 TG_BOT_AUTO_CLONE_CONFIG=true/false）
+     */
+    private function autoCloneEnabled(): bool
+    {
+        return (bool) env('TG_BOT_AUTO_CLONE_CONFIG', true);
+    }
+
     public function index(Request $request)
     {
         return view('admin.telegram.telegrambot.index');
@@ -45,14 +65,208 @@ class TelegrambotController extends Controller
         if(!empty($data)){
             return $this->responseData(400, '机器人已存在');
         }
-        
-        $res = TelegramBot::create([
-            'bot_token' => $request->bot_token,
-            'bot_admin_username' => $request->bot_admin_username,
-            'comments' => $request->comments,
-            'create_time' => nowDate()
-        ]);
-        return $res ? $this->responseData(200, '添加成功') : $this->responseData(400, '添加失败');
+
+        DB::beginTransaction();
+        try {
+            /** @var TelegramBot $res */
+            $res = TelegramBot::create([
+                'bot_token' => $request->bot_token,
+                'bot_admin_username' => $request->bot_admin_username,
+                'comments' => $request->comments,
+                'create_time' => nowDate()
+            ]);
+
+            // 新增机器人默认继承模板机器人配置（命令/关键词/广告等），避免“新增机器人不回复”
+            if (!empty($res) && $this->autoCloneEnabled()) {
+                $fromRid = (int) ($request->clone_from_rid ?? 0);
+                if ($fromRid <= 0) {
+                    $fromRid = $this->getBotTemplateRid();
+                }
+                // 防止自己拷贝自己
+                if ($fromRid > 0 && (int)$fromRid !== (int)$res->rid) {
+                    $this->cloneBotConfigInternal($fromRid, (int)$res->rid, false);
+                }
+            }
+
+            DB::commit();
+            return $this->responseData(200, '添加成功');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return $this->responseData(400, '添加失败: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * 手动复制模板机器人配置到指定机器人（用于已存在的机器人）
+     * POST: rid(目标机器人), from_rid(可选，来源机器人，默认 TG_BOT_TEMPLATE_RID), force(可选，1=覆盖)
+     */
+    public function cloneConfig(Request $request)
+    {
+        $toRid = (int) ($request->rid ?? 0);
+        if ($toRid <= 0) {
+            return $this->responseData(400, '缺少目标机器人 rid');
+        }
+
+        $fromRid = (int) ($request->from_rid ?? 0);
+        if ($fromRid <= 0) {
+            $fromRid = $this->getBotTemplateRid();
+        }
+
+        if ($fromRid === $toRid) {
+            return $this->responseData(400, '来源机器人和目标机器人不能相同');
+        }
+
+        $force = (string)($request->force ?? '') === '1';
+
+        DB::beginTransaction();
+        try {
+            $msg = $this->cloneBotConfigInternal($fromRid, $toRid, $force);
+            DB::commit();
+            return $this->responseData(200, $msg);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return $this->responseData(400, '复制失败: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * 复制机器人配置（命令/关键词/广告 + 关联键盘）
+     * @param int $fromRid
+     * @param int $toRid
+     * @param bool $force 是否覆盖（true 时会先清空目标机器人相关配置）
+     * @return string
+     */
+    private function cloneBotConfigInternal(int $fromRid, int $toRid, bool $force): string
+    {
+        $fromBot = TelegramBot::where('rid', $fromRid)->first();
+        $toBot = TelegramBot::where('rid', $toRid)->first();
+        if (empty($fromBot) || empty($toBot)) {
+            throw new \RuntimeException('来源或目标机器人不存在');
+        }
+
+        if ($force) {
+            TelegramBotCommand::where('bot_rid', $toRid)->delete();
+            TelegramBotKeyreplyKeyboard::where('bot_rid', $toRid)->delete();
+            TelegramBotKeyreply::where('bot_rid', $toRid)->delete();
+            TelegramBotAdKeyboard::where('bot_rid', $toRid)->delete();
+            TelegramBotAd::where('bot_rid', $toRid)->delete();
+        } else {
+            // 目标已有配置就不重复复制（避免误覆盖）
+            $hasAny = TelegramBotCommand::where('bot_rid', $toRid)->exists()
+                || TelegramBotKeyreply::where('bot_rid', $toRid)->exists()
+                || TelegramBotAd::where('bot_rid', $toRid)->exists();
+            if ($hasAny) {
+                return '目标机器人已存在配置，如需覆盖请传 force=1';
+            }
+        }
+
+        $now = nowDate();
+        $copied = [
+            'command' => 0,
+            'keyreply' => 0,
+            'keyreply_keyboard' => 0,
+            'ad' => 0,
+            'ad_keyboard' => 0,
+        ];
+
+        // 1) 复制命令
+        $commands = TelegramBotCommand::where('bot_rid', $fromRid)->orderBy('rid')->get();
+        foreach ($commands as $c) {
+            TelegramBotCommand::create([
+                'bot_rid' => $toRid,
+                'command' => $c->command,
+                'description' => $c->description,
+                'command_type' => $c->command_type,
+                'seq_sn' => $c->seq_sn,
+                'create_by' => $c->create_by,
+                'create_time' => $now,
+                'update_by' => $c->update_by,
+                'update_time' => $now,
+            ]);
+            $copied['command']++;
+        }
+
+        // 2) 复制关键词回复，并建立 rid 映射
+        $keyreplyMap = [];
+        $keyreplies = TelegramBotKeyreply::where('bot_rid', $fromRid)->orderBy('rid')->get();
+        foreach ($keyreplies as $kr) {
+            $new = TelegramBotKeyreply::create([
+                'bot_rid' => $toRid,
+                'key_type' => $kr->key_type,
+                'monitor_word' => $kr->monitor_word,
+                'reply_photo' => $kr->reply_photo,
+                'reply_content' => $kr->reply_content,
+                'opt_type' => $kr->opt_type,
+                'status' => $kr->status,
+                'create_by' => $kr->create_by,
+                'create_time' => $now,
+                'update_by' => $kr->update_by,
+                'update_time' => $now,
+            ]);
+            $keyreplyMap[(int)$kr->rid] = (int)$new->rid;
+            $copied['keyreply']++;
+        }
+
+        // 3) 复制关键词-键盘关系（keyboard 表是全局的，不需要复制）
+        $krBoards = TelegramBotKeyreplyKeyboard::where('bot_rid', $fromRid)->orderBy('rid')->get();
+        foreach ($krBoards as $kb) {
+            $oldKeyreplyRid = (int)$kb->keyreply_rid;
+            if (!isset($keyreplyMap[$oldKeyreplyRid])) {
+                continue;
+            }
+            TelegramBotKeyreplyKeyboard::create([
+                'bot_rid' => $toRid,
+                'keyreply_rid' => $keyreplyMap[$oldKeyreplyRid],
+                'keyboard_rid' => $kb->keyboard_rid,
+                'create_by' => $kb->create_by,
+                'create_time' => $now,
+                'update_by' => $kb->update_by,
+                'update_time' => $now,
+            ]);
+            $copied['keyreply_keyboard']++;
+        }
+
+        // 4) 复制定时广告，并建立 rid 映射
+        $adMap = [];
+        $ads = TelegramBotAd::where('bot_rid', $fromRid)->orderBy('rid')->get();
+        foreach ($ads as $ad) {
+            $newAd = TelegramBotAd::create([
+                'bot_rid' => $toRid,
+                'notice_cycle' => $ad->notice_cycle,
+                'notice_obj' => $ad->notice_obj,
+                'notice_photo' => $ad->notice_photo,
+                'notice_ad' => $ad->notice_ad,
+                'status' => $ad->status,
+                'last_notice_time' => $ad->last_notice_time,
+                'create_by' => $ad->create_by,
+                'create_time' => $now,
+                'update_by' => $ad->update_by,
+                'update_time' => $now,
+            ]);
+            $adMap[(int)$ad->rid] = (int)$newAd->rid;
+            $copied['ad']++;
+        }
+
+        // 5) 复制广告-键盘关系
+        $adBoards = TelegramBotAdKeyboard::where('bot_rid', $fromRid)->orderBy('rid')->get();
+        foreach ($adBoards as $ab) {
+            $oldAdRid = (int)$ab->ad_rid;
+            if (!isset($adMap[$oldAdRid])) {
+                continue;
+            }
+            TelegramBotAdKeyboard::create([
+                'bot_rid' => $toRid,
+                'ad_rid' => $adMap[$oldAdRid],
+                'keyboard_rid' => $ab->keyboard_rid,
+                'create_by' => $ab->create_by,
+                'create_time' => $now,
+                'update_by' => $ab->update_by,
+                'update_time' => $now,
+            ]);
+            $copied['ad_keyboard']++;
+        }
+
+        return '复制完成：命令'.$copied['command'].'条，关键词'.$copied['keyreply'].'条，关键词键盘'.$copied['keyreply_keyboard'].'条，广告'.$copied['ad'].'条，广告键盘'.$copied['ad_keyboard'].'条';
     }
     
     //删除

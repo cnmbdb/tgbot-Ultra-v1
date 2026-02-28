@@ -202,7 +202,7 @@ class CommandController extends Controller
             TelegramBotCommand::insertUsing([
                 'bot_rid', 'command', 'description', 'command_type','seq_sn','create_time'
             ], TelegramBotCommand::selectRaw(
-                "$request->paste_bot_rid, command, description, command_type, seq_sn, sysdate()"
+                "$request->paste_bot_rid, command, description, command_type, seq_sn, now()"
             )->where('bot_rid', $request->copy_bot_rid));
             
             DB::commit();

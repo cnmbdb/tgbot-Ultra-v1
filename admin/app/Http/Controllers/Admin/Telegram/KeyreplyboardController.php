@@ -141,7 +141,7 @@ class KeyreplyboardController extends Controller
             TelegramBotKeyreplyKeyboard::insertUsing([
                 'bot_rid', 'keyreply_rid', 'keyboard_rid', 'create_time'
             ], TelegramBotKeyboard::selectRaw(
-                "$data->bot_rid, $request->keyreply_rid, rid, sysdate()"
+                "$data->bot_rid, $request->keyreply_rid, rid, now()"
             )->where('keyboard_type', $request->keyboard_type));
             
             DB::commit();
@@ -187,7 +187,7 @@ class KeyreplyboardController extends Controller
                 TelegramBotKeyreplyKeyboard::insertUsing([
                     'bot_rid', 'keyreply_rid', 'keyboard_rid', 'create_time'
                 ], TelegramBotKeyboard::selectRaw(
-                    "$request->bot_rid, $keyreply_rid, rid, sysdate()"
+                    "$request->bot_rid, $keyreply_rid, rid, now()"
                 )->where('keyboard_type', $request->keyboard_type));
             
             }

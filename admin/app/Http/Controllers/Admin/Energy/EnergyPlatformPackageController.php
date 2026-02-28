@@ -73,7 +73,7 @@ class EnergyPlatformPackageController extends Controller
         if(empty($request->package_name)){
             return $this->responseData(400, '套餐名称不能为空');
         }
-
+        
         // 兼容：表单空字符串会导致 PostgreSQL numeric/integer 字段写入报错
         $seqSn = (isset($request->seq_sn) && $request->seq_sn !== '' && $request->seq_sn !== null) ? intval($request->seq_sn) : 0;
         $agentTrxPrice = (isset($request->agent_trx_price) && $request->agent_trx_price !== '' && $request->agent_trx_price !== null) ? floatval($request->agent_trx_price) : 0;
@@ -219,7 +219,7 @@ class EnergyPlatformPackageController extends Controller
             EnergyPlatformPackage::insertUsing([
                 'bot_rid', 'package_type', 'package_name','energy_amount','energy_day','trx_price','agent_trx_price','status','seq_sn','create_time','callback_data','show_notes','package_pic'
             ], EnergyPlatformPackage::selectRaw(
-                "$request->paste_bot_rid, package_type, package_name, energy_amount, energy_day, trx_price, agent_trx_price, status, seq_sn, sysdate(),concat('energy_',md5(rand())), show_notes, package_pic"
+                "$request->paste_bot_rid, package_type, package_name, energy_amount, energy_day, trx_price, agent_trx_price, status, seq_sn, now(),concat('energy_',md5(rand())), show_notes, package_pic"
             )->where('bot_rid', $request->copy_bot_rid));
             
             DB::commit();

@@ -167,7 +167,7 @@ class TelegramBotAdKeyboardController extends Controller
             TelegramBotAdKeyboard::insertUsing([
                 'bot_rid', 'ad_rid', 'keyboard_rid', 'create_time'
             ], TelegramBotKeyboard::selectRaw(
-                "$data->bot_rid, $request->ad_rid, rid, sysdate()"
+                "$data->bot_rid, $request->ad_rid, rid, now()"
             )->where('keyboard_type', $request->keyboard_type));
             
             DB::commit();

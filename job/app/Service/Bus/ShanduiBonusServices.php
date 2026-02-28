@@ -109,8 +109,16 @@ class ShanduiBonusServices
                 $success_status = 0;
                 $balance = 0;
                 
-                $api_key = config('apikey.gridapikey');
-                $apikeyrand = $api_key[array_rand($api_key)];
+                // 优先从配置/环境随机取一个 trongrid API key；如果没有，就不带 header 也继续执行
+                $apikeyrand = null;
+                if (function_exists('getRandomTronApiKey')) {
+                    $apikeyrand = getRandomTronApiKey('trongrid');
+                } else {
+                    $api_key = config('apikey.gridapikey');
+                    if (is_array($api_key) && !empty($api_key)) {
+                        $apikeyrand = $api_key[array_rand($api_key)];
+                    }
+                }
         
                 //波场接口API
                 $TronApiConfig = [
@@ -137,12 +145,21 @@ class ShanduiBonusServices
                 //如果还获取不成功,换接口获取
                 if(empty($balance) || $balance == 0){
                     $url = 'https://apilist.tronscanapi.com/api/accountv2?address='.$OWNER_ADDRESS;
-                    $tronapikey = config('apikey.tronapikey');
-                    $apikeyrand = $tronapikey[array_rand($tronapikey)];
+
+                    $apikeyrand = null;
+                    if (function_exists('getRandomTronApiKey')) {
+                        $apikeyrand = getRandomTronApiKey('tronscan');
+                    } else {
+                        $tronapikey = config('apikey.tronapikey');
+                        if (is_array($tronapikey) && !empty($tronapikey)) {
+                            $apikeyrand = $tronapikey[array_rand($tronapikey)];
+                        }
+                    }
                     
-                    $heders = [
-                        "TRON-PRO-API-KEY:".$apikeyrand
-                    ];
+                    $heders = [];
+                    if (!empty($apikeyrand)) {
+                        $heders[] = "TRON-PRO-API-KEY:".$apikeyrand;
+                    }
                     
                     $res = Get_Pay($url,null,$heders);
                     
@@ -158,13 +175,13 @@ class ShanduiBonusServices
                                 
                                 if($sendback_coin_name == 'trx'){
                                     $trxkey = array_search('_', array_column($withPriceTokens, 'tokenId'));
-                                    if($trxkey >= 0){
+                                    if($trxkey !== false){
                                         $balance = $withPriceTokens[$trxkey]['amount'];
                                     }
                                 }else{
                                     // 获取TRC20余额
                                     $usdtkey = array_search('TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', array_column($withPriceTokens, 'tokenId'));
-                                    if(is_bool($usdtkey)){
+                                    if($usdtkey === false){
                                         $balance = 0;
                                     }else{
                                         $balance = calculationExcept($withPriceTokens[$usdtkey]['balance'] ,$withPriceTokens[$usdtkey]['tokenDecimal']);
@@ -197,35 +214,10 @@ class ShanduiBonusServices
                 
                             //php必须安装gmp扩展才能转账
                             $res = $tron->trxTransaction($address,$amount);
-                            $trid = $res['data']['txid'];
-                            $troncode = $res['code'];
-                            
-                            //多签如果不是owner，调用下面这种api方式，注意要先查询私钥对应地址的permissionid
-                            // $apiparam = [
-                            //     'fromaddress' => $OWNER_ADDRESS,
-                            //     'toaddress' => $address,
-                            //     'sendamount' => $amount,
-                            //     'pri1' => $OWNER_PRIVATE_KEY,
-                            //     'permissionid' => 2,
-                            // ];
-                            // $res = Get_Pay('xxx/sendtrxbypermid',$apiparam);
-                            
-                            // if(empty($res)){
-                            //     $troncode = 400;
-                            // }else{
-                            //     $res = json_decode($res,true);
-                            //     if(empty($res['code'])){
-                            //         $troncode = 400;
-                            //     }else{
-                            //         if($res['code'] == 200){
-                            //             $troncode = 200;
-                            //             $trid = $res['data']['txid'];
-                            //         }else{
-                            //             $troncode = 400;
-                            //         }
-                            //     }
-                            // }
-                            
+                            // 记录TRX转账返回结果
+                            $this->log('shanduibonus','TRX转账返回:'.json_encode($res, JSON_UNESCAPED_UNICODE));
+                            $trid = isset($res['data']['txid']) ? $res['data']['txid'] : '';
+                            $troncode = isset($res['code']) ? $res['code'] : 400;
                         }else{
                             $trid = '扣预支后为0,不转账';
                             $troncode = 200;
@@ -237,8 +229,10 @@ class ShanduiBonusServices
                         // TRC20转账
                         if($amount > 0){
                             $res = $tron->trc20Transaction($address,$amount,'USDT');
-                            $trid = $res['data']['txid'];
-                            $troncode = $res['code'];
+                            // 记录TRC20转账返回结果
+                            $this->log('shanduibonus','TRC20转账返回:'.json_encode($res, JSON_UNESCAPED_UNICODE));
+                            $trid = isset($res['data']['txid']) ? $res['data']['txid'] : '';
+                            $troncode = isset($res['code']) ? $res['code'] : 400;
                             
                         }else{
                             $trid = '扣预支后为0,不转账';
@@ -281,9 +275,11 @@ class ShanduiBonusServices
                         
                         $success_count++;
                     }else{
+                        // 转账失败（非余额不足），记录失败原因，标记为余额不足状态，方便后台补发
+                        $msg = isset($res['msg']) ? $res['msg'] : '转账失败，code='.$troncode;
                         $save_data = [];
-                        $save_data['process_status'] = 1;      //待兑换
-                        $save_data['process_comments'] = '待兑换';      //处理备注  
+                        $save_data['process_status'] = 10;      //余额不足/失败
+                        $save_data['process_comments'] = '自动转账失败:'.$msg;      //处理备注  
                         TransitWalletTradeList::where('rid',$v->rid)->update($save_data);
                     }
                 }else{

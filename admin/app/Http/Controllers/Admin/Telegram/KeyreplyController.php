@@ -201,7 +201,7 @@ class KeyreplyController extends Controller
             TelegramBotKeyreply::insertUsing([
                 'bot_rid', 'key_type', 'monitor_word', 'reply_photo','reply_content','opt_type','status','create_time'
             ], TelegramBotKeyreply::selectRaw(
-                "$request->paste_bot_rid, key_type, monitor_word, reply_photo, reply_content, opt_type, status, sysdate()"
+                "$request->paste_bot_rid, key_type, monitor_word, reply_photo, reply_content, opt_type, status, now()"
             )->where('bot_rid', $request->copy_bot_rid));
             
             DB::commit();

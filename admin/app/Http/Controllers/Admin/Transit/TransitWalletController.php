@@ -174,7 +174,6 @@ class TransitWalletController extends Controller
     public function updateprikey(Request $request)
     {
         $rsa_services = new RsaServices();
-        $model = TransitWallet::where('rid', $request->rid)->firstData($request->send_wallet_privatekey);
         $PRIVATE_KEY = $rsa_services->publicEncrypt($request->send_wallet_privatekey);
             
         DB::beginTransaction();

@@ -113,6 +113,8 @@ services:
       - postgres_data:/var/lib/postgresql/data
       # 自动初始化脚本挂载（仅首次启动有效）
       - ./DB_PostgreSQL.sql:/docker-entrypoint-initdb.d/init.sql
+      # 兼容历史无前缀表名：创建 VIEW（仅首次启动有效）
+      - ./DB_PostgreSQL_views_no_prefix.sql:/docker-entrypoint-initdb.d/002_views_no_prefix.sql
     restart: unless-stopped
     networks:
       - tgbot-network

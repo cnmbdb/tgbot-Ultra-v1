@@ -47,3 +47,4 @@ Thumbs.db
 # 临时文件
 *.bak
 *.tmp
+node_modules

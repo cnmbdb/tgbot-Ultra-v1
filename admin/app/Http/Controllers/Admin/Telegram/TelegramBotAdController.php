@@ -191,7 +191,7 @@ class TelegramBotAdController extends Controller
             TelegramBotAd::insertUsing([
                 'bot_rid', 'notice_cycle', 'notice_obj', 'notice_photo', 'notice_ad','status','create_time'
             ], TelegramBotAd::selectRaw(
-                "$request->paste_bot_rid, notice_cycle, '-', notice_photo, notice_ad, status, sysdate()"
+                "$request->paste_bot_rid, notice_cycle, '-', notice_photo, notice_ad, status, now()"
             )->where('bot_rid', $request->copy_bot_rid));
             
             DB::commit();
