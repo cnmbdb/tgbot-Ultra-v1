@@ -25,11 +25,11 @@ class TransitWalletTradeUsdtServices
         }
         
         $api_key = config('apikey.gridapikey');
-        $apikeyrand = $api_key[array_rand($api_key)];
-        
-        $heders = [
-            "TRON-PRO-API-KEY:".$apikeyrand
-        ];
+        $heders = [];
+        if (is_array($api_key) && !empty($api_key)) {
+            $apikeyrand = $api_key[array_rand($api_key)];
+            $heders[] = "TRON-PRO-API-KEY:".$apikeyrand;
+        }
         
         $data = Get_Pay($url,null,$heders);
 

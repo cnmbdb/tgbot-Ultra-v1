@@ -41,7 +41,7 @@ class TronServices
 
         try {
             $this->tron = new \IEXBase\TronAPI\Tron($fullNode, $solidityNode, $eventServer);
-        } catch (\IEXBase\TronAPI\Exception\TronException $e) {
+        } catch (\IEXBase\TronAPI\Exception\IEXBaseTronAPIExceptionTronException $e) {
             return ['code' => 400,'msg' => $e->getMessage()];
         }
     }
@@ -99,7 +99,7 @@ class TronServices
     public function trxTransaction($to, $amount){
         try {
             $transaction = $this->tron->getTransactionBuilder()->sendTrx($to, (float)$amount, $this->OWNER_ADDRESS);
-        }catch (\IEXBase\TronAPI\Exception\TronException $e){
+        }catch (\IEXBase\TronAPI\Exception\IEXBaseTronAPIExceptionTronException $e){
             return ['code' => 400,'msg' => $e->getMessage()];
         }
 
@@ -172,29 +172,28 @@ class TronServices
 
     /**
      * 签名并且广播
-     * @param Tron $tron
+     * @param $tron
      * @param $transaction
      * @param $privateKey
      * @return mixed
-     * @throws Exception
      */
-    private  function signAndBroadcast($tron,$transaction,$privateKey){
+    private function signAndBroadcast($tron, $transaction, $privateKey)
+    {
         $tron->setPrivateKey($privateKey);
         try {
-            # 签名
+            // 签名
             $signTransaction = $tron->signTransaction($transaction);
-        }catch (\IEXBase\TronAPI\Exception\TronException $e){
-            return ['code' => 400,'msg' => "签名并且广播:". $e->getMessage()];
+        } catch (\IEXBase\TronAPI\Exception\TronException $e) {
+            return ['code' => 400, 'msg' => '签名并且广播:' . $e->getMessage()];
         }
 
-        # 广播签名后的事务
+        // 广播签名后的事务
         return $tron->sendRawTransaction($signTransaction);
     }
-
     /**
      * 生成地址并激活
      * @return array
-     * @throws \IEXBase\TronAPI\Exception\TronException
+     * @throws \IEXBase\TronAPI\Exception\IEXBaseTronAPIExceptionTronException
      * @throws \think\Exception
      */
     public function createAddress(){
