@@ -3269,21 +3269,34 @@ SELECT pg_catalog.setval('public.t_sys_data_dictionary_rid_seq', 1, false);
 -- Name: t_telegram_bot_ad_keyboard_rid_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.t_telegram_bot_ad_keyboard_rid_seq', 1, false);
+-- 根据当前表数据自动调整自增序列，避免主键冲突
+SELECT pg_catalog.setval(
+    'public.t_telegram_bot_ad_keyboard_rid_seq',
+    COALESCE((SELECT max(rid) FROM public.t_telegram_bot_ad_keyboard), 1),
+    true
+);
 
 
 --
 -- Name: t_telegram_bot_ad_rid_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.t_telegram_bot_ad_rid_seq', 1, false);
+SELECT pg_catalog.setval(
+    'public.t_telegram_bot_ad_rid_seq',
+    COALESCE((SELECT max(rid) FROM public.t_telegram_bot_ad), 1),
+    true
+);
 
 
 --
 --
 
--- 修正初始自增值：表中已初始化 5 条记录 (rid=1~5)，避免后续插入重复主键
-SELECT pg_catalog.setval('public.t_telegram_bot_command_rid_seq', 5, true);
+-- 修正初始自增值：根据实际数据自动设置，避免后续插入重复主键
+SELECT pg_catalog.setval(
+    'public.t_telegram_bot_command_rid_seq',
+    COALESCE((SELECT max(rid) FROM public.t_telegram_bot_command), 1),
+    true
+);
 
 --
 -- ============================================================================
@@ -3356,42 +3369,66 @@ END $$;
 -- Name: t_telegram_bot_group_rid_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.t_telegram_bot_group_rid_seq', 1, false);
+SELECT pg_catalog.setval(
+    'public.t_telegram_bot_group_rid_seq',
+    COALESCE((SELECT max(rid) FROM public.t_telegram_bot_group), 1),
+    true
+);
 
 
 --
 -- Name: t_telegram_bot_keyboard_rid_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.t_telegram_bot_keyboard_rid_seq', 1, false);
+SELECT pg_catalog.setval(
+    'public.t_telegram_bot_keyboard_rid_seq',
+    COALESCE((SELECT max(rid) FROM public.t_telegram_bot_keyboard), 1),
+    true
+);
 
 
 --
 -- Name: t_telegram_bot_keyreply_keyboard_rid_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.t_telegram_bot_keyreply_keyboard_rid_seq', 1, false);
+SELECT pg_catalog.setval(
+    'public.t_telegram_bot_keyreply_keyboard_rid_seq',
+    COALESCE((SELECT max(rid) FROM public.t_telegram_bot_keyreply_keyboard), 1),
+    true
+);
 
 
 --
 -- Name: t_telegram_bot_keyreply_rid_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.t_telegram_bot_keyreply_rid_seq', 1, false);
+SELECT pg_catalog.setval(
+    'public.t_telegram_bot_keyreply_rid_seq',
+    COALESCE((SELECT max(rid) FROM public.t_telegram_bot_keyreply), 1),
+    true
+);
 
 
 --
 -- Name: t_telegram_bot_rid_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.t_telegram_bot_rid_seq', 1, false);
+SELECT pg_catalog.setval(
+    'public.t_telegram_bot_rid_seq',
+    COALESCE((SELECT max(rid) FROM public.t_telegram_bot), 1),
+    true
+);
 
 
 --
 -- Name: t_telegram_bot_user_rid_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.t_telegram_bot_user_rid_seq', 1, false);
+SELECT pg_catalog.setval(
+    'public.t_telegram_bot_user_rid_seq',
+    COALESCE((SELECT max(rid) FROM public.t_telegram_bot_user), 1),
+    true
+);
 
 
 --
