@@ -1,0 +1,188 @@
+# =============================================================================
+# TGBot-Ultra-v1 生产环境部署
+# 使用远程镜像 hfdoker2333/tgbot-ultra-v1
+# 
+# 部署命令: docker-compose pull && docker-compose up -d
+# 
+# 镜像说明:
+#   - Admin: hfdoker2333/tgbot-ultra-v1:admin-latest
+#   - Job:   hfdoker2333/tgbot-ultra-v1:job-latest
+# 
+# 本地开发请使用: /Users/a2333/IDE/tgbot-Ultra-v1 (使用本地构建镜像)
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # 1. 后台管理服务 (Laravel/PHP)
+  # 访问地址: http://your-server-ip:8080/admin/login
+  # 生产环境：拉取远程镜像
+  # ---------------------------------------------------------------------------
+  admin:
+    image: hfdoker2333/tgbot-ultra-v1:admin-latest
+    pull_policy: always
+    container_name: tgbot-admin
+    command: >
+      sh -c "
+      if [ \"$$(id -u)\" = \"0\" ]; then
+        find /var/www/html -type f -writable -exec chown www-data:www-data {} + 2>/dev/null || true;
+        find /var/www/html -type d -writable -exec chown www-data:www-data {} + 2>/dev/null || true;
+        chmod -R 755 /var/www/html/public 2>/dev/null || true;
+        chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache 2>/dev/null || true;
+      fi;
+      pkill -9 php-fpm 2>/dev/null || true;
+      sleep 1;
+      php-fpm -D;
+      exec nginx -g 'daemon off;'
+      "
+    ports:
+      - "${ADMIN_PORT:-8080}:80"
+    environment:
+      # API-Web 服务地址（从环境变量或 .env 文件读取），默认指向生产环境 5h1-api.hfz.pw
+      - API_WEB_URL=${API_WEB_URL:-https://5h1-api.hfz.pw}
+      # NL-API 能量池系统地址（tgnl-home），默认指向生产域名，可通过环境变量覆盖
+      - NL_API_BASE_URL=${NL_API_BASE_URL:-https://tgnl-home.hfz.pw}
+      # 数据库配置（从环境变量读取）
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=${DB_DATABASE:-tgbot}
+      - DB_USERNAME=${DB_USERNAME:-root}
+      - DB_PASSWORD=${DB_PASSWORD:-rootpassword}
+      # Redis 配置
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - admin_storage:/var/www/html/storage
+      - admin_cache:/var/www/html/bootstrap/cache
+      - ./admin.env:/var/www/html/.env:ro
+      # 挂载配置文件，确保表名配置生效
+      - ./admin/config/permission.php:/var/www/html/config/permission.php:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - tgbot-network
+    extra_hosts:
+      # 允许容器访问宿主机上的 API-Web 服务
+      - "host.docker.internal:host-gateway"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  # 2. 任务处理服务 (Hyperf/Swoole)
+  # 处理 Telegram 消息、定时任务、异步队列
+  # 生产环境：使用远程镜像 hfdoker2333/tgbot-ultra-v1:job-latest
+  # 
+  # 注意：API-Web 服务已独立部署，通过环境变量 API_WEB_URL 连接
+  # ---------------------------------------------------------------------------
+  job:
+    image: hfdoker2333/tgbot-ultra-v1:job-latest
+    pull_policy: always
+    container_name: tgbot-job
+    ports:
+      - "${JOB_PORT:-9503}:9503"
+    environment:
+      # API-Web 服务地址（从环境变量或 .env 文件读取），默认指向生产环境 5h1-api.hfz.pw
+      - API_WEB_URL=${API_WEB_URL:-https://5h1-api.hfz.pw}
+      # NL-API 能量池系统地址（tgnl-home），默认指向生产域名，可通过环境变量覆盖
+      - NL_API_BASE_URL=${NL_API_BASE_URL:-https://tgnl-home.hfz.pw}
+      # 数据库配置（从环境变量读取）
+      - DB_DRIVER=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=${DB_DATABASE:-tgbot}
+      - DB_USERNAME=${DB_USERNAME:-root}
+      - DB_PASSWORD=${DB_PASSWORD:-rootpassword}
+      - DB_PREFIX=t_
+      # Redis 配置
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_AUTH=${REDIS_AUTH:-}
+      - REDIS_DB=1
+      # 应用配置
+      - APP_NAME=TGBot-Job
+      - APP_ENV=production
+    volumes:
+      - job_storage:/opt/www/runtime
+      - ./job.env:/opt/www/.env:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - tgbot-network
+    extra_hosts:
+      # 允许容器访问宿主机上的 API-Web 服务
+      - "host.docker.internal:host-gateway"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  # 3. 主数据库 (PostgreSQL)
+  # 存储机器人业务数据
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:15-alpine
+    container_name: tgbot-postgres
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-rootpassword}
+      - POSTGRES_USER=${DB_USERNAME:-root}
+      - POSTGRES_DB=${DB_DATABASE:-tgbot}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # 自动初始化脚本挂载（仅首次启动有效，已包含表结构 + 初始数据 + VIEW）
+      - ./001_init.sql:/docker-entrypoint-initdb.d/001_init.sql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-root} -d ${DB_DATABASE:-tgbot}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - tgbot-network
+
+  # ---------------------------------------------------------------------------
+  # 4. 主缓存 (Redis)
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: tgbot-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    restart: unless-stopped
+    networks:
+      - tgbot-network
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+
+networks:
+  tgbot-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  admin_storage:
+  admin_cache:
+  job_storage:
+  redis_data:
