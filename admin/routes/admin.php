@@ -34,6 +34,8 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin'], function () {
                 Route::post('gengxin', 'TelegrambotController@gengxin')->name('admin.telegram.telegrambot.gengxin');
                 Route::post('regwebhook', 'TelegrambotController@regwebhook')->name('admin.telegram.telegrambot.regwebhook');
                 Route::post('recharge', 'TelegrambotController@recharge')->name('admin.telegram.telegrambot.recharge');
+                // 复制模板机器人配置（命令/关键词/广告等）
+                Route::post('clone_config', 'TelegrambotController@cloneConfig')->name('admin.telegram.telegrambot.clone_config');
             });
             
             // 机器人关键字回复设置

@@ -87,6 +87,9 @@
                 <button class="layui-btn layui-btn-sm" style="background-color:blueviolet !important" lay-event="regwebhook" data-rid="@{{d.rid}}" data-bot-username="@{{d.bot_username}}" data-bot-token="@{{d.bot_token}}">Webhook
                 </button>
             @endif
+            @if( auth('admin')->user()->hasrole('超级管理员') )
+                <button class="layui-btn layui-btn-warm layui-btn-sm" lay-event="clone_config" data-rid="@{{d.rid}}">复制配置</button>
+            @endif
             @if( auth('admin')->user()->can('删除机器人') || auth('admin')->user()->hasrole('超级管理员') )
                 <button class="layui-btn delete_button layui-btn-sm" lay-event="delete" data-rid="@{{d.rid}}">删除
                 </button>
@@ -140,6 +143,11 @@
                             'bot_token':['机器人token','span', data.bot_token]
                         },
                         '{{route("admin.telegram.telegrambot.regwebhook")}}', get_online_data);
+                } else if(layEvent === 'clone_config'){
+                    // 复制模板配置到该机器人（默认从模板 rid=1 复制）
+                    confirm_opt(function(){
+                        form_func('{{route("admin.telegram.telegrambot.clone_config")}}', {'rid': data.rid, 'from_rid': 1}, get_online_data);
+                    });
                 } else if(layEvent === 'delete'){
                     // 删除机器人
                     confirm_opt(function(){
