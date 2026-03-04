@@ -1,0 +1,110 @@
+services:
+  # ---------------------------------------------------------------------------
+  # API-Web 服务 (Next.js)
+  # 本地开发：使用 node 镜像 + 源码挂载 + npm run dev，无需每次重建镜像
+  # 访问地址: http://localhost:4444
+  # ---------------------------------------------------------------------------
+  api-web:
+    image: node:20-alpine
+    container_name: api-web
+    working_dir: /app
+    ports:
+      - "4444:4444"
+    environment:
+      - NODE_ENV=development
+      - PORT=4444
+      - HOSTNAME=0.0.0.0
+      # 数据库配置
+      - DB_HOST=api-web-postgres
+      - DB_PORT=5432
+      - DB_USER=root
+      - DB_PASSWORD=apiwebpassword
+      - DB_NAME=apiweb
+      # Redis 配置
+      - REDIS_HOST=api-web-redis
+      - REDIS_PORT=6379
+      # 区块链网络配置
+      - TRON_NETWORK=${TRON_NETWORK:-https://api.trongrid.io}
+      - ETH_RPC_URL=${ETH_RPC_URL:-https://eth.llamarpc.com}
+      # 允许的来源（可选，用于安全控制）
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}
+      # 管理后台密码（从 .env 或宿主环境读取）
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-Apple11.15}
+      # 将当前目录挂载进容器后，.env 也会随之生效
+    volumes:
+      # 源码挂载，修改后热更新（Next.js dev）
+      - ./:/app
+      # 持久化日志目录
+      - api_web_logs:/app/logs
+    depends_on:
+      api-web-postgres:
+        condition: service_healthy
+      api-web-redis:
+        condition: service_started
+    command: sh -c "npm install --legacy-peer-deps && npm run dev -- -p 4444"
+    restart: unless-stopped
+    networks:
+      - api-web-network
+
+  # ---------------------------------------------------------------------------
+  # API-Web 数据库 (PostgreSQL)
+  # 存储 API 日志、密钥映射等敏感数据
+  # ---------------------------------------------------------------------------
+  api-web-postgres:
+    image: postgres:15-alpine
+    container_name: api-web-postgres
+    environment:
+      - POSTGRES_PASSWORD=apiwebpassword
+      - POSTGRES_USER=root
+      - POSTGRES_DB=apiweb
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    ports:
+      - "5433:5432"
+    volumes:
+      - apiweb_postgres_data:/var/lib/postgresql/data
+      # 自动初始化脚本挂载（仅首次启动有效）
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    restart: unless-stopped
+    networks:
+      - api-web-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d apiweb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
+  # API-Web 缓存 (Redis)
+  # 用于缓存和会话管理
+  # ---------------------------------------------------------------------------
+  api-web-redis:
+    image: redis:7-alpine
+    container_name: api-web-redis
+    # 默认不开启密码，REDIS_PASSWORD 以后如要启用，再改成使用自定义配置文件
+    command: redis-server --appendonly yes
+    ports:
+      - "6380:6379"
+    volumes:
+      - apiweb_redis_data:/data
+    restart: unless-stopped
+    networks:
+      - api-web-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  api-web-network:
+    driver: bridge
+    name: api-web-network
+
+volumes:
+  apiweb_postgres_data:
+    name: apiweb_postgres_data
+  apiweb_redis_data:
+    name: apiweb_redis_data
+  api_web_logs:
+    name: api_web_logs
