@@ -17,7 +17,8 @@ class GetAiEnergyWalletResource
                     ->Join('t_telegram_bot as b','a.bot_rid','b.rid')
                     ->Join('t_energy_platform_bot as c','a.bot_rid','c.bot_rid')
                     ->Join('telegram_bot_user as d', function ($join) {
-                                      $join->on('a.bot_rid', '=','d.bot_rid')->on('a.tg_uid', '=','d.tg_uid');
+                                      $join->on('a.bot_rid', '=','d.bot_rid')
+                                           ->whereRaw('a.tg_uid = CAST(d.tg_uid AS VARCHAR)');
                                       })
                     ->where('a.status',0)
                     ->where('c.is_open_ai_trusteeship','Y')

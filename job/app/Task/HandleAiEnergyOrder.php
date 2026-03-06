@@ -25,7 +25,7 @@ class HandleAiEnergyOrder
                 ->where('b.trx_price_energy_32000','>',0)
                 ->where('b.trx_price_energy_65000','>',0)
                 ->whereIn('b.per_energy_day',[0,1,3])
-                ->select('a.rid','a.wallet_addr','a.tg_uid','a.per_buy_energy_quantity','b.trx_price_energy_32000','b.trx_price_energy_65000','b.per_energy_day','b.status','a.is_notice','a.bot_rid','a.total_buy_energy_quantity','a.total_used_trx','a.total_buy_quantity','a.is_notice_admin','b.poll_group','b.rid as energy_platform_bot_rid','b.ai_trusteeship_recovery_type','b.agent_tg_uid','b.agent_per_price')
+                ->select('a.rid','a.wallet_addr','a.tg_uid','a.per_buy_energy_quantity','b.trx_price_energy_32000','b.trx_price_energy_65000','b.per_energy_day','b.status','a.is_notice','a.bot_rid','a.total_buy_energy_quantity','a.total_used_trx','a.total_buy_quantity','a.is_notice_admin','b.poll_group','b.rid as energy_platform_bot_rid','b.agent_tg_uid','b.agent_per_price')
                 ->limit(100)
                 ->get();
                 
@@ -69,7 +69,7 @@ class HandleAiEnergyOrder
                     }
                     
                     //判断是否在代理之前回收之前还未回收的能量
-                    if($v->ai_trusteeship_recovery_type == 2){
+                    if(isset($v->ai_trusteeship_recovery_type) && $v->ai_trusteeship_recovery_type == 2){
                         //查平台信息
                         $recoveryPlatform = EnergyPlatform::where('poll_group',$v->poll_group)->where('status',0)->whereNotNull('platform_apikey')->where('platform_name',3)->get();
                         
@@ -365,7 +365,7 @@ class HandleAiEnergyOrder
                 ->where('b.status',0)
                 // 注意：t_energy_platform_bot 表没有 per_bishu_energy_quantity 字段，先注释掉
                 // ->where('b.per_bishu_energy_quantity','>=',65000)
-                ->where('a.max_buy_quantity','>','a.total_buy_quantity')
+                ->whereColumn('a.max_buy_quantity','>','a.total_buy_quantity')
                 ->select('a.rid','a.wallet_addr','a.tg_uid','b.per_energy_day_bishu','b.status','a.is_notice','a.bot_rid','a.total_buy_energy_quantity','a.total_buy_quantity','a.is_notice_admin','b.poll_group','b.rid as energy_platform_bot_rid','a.max_buy_quantity','b.bishu_recovery_type','b.bishu_daili_type','b.agent_tg_uid','b.agent_per_price')
                 ->limit(100)
                 ->get();
@@ -1010,6 +1010,155 @@ class HandleAiEnergyOrder
                         }else{
                             $save_data = [];
                             $save_data['comments'] = $time.' 笔数不大于0,无需下单:'.$energy_bishu;      //处理备注  
+                            EnergyAiBishu::where('rid',$v->rid)->update($save_data);
+                        }
+
+                    //提交给第三方处理,NL-API平台
+                    }elseif($v->bishu_daili_type == 4){
+                        $time = nowDate();
+                        $energy_bishu = $v->max_buy_quantity - $v->total_buy_quantity;
+
+                        if($isAgent == 'Y'){
+                            if($agentUser->cash_trx < $energy_bishu * $v->agent_per_price){
+                                $errorMessage = "代理地址对应用户TRX余额不足,无法扣款,需要：".($energy_bishu * $v->agent_per_price + 0).",用户余额：".($agentUser->cash_trx + 0);
+                                $save_data = [];
+                                $save_data['comments'] = $time.$errorMessage;      //处理备注
+                                EnergyAiBishu::where('rid',$v->rid)->update($save_data);
+                                continue;
+                            }elseif($agentUser->cash_trx >= $energy_bishu * $v->agent_per_price){
+                                $isAgent = 'Y';
+                            }else{
+                                $errorMessage = "代理校验未知错误";
+                                $save_data = [];
+                                $save_data['comments'] = $time.$errorMessage;      //处理备注
+                                EnergyAiBishu::where('rid',$v->rid)->update($save_data);
+                                continue;
+                            }
+                        }
+
+                        if($energy_bishu > 0){
+                            $bishuModel = EnergyPlatform::where('poll_group',$v->poll_group)
+                                    ->where('status',0)
+                                    ->whereNotNull('platform_apikey')
+                                    ->where('platform_name',7)
+                                    ->where('platform_balance','>',0)
+                                    ->orderBy('seq_sn','desc')
+                                    ->get();
+
+                            if($bishuModel->count() > 0){
+                                $errorMessage = '';
+                                $rsa_services = new RsaServices();
+                                $lunxunCount = 0;
+
+                                foreach ($bishuModel as $k1 => $v1){
+                                    $lunxunCount = $lunxunCount + 1;
+                                    $signstr = $rsa_services->privateDecrypt($v1->platform_apikey);
+
+                                    if(empty($signstr)){
+                                        $errorMessage = $errorMessage."能量平台ID：".$v1->rid." 平台私钥为空。";
+                                        $save_data = [];
+                                        $save_data['comments'] = $time.$errorMessage;      //处理备注
+                                        EnergyAiBishu::where('rid',$v->rid)->update($save_data);
+                                        continue;
+                                    }
+
+                                    $nlApiBaseUrl = env('NL_API_BASE_URL', 'https://tgnl-home.hfz.pw');
+                                    if(empty($nlApiBaseUrl) && !empty($v1->comments)){
+                                        if(preg_match('/nl_api_url=([^\s]+)/i', $v1->comments, $matches)){
+                                            $nlApiBaseUrl = trim($matches[1]);
+                                        }
+                                    }
+                                    if(empty($nlApiBaseUrl)){
+                                        $errorMessage = $errorMessage."能量平台ID：".$v1->rid." NL-API域名未配置。";
+                                        $save_data = [];
+                                        $save_data['comments'] = $time.$errorMessage;
+                                        $save_data['is_notice_admin'] = ($v->is_notice_admin == 'N' && $lunxunCount >= $bishuModel->count()) ?'Y':$v->is_notice_admin;
+                                        EnergyAiBishu::where('rid',$v->rid)->update($save_data);
+                                        continue;
+                                    }
+
+                                    $energy_day = $v->per_energy_day_bishu >= 30 ?1:$v->per_energy_day_bishu;
+                                    if ($energy_day == 3) {
+                                        $day = 3;
+                                    } else {
+                                        $day = 1;
+                                    }
+
+                                    $payment = intval(env('NL_API_BISHU_PAYMENT', 0));
+                                    $this->log('handleaienergyorder','提交NL-API平台'.$v1->platform_uid.'。提交地址：'.$v->wallet_addr.'。提交次数'.$energy_bishu.'。此时最大次数：'.$v->max_buy_quantity.'。此时已够次数'.$v->total_buy_quantity.'。提交方式：'.$payment);
+
+                                    $param = [
+                                        "username" => $v1->platform_uid,
+                                        "password" => $signstr,
+                                        "receiver_address" => $v->wallet_addr,
+                                        "times" => intval($energy_bishu),
+                                        "energy" => 65000,
+                                        "day" => intval($day),
+                                        "payment" => $payment,
+                                    ];
+
+                                    $balance_url = rtrim($nlApiBaseUrl, '/') . '/v1/delegate_times';
+                                    $header = [
+                                        "Content-Type: application/json",
+                                        "Accept: application/json"
+                                    ];
+                                    $dlres = Get_Pay($balance_url, json_encode($param), $header);
+
+                                    if(empty($dlres)){
+                                        $errorMessage = $errorMessage."能量平台ID：".$v1->rid." 下单失败,接口请求空。";
+                                        $save_data = [];
+                                        $save_data['comments'] = $time.$errorMessage;
+                                        $save_data['is_notice_admin'] = ($v->is_notice_admin == 'N' && $lunxunCount >= $bishuModel->count()) ?'Y':$v->is_notice_admin;
+                                        EnergyAiBishu::where('rid',$v->rid)->update($save_data);
+                                        continue;
+                                    }
+
+                                    if(is_string($dlres)){
+                                        $decodeRes = json_decode($dlres,true);
+                                        if(!empty($decodeRes)){
+                                            $dlres = $decodeRes;
+                                        }
+                                    }
+                                    $this->log('handleaienergyorder','NL-API提交地址：'.$v->wallet_addr.'。平台返回：'.json_encode($dlres, JSON_UNESCAPED_UNICODE));
+
+                                    if(
+                                        (isset($dlres['success']) && $dlres['success'] === true) ||
+                                        (isset($dlres['code']) && intval($dlres['code']) == 200) ||
+                                        isset($dlres['tx_hash']) || isset($dlres['txHash']) ||
+                                        isset($dlres['order_id']) || isset($dlres['task_id']) || isset($dlres['id'])
+                                    ){
+                                        $save_data = [];
+                                        $save_data['is_buy'] = 'N';      //下单成功
+                                        $save_data['comments'] = 'SUCCESS '.$time.' NL-API平台下单,本次次数：'.$energy_bishu;      //处理备注
+                                        $save_data['is_notice'] = 'N';
+                                        $save_data['total_buy_quantity'] = $v->max_buy_quantity;
+                                        $save_data['last_buy_time'] = $time;
+                                        $save_data['energy_platform_rid'] = $v1->rid;
+                                        EnergyAiBishu::where('rid',$v->rid)->update($save_data);
+
+                                        if($isAgent == 'Y'){
+                                            $agentUser->decrement('cash_trx', $energy_bishu * $v->agent_per_price);
+                                        }
+
+                                        break;
+                                    }else{
+                                        $msg = ' 下单失败,接口返回:'.json_encode($dlres, JSON_UNESCAPED_UNICODE);
+                                        $errorMessage = $errorMessage."能量平台ID：".$v1->rid.$msg;
+                                        $save_data = [];
+                                        $save_data['comments'] = $time.$errorMessage;
+                                        $save_data['is_notice_admin'] = ($v->is_notice_admin == 'N' && $lunxunCount >= $bishuModel->count()) ?'Y':$v->is_notice_admin;
+                                        EnergyAiBishu::where('rid',$v->rid)->update($save_data);
+                                        continue;
+                                    }
+                                }
+                            }else{
+                                $save_data = [];
+                                $save_data['comments'] = $time.' 无可用能量平台NL-API,轮询失败';      //处理备注
+                                EnergyAiBishu::where('rid',$v->rid)->update($save_data);
+                            }
+                        }else{
+                            $save_data = [];
+                            $save_data['comments'] = $time.' 笔数不大于0,无需下单:'.$energy_bishu;      //处理备注
                             EnergyAiBishu::where('rid',$v->rid)->update($save_data);
                         }
                     }

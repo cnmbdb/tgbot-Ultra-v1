@@ -958,7 +958,7 @@ class TelegramController extends Controller
                     }else{
                         //查询是否第三方平台代理
                         $platformBot = EnergyPlatformBot::where("bot_rid",$bot_rid)->first();
-                        if(empty($platformBot) || $platformBot->bishu_daili_type == 1){
+                        if(empty($platformBot) || $platformBot->bishu_daili_type != 2){
                             $replytext = "查询地址：<code>".$message."</code>\n"
                                     ."总充值：".$isexit->total_buy_usdt." USDT\n"
                                     ."剩余次数：".($isexit->max_buy_quantity - $isexit->total_buy_quantity);

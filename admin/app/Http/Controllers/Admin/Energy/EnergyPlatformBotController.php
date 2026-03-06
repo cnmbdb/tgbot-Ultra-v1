@@ -21,7 +21,7 @@ class EnergyPlatformBotController extends Controller
     public $PollGroup = ['A' => 'A组','B' => 'B组','C' => 'C组','D' => 'D组','E' => 'E组','F' => 'F组','G' => 'G组'];
     public $BishuRecoveryType = ['1' => '到期回收','2' => '代理下一笔回收'];
     public $AiRecoveryType = ['1' => '到期回收','2' => '代理下一笔回收'];
-    public $BishuDailiType = ['1' => '自动','2' => '提交到trongas.io','3' => '提交到搜狐'];
+    public $BishuDailiType = ['1' => '自动','2' => '提交到trongas.io','3' => '提交到搜狐','4' => '提交到NL-API'];
     
     public function index(Request $request)
     {
