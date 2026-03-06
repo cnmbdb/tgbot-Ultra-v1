@@ -112,8 +112,9 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       # 自动初始化脚本挂载（仅首次启动有效）
-      - ./DB_PostgreSQL.sql:/docker-entrypoint-initdb.d/init.sql
-      # 兼容历史无前缀表名：创建 VIEW（仅首次启动有效）
+      # 注意：必须保证主库 SQL 先于视图 SQL 执行，否则视图创建会失败导致初始化中断
+      - ./DB_PostgreSQL.sql:/docker-entrypoint-initdb.d/001_DB_PostgreSQL.sql
+      # 兼容历史无前缀表名：创建 VIEW（仅首次启动有效，需在主库 SQL 之后）
       - ./DB_PostgreSQL_views_no_prefix.sql:/docker-entrypoint-initdb.d/002_views_no_prefix.sql
     restart: unless-stopped
     networks:
