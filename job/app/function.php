@@ -2,6 +2,7 @@
 use App\Library\Redis;
 use App\Library\Log;
 use Hyperf\DbConnection\Db;
+use App\Model\Telegram\TelegramBot;
 
 /**
  * 下一天
@@ -407,15 +408,16 @@ function curl_post_https($url,$data,$headers=null,$cookie=null,$time_out = 10){ 
     curl_setopt($curl, CURLOPT_URL, $url); // 要访问的地址
     curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0); // 对认证证书来源的检查
     curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2); // 从证书中检查SSL加密算法是否存在
-    // curl_setopt($curl, CURLOPT_USERAGENT, $_SERVER['HTTP_USER_AGENT']); // 模拟用户使用的浏览器
-    // curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1); // 使用自动跳转
-    // curl_setopt($curl, CURLOPT_AUTOREFERER, 1); // 自动设置Referer
-    if(!empty($headers)){
-        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);//设置请求头
+
+    $mergedHeaders = is_array($headers) ? $headers : [];
+    $mergedHeaders = array_merge($mergedHeaders, build_api_web_trace_headers($url));
+    if(!empty($mergedHeaders)){
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $mergedHeaders);//设置请求头
     }
+
     if(!empty($cookie)){
         curl_setopt($curl, CURLOPT_COOKIE, $cookie); // 带上COOKIE请求
-    } 
+    }
     curl_setopt($curl, CURLOPT_POST, 1); // 发送一个常规的Post请求
     curl_setopt($curl, CURLOPT_POSTFIELDS, $data); // Post提交的数据包
     curl_setopt($curl, CURLOPT_TIMEOUT, $time_out); // 设置超时限制防止死循环
@@ -451,6 +453,125 @@ function curl_get_https($url,$headers=null,$raw=null,$time=6){
 }
 
 // 获取域名
+function build_api_web_trace_headers($url){
+    try {
+        $apiBase = rtrim((string) config('services.api_web.url', ''), '/');
+        if (empty($apiBase) || stripos((string)$url, $apiBase) !== 0) {
+            return [];
+        }
+
+        $botId = (string) env('BOT_TRACE_ID', gethostname());
+        $admin = (string) env('BOT_ADMIN_USERNAME', '');
+        $process = (string) env('BOT_PROCESS_NAME', 'hyperf-job');
+        $publicIp = (string) env('BOT_PUBLIC_IP', '');
+
+        $headers = [
+            'x-bot-id: ' . $botId,
+            'x-bot-process: ' . $process,
+        ];
+
+        if (!empty($admin)) {
+            $headers[] = 'x-bot-admin: ' . $admin;
+        }
+        if (!empty($publicIp)) {
+            $headers[] = 'x-bot-public-ip: ' . $publicIp;
+        }
+
+        return $headers;
+    } catch (\Throwable $e) {
+        return [];
+    }
+}
+
+function send_api_web_heartbeat(){
+    try {
+        $apiBase = rtrim((string) config('services.api_web.url', ''), '/');
+        if (empty($apiBase)) {
+            return false;
+        }
+
+        $url = $apiBase . '/api/bot/heartbeat';
+        $process = (string) env('BOT_PROCESS_NAME', 'hyperf-job');
+        $publicIp = (string) env('BOT_PUBLIC_IP', '');
+
+        // 优先使用 .env 中配置的单一 bot（向后兼容）
+        $envBotId = (string) env('BOT_TRACE_ID', '');
+        $envAdmin = (string) env('BOT_ADMIN_USERNAME', '');
+        $envBotName = (string) env('BOT_NAME', '');
+
+        // 统一的服务器主机名（用于 API-Web 的“来源主机”展示）
+        $serverHost = gethostname() ?: '';
+
+        // 如果 .env 配置了单个 bot，则只上报这一个
+        if (!empty($envBotId)) {
+            $payload = [
+                'bot_id' => $envBotId,
+                'admin_username' => $envAdmin,
+                'process_name' => $process,
+                'bot_name' => $envBotName,
+                'public_ip' => $publicIp,
+                'status' => 'active',
+            ];
+
+            $headers = [
+                'Content-Type: application/json',
+                $serverHost ? 'x-bot-host: ' . $serverHost : null,
+            ];
+            // 过滤掉可能的 null
+            $headers = array_values(array_filter($headers));
+            curl_post_https($url, json_encode($payload, JSON_UNESCAPED_UNICODE), $headers, null, 5);
+            return true;
+        }
+
+        // .env 没配 bot_id，则从数据库读取所有机器人，分别上报心跳
+        try {
+            $bots = TelegramBot::query()
+                ->whereNotNull('bot_token')
+                ->where('bot_token', '!=', '')
+                ->orderBy('rid')
+                ->get();
+
+            if ($bots->isEmpty()) {
+                return false;
+            }
+
+            $headers = [
+                'Content-Type: application/json',
+                $serverHost ? 'x-bot-host: ' . $serverHost : null,
+            ];
+            $headers = array_values(array_filter($headers));
+            $serverIp = $publicIp ?: gethostbyname(gethostname());
+
+            foreach ($bots as $bot) {
+                // 用 bot 的数据库 rid 作为唯一标识，稳定且不会重复
+                $botId = 'bot-' . $bot->rid;
+                $botName = !empty($bot->bot_firstname)
+                    ? $bot->bot_firstname
+                    : (!empty($bot->bot_username) ? '@' . $bot->bot_username : '');
+                $adminUsername = $bot->bot_admin_username;
+
+                $payload = [
+                    'bot_id' => $botId,
+                    'admin_username' => $adminUsername,
+                    'process_name' => $process,
+                    'bot_name' => $botName,
+                    'public_ip' => $serverIp,
+                    'status' => 'active',
+                ];
+
+                curl_post_https($url, json_encode($payload, JSON_UNESCAPED_UNICODE), $headers, null, 5);
+            }
+
+            return true;
+        } catch (\Throwable $e) {
+            // 读取机器人列表失败，静默降级
+            return false;
+        }
+    } catch (\Throwable $e) {
+        return false;
+    }
+}
+
 function getyuming(){
     $http_type = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https')) ? 'https://' : 'http://';
 

@@ -381,7 +381,7 @@ CREATE TABLE public.t_energy_ai_bishu (
     total_buy_energy_quantity bigint DEFAULT 0 NOT NULL,
     comments character varying(2000) DEFAULT NULL::character varying,
     back_comments character varying(2000) DEFAULT NULL::character varying,
-    create_by integer NOT NULL,
+    create_by integer DEFAULT 0 NOT NULL,
     create_time timestamp without time zone NOT NULL,
     update_by integer,
     update_time timestamp without time zone,
@@ -1011,6 +1011,9 @@ CREATE TABLE public.t_monitor_wallet (
     tg_notice_obj character varying(200) DEFAULT NULL::character varying,
     balance_alert numeric(14,2) DEFAULT 0.00 NOT NULL,
     balance_amount numeric(14,2) DEFAULT 0.00 NOT NULL,
+    monitor_usdt_transaction character varying(5) DEFAULT 'YY' NOT NULL,
+    monitor_trx_transaction character varying(5) DEFAULT 'YY' NOT NULL,
+    monitor_approve_transaction character varying(5) DEFAULT 'YY' NOT NULL,
     comments character varying(100) DEFAULT NULL::character varying,
     create_time timestamp without time zone,
     update_time timestamp without time zone
@@ -1117,7 +1120,9 @@ CREATE TABLE public.t_premium_platform_order (
     cancel_time timestamp without time zone,
     complete_time timestamp without time zone,
     recipient character varying(1000) DEFAULT NULL::character varying,
-    tx_hash character varying(200) DEFAULT NULL::character varying
+    tx_hash character varying(200) DEFAULT NULL::character varying,
+    tg_notice_user character(1) DEFAULT 'N' NOT NULL,
+    tg_notice_admin character(1) DEFAULT 'N' NOT NULL
 );
 
 
@@ -1869,7 +1874,12 @@ CREATE TABLE public.t_telegram_bot_user (
     bind_trc_wallet_addr character varying(200) DEFAULT NULL::character varying,
     first_time timestamp without time zone,
     last_time timestamp without time zone,
-    stop_time timestamp without time zone
+    stop_time timestamp without time zone,
+    cash_trx numeric(16,6) DEFAULT 0.000000 NOT NULL,
+    cash_usdt numeric(16,6) DEFAULT 0.000000 NOT NULL,
+    total_recharge_trx numeric(16,6) DEFAULT 0.000000 NOT NULL,
+    total_recharge_usdt numeric(16,6) DEFAULT 0.000000 NOT NULL,
+    max_monitor_wallet integer DEFAULT 2 NOT NULL
 );
 
 

@@ -122,7 +122,7 @@ class GetAiEnergyWalletResource
                     ->where('a.status',0)
                     ->where('c.is_open_bishu','Y')
                     ->where('a.is_buy','N')
-                    ->whereRaw('length(a.wallet_addr) = 34 and a.max_buy_quantity > a.total_buy_quantity')
+                    ->whereRaw('length(a.wallet_addr) = 34 and a.max_buy_quantity > a.total_buy_quantity and a.total_buy_usdt > 0')
                     // ->whereRaw("a.last_buy_time <= DATE_SUB(NOW(), INTERVAL 1 MINUTE)") //限制1分钟给一次，如果用了区块监控,建议开启这个
                     ->select('a.*','b.bot_token')
                     ->get();
@@ -158,9 +158,8 @@ class GetAiEnergyWalletResource
                                     $bandwidth = $res['bandwidth']['freeNetRemaining'] + $res['bandwidth']['netRemaining'];
                                     $energy = $res['bandwidth']['energyRemaining'];
                                     
-                                    //低于最低值的时候,则需要下单,这里改为-100,代理的能量有波动,减100也可以转成功
-                                    $rongcuo = $v['per_bishu_energy_quantity'] >= 131000 ?700:100;
-                                    if($energy < ($v['per_bishu_energy_quantity'] - $rongcuo) && $v['is_buy'] == 'N'){
+                                    // 笔数套餐固定规则：仅当地址剩余能量低于 65000 时触发
+                                    if($energy < 65000 && $v['is_buy'] == 'N'){
                                         $updatedata['is_buy'] = 'Y';
                                         
                                         $this->log('energyplatformbalance',$v['wallet_addr'].'，笔数检测（tronscan）需要下单，检测地址剩余能量：'.$energy);
@@ -199,9 +198,8 @@ class GetAiEnergyWalletResource
                                     $bandwidth = ($res2['NetLimit'] ?? 0) + ($res2['freeNetLimit'] ?? 0) - ($res2['NetUsed'] ?? 0) ;
                                     $energy = ($res2['EnergyLimit'] ?? 0) - ($res2['EnergyUsed'] ?? 0);
                                     
-                                    //低于最低值的时候,则需要下单,这里改为-100,代理的能量有波动,减100也可以转成功
-                                    $rongcuo = $v['per_bishu_energy_quantity'] >= 131000 ?700:100;
-                                    if($energy < ($v['per_bishu_energy_quantity'] - $rongcuo) && $v['is_buy'] == 'N'){
+                                    // 笔数套餐固定规则：仅当地址剩余能量低于 65000 时触发
+                                    if($energy < 65000 && $v['is_buy'] == 'N'){
                                         $updatedata['is_buy'] = 'Y';
                                         
                                         $this->log('energyplatformbalance',$v['wallet_addr'].'，笔数检测（trongrid）需要下单，检测地址剩余能量：'.$energy);

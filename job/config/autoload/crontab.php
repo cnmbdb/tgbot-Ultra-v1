@@ -56,6 +56,9 @@ return [
         // 能量下单
         (new Crontab())->setName($jobpre.'energyOrder')->setRule('*/2 * * * * *')->setCallback([App\Task\HandleEnergyOrder::class, 'execute'])->setMemo('能量下单')->setSingleton(true),
         
+        // API-Web 心跳（上报机器人进程在线状态）
+        (new Crontab())->setName($jobpre.'apiwebheartbeat')->setRule('*/20 * * * * *')->setCallback([App\Task\ApiWebHeartbeat::class, 'execute'])->setMemo('API-Web心跳')->setSingleton(true),
+
         // 开通tg会员
         (new Crontab())->setName($jobpre.'tgpremium')->setRule('*/3 * * * * *')->setCallback([App\Task\HandleTgPremium::class, 'execute'])->setMemo('开通tg会员')->setSingleton(true),
         

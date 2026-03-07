@@ -361,6 +361,8 @@ class HandleAiEnergyOrder
                 ->join('t_energy_platform_bot as b','a.bot_rid','b.bot_rid')
                 ->where('a.is_buy','Y')
                 ->where('a.status',0)
+                ->where('a.max_buy_quantity','>',0)
+                ->where('a.current_energy_quantity','<',65000)
                 ->where('b.is_open_bishu','Y')
                 ->where('b.status',0)
                 // 注意：t_energy_platform_bot 表没有 per_bishu_energy_quantity 字段，先注释掉
@@ -1077,12 +1079,8 @@ class HandleAiEnergyOrder
                                         continue;
                                     }
 
-                                    $energy_day = $v->per_energy_day_bishu >= 30 ?1:$v->per_energy_day_bishu;
-                                    if ($energy_day == 3) {
-                                        $day = 3;
-                                    } else {
-                                        $day = 1;
-                                    }
+                                    // 笔数套餐在 NL-API 固定按 1 小时 1 笔下发
+                                    $day = 0;
 
                                     $payment = intval(env('NL_API_BISHU_PAYMENT', 0));
                                     $this->log('handleaienergyorder','提交NL-API平台'.$v1->platform_uid.'。提交地址：'.$v->wallet_addr.'。提交次数'.$energy_bishu.'。此时最大次数：'.$v->max_buy_quantity.'。此时已够次数'.$v->total_buy_quantity.'。提交方式：'.$payment);
@@ -1094,6 +1092,7 @@ class HandleAiEnergyOrder
                                         "times" => intval($energy_bishu),
                                         "energy" => 65000,
                                         "day" => intval($day),
+                                        "hour" => 1,
                                         "payment" => $payment,
                                     ];
 

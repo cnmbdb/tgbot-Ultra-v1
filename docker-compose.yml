@@ -19,7 +19,8 @@ services:
       - "8080:80"
     environment:
       # API-Web 服务地址（从环境变量或 .env 文件读取）
-      - API_WEB_URL=${API_WEB_URL:-http://host.docker.internal:4444}
+      # 注意：需要确保 tgbot-job 已加入 api-web-network，才能用 api-web 这个域名访问
+      - API_WEB_URL=${API_WEB_URL:-http://api-web:4444}
       # NL-API 能量池系统地址
       - NL_API_BASE_URL=${NL_API_BASE_URL:-https://tgnl-home.hfz.pw}
     volumes:
@@ -64,9 +65,17 @@ services:
       - "9503:9503"
     environment:
       # API-Web 服务地址（从环境变量或 .env 文件读取）
-      - API_WEB_URL=${API_WEB_URL:-http://host.docker.internal:4444}
+      # 注意：需要确保 tgbot-job 已加入 api-web-network，才能用 api-web 这个域名访问
+      - API_WEB_URL=${API_WEB_URL:-http://api-web:4444}
       # NL-API 能量池系统地址
       - NL_API_BASE_URL=${NL_API_BASE_URL:-https://tgnl-home.hfz.pw}
+      # 机器人标识（用于上报 API-Web 心跳）
+      - BOT_TRACE_ID=${BOT_TRACE_ID:-}
+      - BOT_ADMIN_USERNAME=${BOT_ADMIN_USERNAME:-}
+      - BOT_PROCESS_NAME=${BOT_PROCESS_NAME:-hyperf-job}
+      - BOT_NAME=${BOT_NAME:-}
+      # 机器人服务器公网IP（用于后台服务器列表按公网IP聚合）
+      - BOT_PUBLIC_IP=${BOT_PUBLIC_IP:-}
       # Redis 配置
       - REDIS_HOST=redis
       - REDIS_PORT=6379
