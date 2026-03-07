@@ -5,8 +5,8 @@
 # 部署命令: docker-compose pull && docker-compose up -d
 # 
 # 镜像说明:
-#   - Admin: hfdoker2333/tgbot-ultra-v1:admin-latest
-#   - Job:   hfdoker2333/tgbot-ultra-v1:job-latest
+#   - Admin: ${IMAGE_REPO:-hfdoker2333/tgbot-ultra-v1}:${ADMIN_IMAGE_TAG:-admin-latest}
+#   - Job:   ${IMAGE_REPO:-hfdoker2333/tgbot-ultra-v1}:${JOB_IMAGE_TAG:-job-latest}
 # 
 # 本地开发请使用: /Users/a2333/IDE/tgbot-Ultra-v1 (使用本地构建镜像)
 # =============================================================================
@@ -18,7 +18,7 @@ services:
   # 生产环境：拉取远程镜像
   # ---------------------------------------------------------------------------
   admin:
-    image: hfdoker2333/tgbot-ultra-v1:admin-latest
+    image: ${IMAGE_REPO:-hfdoker2333/tgbot-ultra-v1}:${ADMIN_IMAGE_TAG:-admin-latest}
     pull_policy: always
     container_name: tgbot-admin
     command: >
@@ -82,7 +82,7 @@ services:
   # 注意：API-Web 服务已独立部署，通过环境变量 API_WEB_URL 连接
   # ---------------------------------------------------------------------------
   job:
-    image: hfdoker2333/tgbot-ultra-v1:job-latest
+    image: ${IMAGE_REPO:-hfdoker2333/tgbot-ultra-v1}:${JOB_IMAGE_TAG:-job-latest}
     pull_policy: always
     container_name: tgbot-job
     ports:
