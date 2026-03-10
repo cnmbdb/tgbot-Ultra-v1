@@ -851,7 +851,7 @@ h5 {
   font-weight: 600;
 }
 .nav > li > a {
-  color: #a7b1c2;
+  color: #1f2937; /* DARK TEXT */
   font-weight: 600;
   padding: 14px 20px 14px 25px;
   display: block;
@@ -869,12 +869,12 @@ h5 {
   color: #999c9e;
 }
 .nav > li.active > a {
-  color: #ffffff;
+  color: #2d2f33; /* DARK TEXT */
 }
 .navbar-default .nav > li > a:hover,
 .navbar-default .nav > li > a:focus {
-  background-color: #293846;
-  color: white;
+  background-color: #f9fafb; /* LIGHT HOVER */
+  color: #2d2f33; /* DARK TEXT */
 }
 .nav .open > a,
 .nav .open > a:hover,
@@ -893,7 +893,7 @@ h5 {
 }
 .navbar-default {
   background-color: transparent;
-  border-color: #2f4050;
+  border-color: #e7eaec; /* LIGHT BORDER */
 }
 .navbar-top-links li {
   display: inline-block;
@@ -1000,8 +1000,8 @@ h5 {
 }
 .nav-header {
   padding: 33px 25px;
-  background-color: #2f4050;
-  background-image: url("patterns/header-profile.png");
+  background-color: #ffffff; /* FORCE WHITE */
+  /* background-image: url("patterns/header-profile.png"); REMOVE IMAGE */
 }
 .caret {
   display: inline-block;
@@ -1020,11 +1020,11 @@ h5 {
   transition: all 0.4s;
 }
 ul.nav-second-level {
-  background: #293846;
+  background: #ffffff; /* FORCE WHITE */
 }
 .nav > li.active {
-  border-left: 4px solid #19aa8d;
-  background: #293846;
+  border-left: none; /* REMOVE BORDER */
+  background: transparent; /* REMOVE BG */
 }
 .nav.nav-second-level > li.active {
   border: none;
@@ -1033,7 +1033,7 @@ ul.nav-second-level {
   height: auto !important;
 }
 .nav-header a {
-  color: #DFE4ED;
+  color: #1f2937; /* DARK TEXT */
 }
 .nav-header .text-muted {
   color: #8095a8 !important;

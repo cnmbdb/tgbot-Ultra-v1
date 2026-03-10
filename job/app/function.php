@@ -226,6 +226,21 @@ if (!function_exists('getRandomTronApiKey')) {
 }
 
 /**
+ * 安全地获取随机 TRON API Key，如果为空则返回 null
+ */
+if (!function_exists('safeGetTronApiKey')) {
+    function safeGetTronApiKey(string $source = 'tronscan'): ?string
+    {
+        $keys = getTronApiKeys($source);
+        if (empty($keys)) {
+            // Log::warning("TRON API Keys for {$source} are empty!");
+            return null;
+        }
+        return $keys[array_rand($keys)];
+    }
+}
+
+/**
  * 系统数据字典表
  * @param $type [0.读取 1.更新]
 */

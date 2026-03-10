@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use App\Models\Admin\AdminLoginLog;
 use App\Models\Admin\Admin;
 
@@ -59,7 +61,10 @@ class LoginController extends Controller
      */
     public function showLoginForm()
     {
-        return view('admin.auth.login');
+        return view('admin.auth.login', [
+            'turnstileRequired' => $this->requiresTurnstile(request()),
+            'turnstileSiteKey' => config('services.turnstile.site_key'),
+        ]);
     }
 
     /**
@@ -89,50 +94,118 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-        // 验证IP
+        if ($this->requiresTurnstile($request) && !$this->passesTurnstile($request)) {
+            return back()->withErrors([
+                $this->username() => '请先完成安全验证',
+            ])->withInput($request->only($this->username()));
+        }
+
         $data = Admin::where('name',$request->name)->first();
         if(empty($data)){
-            return $this->sendFailedLoginResponse($request);
+            return $this->failLogin($request);
         }else{
             if(!empty($data->white_ip)){
                 $ip = getClientIP();
-                // PostgreSQL 兼容：使用 string_to_array 和 ANY 替代 MySQL 的 FIND_IN_SET
                 $canLogin = Admin::where('name',$request->name)
                     ->where('status',1)
                     ->whereRaw("? = ANY(string_to_array(white_ip, ','))", [$ip])
                     ->first();
                 if(empty($canLogin)){
-                    return $this->sendFailedLoginResponse($request);
+                    return $this->failLogin($request);
                 }
             }
             
-            // 检查密码（支持 MD5 和 bcrypt）
             $admin = Admin::where('name', $request->name)->where('status', 1)->first();
             
             if ($admin) {
                 $passwordMatch = false;
-                // 检查是否是 bcrypt 格式（以 $2y$ 开头）
                 if (strpos($admin->password, '$2y$') === 0) {
-                    // 使用 bcrypt 验证
                     $passwordMatch = \Hash::check($request->password, $admin->password);
                 } else {
-                    // 使用 MD5 验证
                     $passwordMatch = (md5($request->password) === $admin->password);
                 }
                 
                 if ($passwordMatch) {
-                    // 手动登录
                     Auth::guard('admin')->login($admin);
+                    $this->clearTurnstileRequired($request);
                     DB::table('t_admin_login_log')->insert(['admin_name' => $request->name,'login_time' => nowDate(),'login_ip' => getClientIP()]);
-                    // 用户存在，已激活且未被禁用。
                     return redirect($this->redirectTo);
                 } else {
-                    return $this->sendFailedLoginResponse($request);
+                    return $this->failLogin($request);
                 }
             } else {
-                return $this->sendFailedLoginResponse($request);
+                return $this->failLogin($request);
             }
         }
     }
 
+    protected function failLogin(Request $request)
+    {
+        $this->markTurnstileRequired($request);
+        return $this->sendFailedLoginResponse($request);
+    }
+
+    protected function turnstileEnabled()
+    {
+        return config('services.turnstile.enable') 
+            && !empty(config('services.turnstile.site_key')) 
+            && !empty(config('services.turnstile.secret_key'));
+    }
+
+    protected function turnstileCacheKey(Request $request)
+    {
+        return 'admin_login_turnstile_required:'.sha1((string) $request->ip());
+    }
+
+    protected function requiresTurnstile(Request $request)
+    {
+        if (!$this->turnstileEnabled()) {
+            return false;
+        }
+
+        return Cache::has($this->turnstileCacheKey($request));
+    }
+
+    protected function markTurnstileRequired(Request $request)
+    {
+        if (!$this->turnstileEnabled()) {
+            return;
+        }
+
+        Cache::put($this->turnstileCacheKey($request), 1, now()->addHours(24));
+    }
+
+    protected function clearTurnstileRequired(Request $request)
+    {
+        if (!$this->turnstileEnabled()) {
+            return;
+        }
+
+        Cache::forget($this->turnstileCacheKey($request));
+    }
+
+    protected function passesTurnstile(Request $request)
+    {
+        if (!$this->turnstileEnabled()) {
+            return true;
+        }
+
+        $token = $request->input('cf-turnstile-response');
+        if (empty($token)) {
+            return false;
+        }
+
+        try {
+            $response = Http::asForm()
+                ->timeout(8)
+                ->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+                    'secret' => config('services.turnstile.secret_key'),
+                    'response' => $token,
+                    'remoteip' => $request->ip(),
+                ]);
+            return (bool) data_get($response->json(), 'success', false);
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
 }

@@ -48,4 +48,10 @@ return [
         'url' => env('API_WEB_URL', 'http://api-web:3000'),
     ],
 
+    'turnstile' => [
+        'enable' => env('TURNSTILE_ENABLE', false),
+        'site_key' => env('TURNSTILE_SITE_KEY'),
+        'secret_key' => env('TURNSTILE_SECRET_KEY'),
+    ],
+
 ];

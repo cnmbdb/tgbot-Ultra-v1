@@ -3,50 +3,139 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登录界面</title>
+    <title>登录 - 后台管理系统</title>
     <link href="/admin/css/bootstrap.min.css" rel="stylesheet">
     <link href="/admin/font-awesome/css/font-awesome.css" rel="stylesheet">
     <link href="/admin/css/animate.css" rel="stylesheet">
     <link href="/admin/css/style.css" rel="stylesheet">
-    <link href="/admin/css/login.css" rel="stylesheet">
+    <link href="/admin/css/ui-ux-pro-max.css" rel="stylesheet">
+    <style>
+        /* Override specific login styles */
+        body {
+            background: #F3F4F6 !important;
+        }
+        .login-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
+        }
+        .login-box {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 48px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+        .login-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1F2937;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .login-subtitle {
+            font-size: 14px;
+            color: #6B7280;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .input-group-modern {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .input-group-modern i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9CA3AF;
+            font-size: 18px;
+        }
+        .input-group-modern input {
+            width: 100%;
+            padding: 12px 16px 12px 48px;
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.2s;
+            background: #F9FAFB;
+        }
+        .input-group-modern input:focus {
+            background: #FFFFFF;
+            border-color: #4F46E5;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+            outline: none;
+        }
+        .btn-modern {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+        .btn-modern:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+        }
+        .turnstile-wrap {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .err {
+            color: #EF4444;
+            font-size: 13px;
+            margin-top: 8px;
+            text-align: center;
+            background: #FEF2F2;
+            padding: 8px;
+            border-radius: 8px;
+        }
+    </style>
 </head>
 
-<body class="gray-bg">
-    <div>
-        <div class="logo-name">后台管理系统</div>
-    </div>
-    <div class="middle-box text-center loginscreen animated fadeInDown">
-        <div>
+<body>
+    <div class="login-wrapper">
+        <div class="login-box animated fadeInDown">
+            <div class="login-title">后台管理系统</div>
+            <div class="login-subtitle">TGBot Ultra Admin Panel</div>
+            
             <form method="POST" action="{{ route('admin.login') }}">
                 {{ csrf_field() }}
-                <div class="main">
-                    <div class="main-btn">
-                        <div class="flex-center flex-justify-between">
-                            <div class="icon-box flex-center">
-                                <img src="img/user.png" class="user-icon">
-                            </div>
-                            <div class="flex1 flex-center">
-                                <input type="test" name="name" placeholder="账号" required="" value="{{old('name')}}">
-                            </div>
-                        </div>
-                        <div class="flex-center flex-justify-between">
-                            <div class="icon-box flex-center">
-                                <img src="img/pwd.png" class="pwd-icon">
-                            </div>
-                            <div  class="flex1 flex-center">
-                                <input type="password" name="password" placeholder="密码" required="">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mian-bg"></div>
+                
+                <div class="input-group-modern">
+                    <i class="fa fa-user"></i>
+                    <input type="text" name="name" placeholder="账号" required value="{{old('name')}}">
                 </div>
+                
+                <div class="input-group-modern">
+                    <i class="fa fa-lock"></i>
+                    <input type="password" name="password" placeholder="密码" required>
+                </div>
+
                 @if ($errors->has('name'))
                     <div class="err">{{ $errors->first('name') }}</div>
                 @endif
-                <button type="submit" class="btn login">
-                    <div class="flex-center">
-                        <div class="p-r-10">登</div><div class="p-l-10">录</div>
+
+                @if (!empty($turnstileRequired) && !empty($turnstileSiteKey))
+                    <div class="turnstile-wrap">
+                        <div class="cf-turnstile" data-sitekey="{{ $turnstileSiteKey }}"></div>
                     </div>
+                @endif
+
+                <button type="submit" class="btn-modern">
+                    登录系统
                 </button> 
             </form>
         </div>
@@ -56,5 +145,8 @@
     <script src="/admin/js/jquery-3.1.1.min.js"></script>
     <script src="/admin/js/popper.min.js"></script>
     <script src="/admin/js/bootstrap.js"></script>
+    @if (!empty($turnstileRequired) && !empty($turnstileSiteKey))
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    @endif
 </body>
 </html>

@@ -18,6 +18,7 @@ services:
     ports:
       - "8080:80"
     environment:
+      - ALLOW_DIRECT_IP_ACCESS=${ALLOW_DIRECT_IP_ACCESS:-true}
       # API-Web 服务地址（从环境变量或 .env 文件读取）
       - API_WEB_URL=${API_WEB_URL:-http://host.docker.internal:4444}
       # NL-API 能量池系统地址
@@ -63,6 +64,7 @@ services:
     ports:
       - "9503:9503"
     environment:
+      - ALLOW_DIRECT_IP_ACCESS=${ALLOW_DIRECT_IP_ACCESS:-true}
       # API-Web 服务地址（从环境变量或 .env 文件读取）
       - API_WEB_URL=${API_WEB_URL:-http://host.docker.internal:4444}
       # NL-API 能量池系统地址

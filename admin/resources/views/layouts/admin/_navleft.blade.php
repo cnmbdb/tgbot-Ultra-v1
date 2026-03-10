@@ -2,27 +2,29 @@
     <ul class="nav metismenu" id="side-menu">
         <li class="nav-header">
             <div class="dropdown profile-element">
-                <img alt="image" class="rounded-circle" src="{{asset('admin/img/profile_small.jpg')}}" style="width:50px;height:50px"/>
-                <a data-toggle="dropdown" class="dropdown-toggle" href="javascript:;">
-                    <span class="block m-t-xs font-bold">{{Auth::guard('admin')->user()->name}}</span>
-                    <span class="text-muted text-xs block">{{auth('admin')->user()->getRoleNames()[0] ?? ''}}</span>
-                    <a href="https://t.me/botfather" style="font-size:12px;color:#b6b900" target="_blank" class="fa fa-address-book"> 创建机器人</a>
-                </a>
+                <span class="block m-t-xs font-bold" style="color: #111827; font-size: 20px; letter-spacing: -0.025em; margin-bottom: 4px;">TG Ultra</span>
+                <span class="block text-muted text-xs block" style="color: #6B7280; font-weight: 500;">Admin Panel</span>
             </div>
-            <div class="logo-element">
-                {{Auth::guard('admin')->user()->name}}
+            <div class="logo-element" style="color: #111827;">
+                TG
             </div>
         </li>
         <li class="@yield('nav-status-home', '')">
-            <a href="javascript:;"><i class="fa fa-home"></i> <span class="nav-label">主页</span> <span class="fa arrow"></span></a>
+            <a href="javascript:;">
+                <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                <span class="nav-label">控制台</span> <span class="fa arrow"></span>
+            </a>
             <ul class="nav nav-second-level">
-                <li class="@yield('nav-status-home', '')"><a href="{{route('admin.home')}}">主页</a></li>
+                <li class="@yield('nav-status-home', '')"><a href="{{route('admin.home')}}">仪表盘</a></li>
             </ul>
         </li>
         
         @if( auth('admin')->user()->can('机器人管理') || auth('admin')->user()->hasrole('超级管理员'))
             <li class="@yield('nav-status-telegram', '')">
-                <a href="javascript:;"><i class="fa fa-plane"></i> <span class="nav-label">机器人列表</span><span class="fa arrow"></span></a>
+                <a href="javascript:;">
+                    <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                    <span class="nav-label">机器人列表</span><span class="fa arrow"></span>
+                </a>
                 <ul class="nav nav-second-level collapse">
                     @if( auth('admin')->user()->can('机器人列表') || auth('admin')->user()->hasrole('超级管理员') )
                         <li class="menumulu" id="menu50"><a _href="{{route('admin.telegram.telegrambot.index')}}">机器人列表</a></li>
@@ -51,7 +53,10 @@
         
         @if( auth('admin')->user()->can('群组用户') || auth('admin')->user()->hasrole('超级管理员'))
             <li class="@yield('nav-status-groupuser', '')">
-                <a href="javascript:;"><i class="fa fa-users"></i> <span class="nav-label">群组用户</span><span class="fa arrow"></span></a>
+                <a href="javascript:;">
+                    <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span class="nav-label">群组用户</span><span class="fa arrow"></span>
+                </a>
                 <ul class="nav nav-second-level collapse">
                     @if( auth('admin')->user()->can('群组列表') || auth('admin')->user()->hasrole('超级管理员') )
                         <li class="menumulu" id="menu70"><a _href="{{route('admin.groupuser.group.index')}}">群组列表</a></li>
@@ -71,7 +76,10 @@
         
         @if( auth('admin')->user()->can('闪兑管理') || auth('admin')->user()->hasrole('超级管理员'))
             <li class="@yield('nav-status-transit', '')">
-                <a href="javascript:;"><i class="fa fa-jsfiddle"></i> <span class="nav-label">闪兑钱包</span><span class="fa arrow"></span></a>
+                <a href="javascript:;">
+                    <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    <span class="nav-label">闪兑钱包</span><span class="fa arrow"></span>
+                </a>
                 <ul class="nav nav-second-level collapse">
                     @if( auth('admin')->user()->can('闪兑钱包') || auth('admin')->user()->hasrole('超级管理员') )
                         <li class="menumulu" id="menu10"><a _href="{{route('admin.transit.wallet.index')}}">闪兑钱包</a></li>
@@ -94,7 +102,10 @@
         
         @if( auth('admin')->user()->can('能量管理') || auth('admin')->user()->hasrole('超级管理员'))
             <li class="@yield('nav-status-energy', '')">
-                <a href="javascript:;"><i class="fa fa-flash"></i> <span class="nav-label">能量管理</span><span class="fa arrow"></span></a>
+                <a href="javascript:;">
+                    <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    <span class="nav-label">能量管理</span><span class="fa arrow"></span>
+                </a>
                 <ul class="nav nav-second-level collapse">
                     @if( auth('admin')->user()->can('能量平台') || auth('admin')->user()->hasrole('超级管理员') )
                         <li class="menumulu" id="menu60"><a _href="{{route('admin.energy.platform.index')}}">能量平台</a></li>
@@ -126,7 +137,10 @@
         
         @if( auth('admin')->user()->can('会员管理') || auth('admin')->user()->hasrole('超级管理员'))
             <li class="@yield('nav-status-premium', '')">
-                <a href="javascript:;"><i class="fa fa-diamond"></i> <span class="nav-label">会员管理</span><span class="fa arrow"></span></a>
+                <a href="javascript:;">
+                    <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6"/></svg>
+                    <span class="nav-label">会员管理</span><span class="fa arrow"></span>
+                </a>
                 <ul class="nav nav-second-level collapse">
                     @if( auth('admin')->user()->can('会员平台') || auth('admin')->user()->hasrole('超级管理员') )
                         <li class="menumulu" id="menu80"><a _href="{{route('admin.premium.platform.index')}}">会员平台</a></li>
@@ -146,7 +160,10 @@
         
         @if( auth('admin')->user()->can('监控管理') || auth('admin')->user()->hasrole('超级管理员'))
             <li class="@yield('nav-status-monitor', '')">
-                <a href="javascript:;"><i class="fa fa-drupal"></i> <span class="nav-label">监控管理</span><span class="fa arrow"></span></a>
+                <a href="javascript:;">
+                    <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                    <span class="nav-label">监控管理</span><span class="fa arrow"></span>
+                </a>
                 <ul class="nav nav-second-level collapse">
                     @if( auth('admin')->user()->can('机器人监控') || auth('admin')->user()->hasrole('超级管理员') )
                         <li class="menumulu" id="menu20"><a _href="{{route('admin.monitor.bot.index')}}">机器人监控</a></li>
@@ -160,7 +177,10 @@
         
         @if( auth('admin')->user()->can('归集管理') || auth('admin')->user()->hasrole('超级管理员'))
             <li class="@yield('nav-status-monitor', '')">
-                <a href="javascript:;"><i class="fa fa-grav"></i> <span class="nav-label">归集管理</span><span class="fa arrow"></span></a>
+                <a href="javascript:;">
+                    <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m10 10 4 4 4-4"/></svg>
+                    <span class="nav-label">归集管理</span><span class="fa arrow"></span>
+                </a>
                 <ul class="nav nav-second-level collapse">
                     @if( auth('admin')->user()->can('归集钱包') || auth('admin')->user()->hasrole('超级管理员') )
                         <li class="menumulu" id="menu101"><a _href="{{route('admin.collection.wallet.index')}}">归集钱包</a></li>
@@ -174,7 +194,10 @@
         
         @if( auth('admin')->user()->can('商城管理') || auth('admin')->user()->hasrole('超级管理员'))
             <li class="@yield('nav-status-shop', '')">
-                <a href="javascript:;"><i class="fa fa-shopping-cart"></i> <span class="nav-label">商城管理</span><span class="fa arrow"></span></a>
+                <a href="javascript:;">
+                    <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+                    <span class="nav-label">商城管理</span><span class="fa arrow"></span>
+                </a>
                 <ul class="nav nav-second-level collapse">
                     @if( auth('admin')->user()->can('商品管理') || auth('admin')->user()->hasrole('超级管理员') )
                         <li class="menumulu" id="menu90"><a _href="{{route('admin.shop.goods.index')}}">商品管理</a></li>
@@ -194,7 +217,10 @@
 
         @if( auth('admin')->user()->can('系统设置') || auth('admin')->user()->hasrole('超级管理员'))
             <li class="@yield('nav-status-setting', '')">
-                <a href="javascript:;"><i class="fa fa-windows"></i> <span class="nav-label">系统设置</span><span class="fa arrow"></span></a>
+                <a href="javascript:;">
+                    <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <span class="nav-label">系统设置</span><span class="fa arrow"></span>
+                </a>
                 <ul class="nav nav-second-level collapse">
                     @if( auth('admin')->user()->can('配置信息') || auth('admin')->user()->hasrole('超级管理员') )
                         <li class="menumulu" id="menu30"><a _href="{{route('admin.setting.config.index')}}">配置信息</a></li>
@@ -205,7 +231,10 @@
 
         @if( auth('admin')->user()->can('系统管理') || auth('admin')->user()->hasrole('超级管理员') )
             <li class="@yield('nav-status-system', '')">
-                <a href="javascript:;"><i class="fa fa-sun-o"></i> <span class="nav-label">系统管理</span><span class="fa arrow"></span></a>
+                <a href="javascript:;">
+                    <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <span class="nav-label">系统管理</span><span class="fa arrow"></span>
+                </a>
                 <ul class="nav nav-second-level collapse">
                     @if( auth('admin')->user()->can('管理员管理') || auth('admin')->user()->hasrole('超级管理员') )
                         <li class="menumulu" id="menu40"><a _href="{{route('admin.system.admin.index')}}">管理员管理</a></li>

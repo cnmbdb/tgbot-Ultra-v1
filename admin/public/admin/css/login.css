@@ -1,4 +1,4 @@
-.gray-bg{background: url("../img/login_bg.jpg") no-repeat top left;background-size:100% 100%;}
+.gray-bg{background:#000;}
 .logo-name{text-align: center;font-size: 100px;padding-top: 10%;letter-spacing: inherit;}
 .flex {
 	display: flex;
@@ -56,6 +56,12 @@ input:focus{
 }
 .main-btn>div{
 	height: 60px;
+	border: 1px solid transparent;
+	transition: border-color .2s ease, box-shadow .2s ease;
+}
+.main-btn>div:focus-within{
+	border-color: rgba(255,255,255,.95);
+	box-shadow: inset 0 0 0 1px rgba(255,255,255,.95);
 }
 .icon-box{
 	background: rgba(255,255,255,.1);
@@ -83,7 +89,7 @@ input:focus{
 	font-size: 16px;
 	width: 300px;
 	height: 50px;
-	background: linear-gradient(to right, #D4CE00,#109F00 );
+	background: linear-gradient(to right, #2F80ED,#005BEA);
 	color: #FFF;
 	border: none;
 }
@@ -97,4 +103,9 @@ input:focus{
 	color: #e41212;
 	margin-top: 20px;
 	font-size: 16px;
+}
+.turnstile-wrap{
+	margin-top: 16px;
+	display: flex;
+	justify-content: center;
 }

@@ -26,9 +26,12 @@ class EnergyWalletTradeTrxServices
         //通过tronscan拉取交易
         $url = 'https://apilist.tronscanapi.com/api/new/transfer?sort=-timestamp&count=true&limit='.$limit.'&start='.$start.'&address='.$in_list['receive_wallet'].'&toAddress='.$in_list['receive_wallet'].'&tokens=_&start_timestamp='.$start_timestamp.'&end_timestamp='.$end_timestamp;
         
-        $api_key = config('apikey.tronapikey');
-        
-        $apikeyrand = $api_key[array_rand($api_key)];
+        $apikeyrand = safeGetTronApiKey('tronscan');
+        if (!$apikeyrand) {
+            // 如果没有 API Key，使用默认或跳过，防止报错
+            // 这里可以记录日志或者直接 return
+            return; 
+        }
 
         $heders = [
             'TRON-PRO-API-KEY:'.$apikeyrand
@@ -148,8 +151,11 @@ class EnergyWalletTradeTrxServices
             $url = 'https://api.trongrid.io/v1/accounts/'.$in_list['receive_wallet'].'/transactions?only_to=true&only_confirm=true&limit='.$limit.'&min_timestamp='.$start_timestamp.'&search_internal=false';
         }
         
-        $api_key = config('apikey.gridapikey');
-        $apikeyrand = $api_key[array_rand($api_key)];
+        $apikeyrand = safeGetTronApiKey('trongrid');
+        if (!$apikeyrand) {
+            // 如果没有 API Key，使用默认或跳过
+             return;
+        }
         
         $heders = [
             'TRON-PRO-API-KEY:'.$apikeyrand

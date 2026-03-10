@@ -1,0 +1,364 @@
+/* UI UX Pro Max - VitePress/Nuxt Style Sidebar (Restored Layout Compatibility) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ==========================================================================
+   RESET & VARIABLES
+   ========================================================================== */
+:root {
+    --vp-c-brand-1: #00d26a;  /* Brand Green */
+    --vp-c-brand-2: #00c062;
+    --vp-c-text-1: #1f2937;   /* Gray-900 */
+    --vp-c-text-2: #4B5563;   /* Gray-600 */
+    --vp-c-divider: #E5E7EB;  /* Divider Gray */
+    --vp-c-bg: #FFFFFF;
+    --vp-c-bg-soft: #F9FAFB;
+}
+
+/* ==========================================================================
+   SIDEBAR NAVIGATION - VITEPRESS STYLE (High Specificity)
+   ========================================================================== */
+
+/* 1. Container - Force White & Border */
+body #wrapper .navbar-static-side,
+body .navbar-static-side {
+    background-color: #ffffff !important;
+    background-image: none !important;
+    border-right: 1px solid var(--vp-c-divider) !important;
+    box-shadow: none !important;
+    height: 100vh !important; /* Force full height */
+    position: fixed !important; /* Keep it fixed */
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 2001;
+    overflow-y: auto; /* Allow scrolling inside sidebar */
+}
+
+/* Scrollbar styling for sidebar */
+.navbar-static-side::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+}
+
+/* 2. Sidebar Inner - Add spacing */
+#side-menu {
+    background: #ffffff !important;
+    padding-top: 20px !important;
+    padding-bottom: 60px !important; /* Extra padding at bottom */
+    min-height: 100% !important; /* Ensure it fills container */
+}
+
+/* 3. Header / Logo - Clean look */
+.nav-header {
+    background: #ffffff !important;
+    background-image: none !important;
+    padding: 20px 25px 10px !important;
+    border-bottom: none !important;
+}
+
+.nav-header .profile-element span {
+    color: var(--vp-c-text-1) !important;
+}
+
+.logo-element {
+    background: var(--vp-c-brand-1) !important;
+    color: #fff !important;
+}
+
+/* 4. Level 1 Items (Section Headers) - Bold, Dark, No Background */
+#side-menu > li > a {
+    color: var(--vp-c-text-1) !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    padding: 12px 20px 12px 25px !important;
+    background: transparent !important;
+    border: none !important;
+    border-left: 4px solid transparent !important; /* Reset legacy border */
+}
+
+/* Hover State Level 1 */
+#side-menu > li > a:hover {
+    background: var(--vp-c-bg-soft) !important;
+    color: var(--vp-c-text-1) !important;
+}
+
+/* Active State Level 1 - No background, just text */
+#side-menu > li.active {
+    background: transparent !important;
+    border-left: none !important;
+}
+
+#side-menu > li.active > a {
+    background: transparent !important;
+    color: var(--vp-c-text-1) !important;
+    border-left: none !important;
+}
+
+/* 5. Icons Level 1 - Subtle Gray */
+#side-menu > li > a > svg.nav-icon {
+    color: #9CA3AF !important; /* Gray-400 */
+    margin-right: 12px !important;
+    width: 18px !important; /* Slightly smaller for elegance */
+    height: 18px !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    transition: color 0.2s ease;
+}
+
+/* Hover/Active State for Icons */
+#side-menu > li > a:hover > svg.nav-icon,
+#side-menu > li.active > a > svg.nav-icon {
+    color: #4B5563 !important; /* Darker gray on hover */
+}
+
+/* Ensure text aligns with icon */
+#side-menu > li > a {
+    display: flex !important;
+    align-items: center !important;
+}
+
+#side-menu > li > a > .nav-label {
+    flex: 1; /* Push arrow to right */
+    line-height: 1; /* Reset line-height */
+    padding-top: 1px; /* Optical adjustment */
+}
+
+/* 6. Level 2 Container - White Background */
+.nav-second-level {
+    background: #ffffff !important;
+    padding-left: 0 !important;
+    margin-bottom: 0 !important; /* Fix potential gap */
+    padding-bottom: 0 !important;
+}
+
+/* 7. Level 2 Items - Indented with Gray Line */
+.nav-second-level li {
+    background: #ffffff !important; /* Force white bg for item container */
+    border-bottom: none !important;
+}
+
+.nav-second-level li a {
+    padding: 8px 20px 8px 55px !important; /* Indent for hierarchy */
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: var(--vp-c-text-2) !important;
+    background: transparent !important;
+    position: relative !important;
+    display: block !important; /* Ensure block display */
+}
+
+/* Gray Guide Line (Pseudo-element on the link to avoid container issues) */
+.nav-second-level li a::before {
+    content: "";
+    position: absolute;
+    left: 34px; /* Align with parent icon center */
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: var(--vp-c-divider) !important;
+    z-index: 1;
+}
+
+/* 8. Active State Level 2 - Green Text + Green Indicator Overlay */
+.nav-second-level li.active a,
+.nav-second-level li.active a:hover,
+.menumulu.active a {
+    color: var(--vp-c-brand-1) !important;
+    font-weight: 600 !important;
+    background: #F0FDF4 !important; /* Very subtle green bg for active item */
+}
+
+/* Green Indicator Bar */
+.nav-second-level li.active a::after,
+.menumulu.active a::after {
+    content: "";
+    position: absolute;
+    left: 34px; /* Match guide line position */
+    top: 0;
+    bottom: 0;
+    width: 2px; /* Thicker than guide line */
+    background-color: var(--vp-c-brand-1) !important;
+    z-index: 2;
+}
+
+/* 9. Page Wrapper - Fix Layout Background */
+#page-wrapper {
+    background-color: var(--vp-c-bg-soft) !important;
+    /* Don't force margin-left here, let style.css handle responsive layout */
+}
+
+/* 10. Navbar Top - Fix Background */
+.navbar-static-top {
+    background: #ffffff !important;
+}
+
+
+
+/* 14. Theme Switcher Small */
+.theme-switch {
+    width: 52px !important; /* Slightly narrower */
+    height: 26px !important; /* Unified 26px */
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.theme-switch .switch-dot {
+    width: 18px !important; /* Reduced size */
+    height: 18px !important;
+    top: 3px !important; /* Adjusted top */
+    left: 3px !important;
+}
+
+body.theme-dark .theme-switch .switch-dot {
+    transform: translateX(26px) !important; /* Adjusted translate */
+}
+
+.theme-switch .switch-icon svg {
+    width: 12px !important;
+    height: 12px !important;
+    margin-top: 0px !important; /* Reset margin */
+}
+
+.theme-switch .switch-icon {
+    top: 6px !important; /* Adjusted icon position */
+}
+
+/* 15. Navbar Top Links - Flexbox Layout */
+.navbar-top-links {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important; /* Push everything to right */
+    height: 64px !important;
+    margin-right: -15px !important;
+    margin-left: auto !important; /* Auto left margin to push right */
+    width: 100% !important; /* Take full width */
+}
+
+.navbar-top-links li {
+    display: inline-flex !important;
+    align-items: center !important;
+    height: 100% !important;
+    padding: 0 12px !important; /* Reduced padding */
+    float: none !important;
+}
+
+.navbar-top-links li:last-child {
+    padding-right: 0 !important;
+}
+
+
+
+/* 16. Navbar Brand Text - Hidden/Removed */
+/* .navbar-brand-text removed */
+
+/* Adjust navbar header to be flex container */
+.navbar-header {
+    display: none !important; /* Hide header completely since it's empty */
+}
+
+/* 17. Universal Pill Badge (Unified Style) */
+.status-pill,
+.nav-pill-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    height: 24px !important; /* Reduced height to 24px */
+    padding: 0 10px !important; /* Reduced padding */
+    background-color: #F9FAFB !important; /* Unified light gray background */
+    border: 1px solid #E5E7EB !important; /* Unified border color */
+    border-radius: 9999px !important; /* Full pill shape */
+    color: #374151 !important; /* Gray-700 text */
+    font-size: 12px !important; /* Small text */
+    font-weight: 600 !important; /* Semi-bold */
+    line-height: 1 !important;
+    transition: all 0.2s ease !important;
+    text-decoration: none !important;
+    cursor: default; /* Default cursor for status */
+    box-sizing: border-box !important; /* Force border-box */
+}
+
+/* Specific overrides for interactive buttons */
+.nav-pill-btn {
+    cursor: pointer !important;
+}
+
+.nav-pill-btn:hover {
+    background-color: #F3F4F6 !important;
+    border-color: #D1D5DB !important;
+    color: #111827 !important;
+}
+
+/* Specific overrides for status indicator (Green theme) */
+.status-pill {
+    background-color: #ECFDF5 !important; /* Green-50 */
+    border-color: #10B981 !important; /* Green-500 */
+    color: #059669 !important; /* Green-600 */
+}
+
+.status-pill.error {
+    background-color: #FEF2F2 !important;
+    border-color: #EF4444 !important;
+    color: #DC2626 !important;
+}
+
+/* Icon Alignment in Pill */
+.status-icon-wrapper,
+.nav-pill-btn svg.nav-icon {
+    width: 16px !important;
+    height: 16px !important;
+    margin-right: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.nav-pill-btn svg.nav-icon {
+    color: #6B7280 !important; /* Icon gray */
+}
+
+.nav-pill-btn:hover svg.nav-icon {
+    color: #111827 !important;
+}
+
+/* 18. Logout Button Special Style */
+.nav-pill-btn.logout-btn:hover {
+    background-color: #FEF2F2 !important; /* Red-50 */
+    border-color: #EF4444 !important; /* Red-500 */
+    color: #DC2626 !important; /* Red-600 */
+}
+
+.nav-pill-btn.logout-btn:hover svg.nav-icon {
+    color: #DC2626 !important;
+}
+
+/* Fix Status Pill Alignment */
+.status-pill {
+    height: 26px !important; /* Unified 26px */
+    padding: 0 12px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.status-icon-wrapper {
+    width: 14px !important; /* Slightly smaller */
+    height: 14px !important;
+    margin-right: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.status-icon,
+.status-pulse {
+    width: 6px !important; /* Smaller dot */
+    height: 6px !important;
+}
+
+/* Text alignment fix */
+#job-text,
+.nav-pill-btn span {
+    padding-top: 0px !important; /* Reset padding for 26px */
+    line-height: 24px !important; /* Match content height */
+}
+

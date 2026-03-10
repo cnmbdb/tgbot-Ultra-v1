@@ -75,7 +75,7 @@ class PollTelegramMessages
                     $ch = curl_init();
                     curl_setopt($ch, CURLOPT_URL, $baseUrl . 'getUpdates?' . $params);
                     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                    curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
                     $response = curl_exec($ch);
                     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                     $curlError = curl_error($ch);

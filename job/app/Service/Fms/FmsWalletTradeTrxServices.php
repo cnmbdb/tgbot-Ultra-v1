@@ -27,9 +27,10 @@ class FmsWalletTradeTrxServices
         
         $url = 'https://apilist.tronscanapi.com/api/new/transfer?sort=-timestamp&count=true&limit='.$limit.'&start='.$start.'&address='.$in_list['recharge_wallet_addr'].'&toAddress='.$in_list['recharge_wallet_addr'].'&tokens=_&start_timestamp='.$start_timestamp.'&end_timestamp='.$end_timestamp;
         
-        $api_key = config('apikey.tronapikey');
-        
-        $apikeyrand = $api_key[array_rand($api_key)];
+        $apikeyrand = safeGetTronApiKey('tronscan');
+        if (!$apikeyrand) {
+            return ['success_count' => 0, 'error_count' => 0];
+        }
 
         $heders = [
             "TRON-PRO-API-KEY:".$apikeyrand
@@ -148,8 +149,10 @@ class FmsWalletTradeTrxServices
             $url = 'https://api.trongrid.io/v1/accounts/'.$in_list['recharge_wallet_addr'].'/transactions?only_to=true&only_confirm=true&limit='.$limit.'&min_timestamp='.$start_timestamp.'&search_internal=false';
         }
         
-        $api_key = config('apikey.gridapikey');
-        $apikeyrand = $api_key[array_rand($api_key)];
+        $apikeyrand = safeGetTronApiKey('trongrid');
+        if (!$apikeyrand) {
+            return;
+        }
         
         $heders = [
             'TRON-PRO-API-KEY:'.$apikeyrand
