@@ -18,7 +18,7 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin'], function () {
         Route::post('logout', 'LoginController@logout')->name('admin.logout');
     });
 
-    Route::group(['middleware' => ['admin.auth', 'permission']], function () {
+    Route::group(['middleware' => ['admin.auth', 'permission', 'license']], function () {
         //后台首页
         Route::get('home', 'Home\HomeController@index')->name('admin.home');
         
@@ -393,6 +393,10 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin'], function () {
             Route::group(['prefix' => 'config'], function () {
                 Route::get('index', 'ConfigController@index')->name('admin.setting.config.index');
                 Route::post('update', 'ConfigController@update')->name('admin.setting.config.update');
+                /* 激活授权 */
+                Route::post('activate', 'ConfigController@activate')->name('admin.setting.config.activate');
+                /* 解除授权 */
+                Route::post('deactivate', 'ConfigController@deactivate')->name('admin.setting.config.deactivate');
                 /* ueditor上传图片 */
                 Route::post('uploadfile', 'ConfigController@uploadfile')->name('admin.setting.config.uploadfile');
                 Route::post('uploadfileNew', 'ConfigController@uploadfileNew')->name('admin.setting.config.uploadfileNew');

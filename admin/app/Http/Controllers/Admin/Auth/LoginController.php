@@ -163,7 +163,8 @@ class LoginController extends Controller
             return false;
         }
 
-        return Cache::has($this->turnstileCacheKey($request));
+        // 始终显示 Turnstile（防暴力破解）
+        return true;
     }
 
     protected function markTurnstileRequired(Request $request)

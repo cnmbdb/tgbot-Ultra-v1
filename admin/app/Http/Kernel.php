@@ -68,6 +68,7 @@ class Kernel extends HttpKernel
         'login' => Login::class,
         'permission' => \App\Http\Middleware\PermissionAuth::class,
         'XSS' => \App\Http\Middleware\XSS::class,
+        'license' => \App\Http\Middleware\CheckLicense::class,
     ];
 
     /**

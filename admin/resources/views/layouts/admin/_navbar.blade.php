@@ -21,13 +21,13 @@
     </li>
     <li class="topbar-actions">
         <a class="nav-pill-btn" onclick="clearJobCache()">
-            <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+            <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
             <span>清理JOB缓存</span>
         </a>
     </li>
     <li class="topbar-actions">
         <span class="nav-pill-btn" onclick="openChangePassword()">
-            <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             <span>修改密码</span>
         </span>
     </li>
@@ -46,7 +46,7 @@
     </li>
     <li>
         <a href="javascript:;" class="nav-pill-btn logout-btn" title="退出登录" onclick="logoutAdmin(event)">
-            <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+            <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
             <span>退出</span>
         </a>
         <form id="logout-form" action="{{ route('admin.logout') }}" method="POST" style="display: none;">
@@ -58,6 +58,10 @@
 <style>
 .topbar-actions {
     padding: 14px 8px;
+}
+body.theme-dark .nav-icon,
+body.theme-dark .switch-icon {
+    color: #d1d5db;
 }
 .theme-switch {
     position: relative;
@@ -108,9 +112,8 @@
 .topbar-avatar {
     width: 28px;
     height: 28px;
-    border-radius: 50%;
-    border: 1px solid #d1d5db;
-    background: #fff;
+    border: none;
+    background: transparent;
 }
 .topbar-account-name {
     font-size: 14px;
@@ -160,8 +163,7 @@ body.theme-dark .topbar-account-link {
     color: #d1d5db !important;
 }
 body.theme-dark .topbar-avatar {
-    border-color: #334155;
-    background: #1f2937;
+    background: transparent;
 }
 body.theme-dark .footer {
     background: #0b1220 !important;
@@ -169,7 +171,7 @@ body.theme-dark .footer {
     color: #9ca3af !important;
 }
 body.theme-dark .nav-header {
-    background: #000000 !important;
+    background: #0b1220 !important;
     background-image: none !important;
 }
 body.theme-dark .nav-header .logo-element {
@@ -230,4 +232,5 @@ body.theme-dark .nav-header .logo-element {
             localStorage.setItem(storageKey, document.body.classList.contains('theme-dark') ? 'dark' : 'light');
         });
     })();
-</script>
+
+    </script>

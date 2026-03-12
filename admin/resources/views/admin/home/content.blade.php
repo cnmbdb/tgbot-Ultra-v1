@@ -1,90 +1,132 @@
-@extends('layouts.admin.app')
-@section('nav-status-home', 'active')
-
-@section('contents')
-    
+{{-- 仪表盘内容（被 index 引入，不要 @extends） --}}
+<div class="dashboard-next">
     <div class="row">
         <div class="col-lg-12">
-            <div class="wrapper wrapper-content animated fadeInUp">
-                <div class="layui-form-item">
-                        <div class="layui-form-item">
-                        <div style="font-size:25px;color:rebeccapurple;margin:10px;">
-                            内置命令：<span style="color:red;font-size:16px">内置命令可以直接发给机器人</span>
-                        </div>
-                        <div style="font-size:16px;">
-                            <span style="color:red">z0</span>：查询欧意C2C实时汇率。z0是查所有，z1是只查银行卡，z2是只查支付宝，z3是只查微信
-                            <br><br>
-                            <span style="color:red">统计</span>：可以统计当天，当月，历史总的兑换订单情况。
-                            <br><br>
-                            <span style="color:red">能量统计</span>：可以统计当天，当月，历史总的能量订单情况。
-                            <br><br>
-                            <span style="color:red">预支给xxx</span>：只能是闪兑钱包->TG通知对象(收款)，才能发起该命令且只能私聊发给机器人。格式为：预支给xxxxxxx 15。xxxxxxx是钱包地址，15是trx数量，如果不输入后面的数量，则默认预支15个trx。比如  预支给TYASr5UV6HEcXatwdFQfmUqMUxHLS 15
-                            <br><br>
-                            <span style="color:red">能量给xxx 65000 0</span>：只能是能量平台->TG管理员用户ID，才能发起该命令且只能私聊发给机器人。格式为：能量给xxx 65000 0。xxx是钱包地址，65000是能量数量，0表示1小时,1表示1天,3表示3天。如果仅输入能量给xxx，则默认给xxx 65000能量 1小时使用权限。比如  能量给TYASr5UV6HEcXatwdFQfmLqMUxHLS 或者 能量给TYASr5UV6HEcXatwdFQfmUqMUxHLS 65000 0
-                            <br>PS: 也可以使用命令：能量强制给xxx  表示不校验TRX是否足够等条件<br><br>
-                            <span style="color:red">查授权xxx</span>：查询波场地址的授权。格式为：查授权xxx   xxx是钱包地址，比如  查授权TYASr5UV6HEcXatwdFQfmUqMUxHLS
-                            <br><br>
-                            <span style="color:red">激活地址xxx</span>：激活波场地址，仅转1 TRX激活地址，只能是闪兑钱包->TG通知对象(收款)，才能发起该命令且只能私聊发给机器人。格式为：激活地址xxx   xxx是钱包地址，比如  激活地址TYASr5UV6HEcwdFQfmLVUqMUxHLS
-                            <br><br>
-                            <span style="color:red">下发trx/下发usdt</span>：只能是闪兑钱包->TG通知对象(收款)，才能发起该命令且只能私聊发给机器人。格式为：下发trx xxx 10 。xxx是钱包地址,10是下发数量，比如  下发trx TYASr5UV6HEcXatwdFQfVUqMUxHLS 10
-                            <br><br>
-                            <span style="color:red">授权波场/多签波场 地址 私钥 [权限ID,默认0]：例如 授权波场/多签波场 TYASr5UV6HEcXatwdFQLVUqMUxHLS 790c2e063e35e0f71acd065bfbe12b8a186565d6e61</span>
-                            <br><br>
-                            <span style="color:red">直接发波场地址，可查询波场地址余额，转账，多签等信息</span>
-                            <br><br>
-                            <span style="color:red">增加笔数：可以给地址增加笔数次数。 绑定笔数：可以给地址绑定用户ID，通知消息。发送命令给机器人可查看命令格式</span>
-                        </div>
+            <div class="dashboard-cards">
+
+                <div class="next-card">
+                    <div class="next-card-header">
+                        <span class="next-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg></span>
+                        <h3 class="next-card-title">内置命令</h3>
+                        <span class="next-card-badge">可直接发给机器人</span>
                     </div>
-                    <div style="font-size:25px;color:rebeccapurple;margin:10px;">
-                        关于回复消息内容，广告内容里面的样式说明：
-                    </div>
-                    <div style="font-size:16px;">
-                        粗体：&lt;b&gt;文字内容&lt;/b&gt; 或者 &lt;strong&gt;文字内容&lt;/strong&gt;
-                        <br>斜体：&lt;i&gt;文字内容&lt;/i&gt; 或者 &lt;em&gt;文字内容&lt;/em&gt;
-                        <br>底线：&lt;u&gt;文字内容&lt;/u&gt; 或者 &lt;ins&gt;文字内容&lt;/ins&gt;
-                        <br>删除线：&lt;s&gt;文字内容&lt;/s&gt; 或者 &lt;strike&gt;文字内容&lt;/strike&gt; 或者 &lt;del&gt;文字内容&lt;/del&gt;
-                        <br>遮挡码：&lt;span class="tg-spoiler"&gt;文字内容&lt;/span&gt; 或者 &lt;tg-spoiler&gt;文字内容&lt;/tg-spoiler&gt;
-                        <br>超链接：&lt;a href="链接地址"&gt;文字内容&lt;/a&gt;
-                        <br>TG用户链接：&lt;a href="tg://user?id=123456789"&gt;文字内容&lt;/a&gt;
-                        <br>等宽(点击复制)：&lt;code&gt;文字内容&lt;/code&gt;
-                        <br>多行等宽(点击复制)：&lt;pre&gt;文字内容&lt;/pre&gt;
-                        <br>代码块(点击复制)：&lt;pre&gt;&lt;code class="language-python"&gt;文字内容&lt;/code&gt;&lt;/pre&gt;
-                        <br><br>
-                        <span style="color:red">所有不属于标记或HTML实体的<，>和&符号必须替换为相应的HTML实体(< 用 &amp;lt; 替换。 > 用 &amp;gt;替换。 & 用 &amp;amp;替换)</span>
+                    <div class="next-card-body">
+                        <ul class="next-list">
+                            <li><strong>z0</strong>：查询欧意C2C实时汇率。z0 查所有，z1 只查银行卡，z2 只查支付宝，z3 只查微信</li>
+                            <li><strong>统计</strong>：统计当天、当月、历史总兑换订单情况</li>
+                            <li><strong>能量统计</strong>：统计当天、当月、历史总能量订单情况</li>
+                            <li><strong>预支给xxx</strong>：仅闪兑钱包→TG通知对象可发起，私聊机器人。格式：预支给xxxxxxx 15（地址+trx数量，默认15）</li>
+                            <li><strong>能量给xxx 65000 0</strong>：仅能量平台→TG管理员可发起，私聊机器人。格式：能量给xxx 65000 0（0=1小时,1=1天,3=3天）。也可用「能量强制给xxx」不校验TRX</li>
+                            <li><strong>查授权xxx</strong>：查询波场地址授权。例：查授权TYASr5UV6HEcXatwdFQfmUqMUxHLS</li>
+                            <li><strong>激活地址xxx</strong>：仅转1 TRX激活地址，仅闪兑钱包→TG通知对象可发起，私聊。例：激活地址TYASr5UV6HEcwdFQfmLVUqMUxHLS</li>
+                            <li><strong>下发trx/下发usdt</strong>：仅闪兑钱包→TG通知对象可发起，私聊。格式：下发trx xxx 10</li>
+                            <li><strong>授权波场/多签波场 地址 私钥 [权限ID,默认0]</strong></li>
+                            <li><strong>直接发波场地址</strong>：可查询余额、转账、多签等信息</li>
+                            <li><strong>增加笔数 / 绑定笔数</strong>：给地址增加笔数或绑定用户ID，发命令给机器人可查格式</li>
+                        </ul>
                     </div>
                 </div>
-                <div class="layui-form-item">
-                    <div style="font-size:25px;color:rebeccapurple;margin:10px;">
-                        关于内置变量：
+
+                <div class="next-card">
+                    <div class="next-card-header">
+                        <span class="next-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg></span>
+                        <h3 class="next-card-title">回复消息与广告内容样式</h3>
                     </div>
-                    <div style="font-size:16px;">
-                        <span style="color:red">${trxusdtrate}</span>  表示闪兑汇率，会根据机器人对应的闪兑地址，查找usdt兑换trx的汇率。
-                        <br><br>
-                        <span style="color:red">${trx10usdtrate}</span>  表示闪兑汇率（10U），会根据机器人对应的闪兑地址，查找usdt兑换trx的汇率。
-                        <br><br>
-                        <span style="color:red">${trx100usdtrate}</span>  表示闪兑汇率（100U），会根据机器人对应的闪兑地址，查找usdt兑换trx的汇率。
-                        <br><br>
-                        <span style="color:red">${trx1000usdtrate}</span>  表示闪兑汇率（1000U），会根据机器人对应的闪兑地址，查找usdt兑换trx的汇率。
-                        <br><br>
-                        <span style="color:red">${trxusdtwallet}</span>  表示闪兑钱包地址，会根据机器人查找对应的闪兑地址。
-                        <br><br>
-                        <span style="color:red">${trxusdtshownotes}</span>  表示闪兑钱包显示说明，会根据机器人查找对应的闪兑地址的闪兑说明。
-                        <br><br>
-                        <span style="color:red">${tgbotadmin}</span>  表示机器人管理员名，会根据机器人查找对应的管理员名。
-                        <br><br>
-                        <span style="color:red">${tgbotname}</span>  表示机器人名，会根据机器人查找对应的机器人名。
-                        <br><br>
-                        <span style="color:red">变量名字直接在回复内容中填写即可</span>
+                    <div class="next-card-body">
+                        <p class="next-text-muted">以下标签可用于回复内容、广告内容中：</p>
+                        <ul class="next-list next-list-code">
+                            <li>粗体：<code>&lt;b&gt;文字&lt;/b&gt;</code> 或 <code>&lt;strong&gt;文字&lt;/strong&gt;</code></li>
+                            <li>斜体：<code>&lt;i&gt;文字&lt;/i&gt;</code> 或 <code>&lt;em&gt;文字&lt;/em&gt;</code></li>
+                            <li>底线：<code>&lt;u&gt;文字&lt;/u&gt;</code> 或 <code>&lt;ins&gt;文字&lt;/ins&gt;</code></li>
+                            <li>删除线：<code>&lt;s&gt;文字&lt;/s&gt;</code> 或 <code>&lt;del&gt;文字&lt;/del&gt;</code></li>
+                            <li>遮挡码：<code>&lt;span class="tg-spoiler"&gt;文字&lt;/span&gt;</code></li>
+                            <li>超链接：<code>&lt;a href="链接"&gt;文字&lt;/a&gt;</code></li>
+                            <li>TG用户链接：<code>&lt;a href="tg://user?id=123456789"&gt;文字&lt;/a&gt;</code></li>
+                            <li>等宽(可复制)：<code>&lt;code&gt;文字&lt;/code&gt;</code>、<code>&lt;pre&gt;文字&lt;/pre&gt;</code></li>
+                            <li>代码块：<code>&lt;pre&gt;&lt;code class="language-xxx"&gt;文字&lt;/code&gt;&lt;/pre&gt;</code></li>
+                        </ul>
+                        <p class="next-text-warning">所有不属于标签的 <code>&lt;</code> <code>&gt;</code> <code>&amp;</code> 需替换为 HTML 实体：&amp;lt; &amp;gt; &amp;amp;</p>
                     </div>
                 </div>
-                
+
+                <div class="next-card">
+                    <div class="next-card-header">
+                        <span class="next-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+                        <h3 class="next-card-title">内置变量</h3>
+                    </div>
+                    <div class="next-card-body">
+                        <p class="next-text-muted">在回复内容中直接填写变量名即可替换：</p>
+                        <ul class="next-list next-list-vars">
+                            <li><code>${trxusdtrate}</code> 闪兑汇率（根据机器人对应闪兑地址）</li>
+                            <li><code>${trx10usdtrate}</code> 闪兑汇率（10U）</li>
+                            <li><code>${trx100usdtrate}</code> 闪兑汇率（100U）</li>
+                            <li><code>${trx1000usdtrate}</code> 闪兑汇率（1000U）</li>
+                            <li><code>${trxusdtwallet}</code> 闪兑钱包地址</li>
+                            <li><code>${trxusdtshownotes}</code> 闪兑钱包显示说明</li>
+                            <li><code>${tgbotadmin}</code> 机器人管理员名</li>
+                            <li><code>${tgbotname}</code> 机器人名</li>
+                        </ul>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
-@endsection
+</div>
 
-@section('scripts')
-   
-@endsection
-
-
+<style>
+.dashboard-next { padding: 20px 0; }
+.dashboard-cards { display: flex; flex-direction: column; gap: 24px; }
+.next-card {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0,0,0,.05);
+    overflow: hidden;
+}
+.next-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    border-bottom: 1px solid #e5e7eb;
+}
+.next-card-icon { font-size: 20px; color: #3b82f6; }
+.next-card-icon .fa { font-size: inherit; }
+.next-card-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+}
+.next-card-badge {
+    margin-left: auto;
+    font-size: 12px;
+    color: #6b7280;
+    background: #e5e7eb;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+.next-card-body { padding: 20px; }
+.next-list {
+    margin: 0;
+    padding-left: 20px;
+    list-style: disc;
+    color: #374151;
+    line-height: 1.8;
+    font-size: 14px;
+}
+.next-list li { margin-bottom: 8px; }
+.next-list li strong { color: #1d4ed8; }
+.next-list-code code,
+.next-list-vars code {
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #1d4ed8;
+}
+.next-text-muted { color: #6b7280; margin-bottom: 12px; font-size: 14px; }
+.next-text-warning { color: #b45309; font-size: 13px; margin-top: 12px; }
+</style>

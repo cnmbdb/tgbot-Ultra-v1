@@ -9,27 +9,29 @@
     <link href="/admin/css/animate.css" rel="stylesheet">
     <link href="/admin/css/style.css" rel="stylesheet">
     <link href="/admin/css/ui-ux-pro-max.css" rel="stylesheet">
+    @if (!empty($turnstileRequired) && !empty($turnstileSiteKey))
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    @endif
     <style>
         /* Override specific login styles */
         body {
-            background: #F3F4F6 !important;
+            background: #ffffff !important;
         }
         .login-wrapper {
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
+            background: #ffffff;
         }
         .login-box {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(20px);
+            background: #ffffff;
             border-radius: 24px;
             padding: 48px;
             width: 100%;
             max-width: 420px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(0, 0, 0, 0.08);
         }
         .login-title {
             font-size: 24px;
@@ -74,8 +76,8 @@
         .btn-modern {
             width: 100%;
             padding: 12px;
-            background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%);
-            color: white;
+            background: #00DC82;
+            color: #003728;
             border: none;
             border-radius: 12px;
             font-size: 16px;
@@ -86,7 +88,7 @@
         }
         .btn-modern:hover {
             transform: translateY(-1px);
-            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+            box-shadow: 0 10px 15px -3px rgba(0, 220, 130, 0.4);
         }
         .turnstile-wrap {
             margin-bottom: 20px;
@@ -130,7 +132,7 @@
 
                 @if (!empty($turnstileRequired) && !empty($turnstileSiteKey))
                     <div class="turnstile-wrap">
-                        <div class="cf-turnstile" data-sitekey="{{ $turnstileSiteKey }}"></div>
+                        <div class="cf-turnstile" data-sitekey="{{ $turnstileSiteKey }}" data-theme="light"></div>
                     </div>
                 @endif
 
@@ -145,8 +147,5 @@
     <script src="/admin/js/jquery-3.1.1.min.js"></script>
     <script src="/admin/js/popper.min.js"></script>
     <script src="/admin/js/bootstrap.js"></script>
-    @if (!empty($turnstileRequired) && !empty($turnstileSiteKey))
-        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-    @endif
 </body>
 </html>

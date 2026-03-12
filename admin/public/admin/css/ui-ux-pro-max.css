@@ -14,6 +14,16 @@
     --vp-c-bg-soft: #F9FAFB;
 }
 
+/* 去掉顶部黑条：body 无外边距 + 白天模式用浅色背景，避免露出深色条 */
+body.zhuye {
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: var(--vp-c-bg-soft) !important; /* 与内容区一致，不再用 style.css 的 #2f4050 */
+}
+#page-wrapper {
+    padding-top: 0 !important;
+}
+
 /* ==========================================================================
    SIDEBAR NAVIGATION - VITEPRESS STYLE (High Specificity)
    ========================================================================== */
@@ -98,11 +108,12 @@ body .navbar-static-side {
 #side-menu > li > a > svg.nav-icon {
     color: #9CA3AF !important; /* Gray-400 */
     margin-right: 12px !important;
-    width: 18px !important; /* Slightly smaller for elegance */
-    height: 18px !important;
-    display: inline-block !important;
-    vertical-align: middle !important;
-    transition: color 0.2s ease;
+    width: 20px !important;
+    height: 20px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
 }
 
 /* Hover/Active State for Icons */
@@ -262,15 +273,16 @@ body.theme-dark .theme-switch .switch-dot {
 .nav-pill-btn {
     display: inline-flex !important;
     align-items: center !important;
-    height: 24px !important; /* Reduced height to 24px */
-    padding: 0 10px !important; /* Reduced padding */
+    height: 26px !important; /* Unified height */
+    min-height: 26px !important; /* Override navbar anchor min-height */
+    padding: 0 12px !important; /* Unified padding */
     background-color: #F9FAFB !important; /* Unified light gray background */
     border: 1px solid #E5E7EB !important; /* Unified border color */
     border-radius: 9999px !important; /* Full pill shape */
     color: #374151 !important; /* Gray-700 text */
     font-size: 12px !important; /* Small text */
     font-weight: 600 !important; /* Semi-bold */
-    line-height: 1 !important;
+    line-height: 26px !important;
     transition: all 0.2s ease !important;
     text-decoration: none !important;
     cursor: default; /* Default cursor for status */
@@ -307,7 +319,7 @@ body.theme-dark .theme-switch .switch-dot {
     width: 16px !important;
     height: 16px !important;
     margin-right: 8px !important;
-    display: flex !important;
+    display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
 }
@@ -338,6 +350,7 @@ body.theme-dark .theme-switch .switch-dot {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
+    overflow: hidden !important; /* Keep pulse inside the pill */
 }
 
 .status-icon-wrapper {
@@ -347,6 +360,12 @@ body.theme-dark .theme-switch .switch-dot {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    position: relative !important;
+    overflow: visible !important; /* Allow glow to be visible */
+}
+
+.status-icon-wrapper::after {
+    content: none !important;
 }
 
 .status-icon,
@@ -355,10 +374,66 @@ body.theme-dark .theme-switch .switch-dot {
     height: 6px !important;
 }
 
+.status-icon {
+    display: block !important;
+    background-color: #10B981 !important;
+    border-radius: 9999px !important;
+    z-index: 2 !important;
+    animation: statusGlow 1.6s ease-out infinite !important;
+}
+
+.status-pulse {
+    display: block !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 6px !important;
+    height: 6px !important;
+    border-radius: 9999px !important;
+    background-color: rgba(16, 185, 129, 0.35) !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+    animation: statusPulsePill 1.6s ease-out infinite !important;
+    will-change: transform, opacity !important;
+    z-index: 1 !important;
+}
+
+.status-pill.error .status-icon {
+    background-color: #EF4444 !important;
+    animation: statusGlowError 1.6s ease-out infinite !important;
+}
+
+.status-pill.error .status-pulse,
+.status-pill.error .status-icon-wrapper::after {
+    background-color: rgba(239, 68, 68, 0.35) !important;
+}
+
+@keyframes statusGlow {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.55);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+    }
+}
+
+@keyframes statusGlowError {
+    0% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+    }
+}
+
 /* Text alignment fix */
 #job-text,
 .nav-pill-btn span {
     padding-top: 0px !important; /* Reset padding for 26px */
-    line-height: 24px !important; /* Match content height */
+    line-height: 26px !important; /* Match unified height */
 }
-

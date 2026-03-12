@@ -6,9 +6,14 @@
 @include('common.modal')
 
 @yield('style')
+<style>
+    body.admin-module-body { background: #f3f4f6; margin: 0; font-family: inherit; }
+    .admin-module-wrap { padding: 24px; max-width: 960px; margin: 0 auto; min-height: 100vh; box-sizing: border-box; }
+    .admin-module-wrap .page-title { font-size: 20px; font-weight: 600; color: #111827; margin-bottom: 24px; }
+</style>
 
-<body>
-    <div>
+<body class="admin-module-body">
+    <div class="admin-module-wrap">
         @yield('contents')
     </div>
 

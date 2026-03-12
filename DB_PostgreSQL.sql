@@ -2,8 +2,6 @@
 -- PostgreSQL database dump
 --
 
-\restrict 8ju2b8gnQVtGC2EErNdMWUaKlKS6g46lbaOrvSPadhKlauUJmy9xgQjdNZ70n4J
-
 -- Dumped from database version 15.16
 -- Dumped by pg_dump version 15.16
 
@@ -3283,7 +3281,11 @@ SELECT pg_catalog.setval('public.t_telegram_bot_ad_rid_seq', 1, false);
 -- Name: t_telegram_bot_command_rid_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.t_telegram_bot_command_rid_seq', 1, false);
+SELECT pg_catalog.setval(
+    'public.t_telegram_bot_command_rid_seq',
+    COALESCE((SELECT MAX(rid) FROM public.t_telegram_bot_command), 1),
+    true
+);
 
 
 --
@@ -3789,4 +3791,3 @@ CREATE UNIQUE INDEX IF NOT EXISTS t_energy_wallet_trade_list_tx_hash_uindex ON p
 --
 
 \unrestrict 8ju2b8gnQVtGC2EErNdMWUaKlKS6g46lbaOrvSPadhKlauUJmy9xgQjdNZ70n4J
-

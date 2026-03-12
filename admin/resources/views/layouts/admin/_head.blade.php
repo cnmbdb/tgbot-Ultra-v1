@@ -18,6 +18,8 @@
     <link href="{{asset('admin/css/common.css')}}" rel="stylesheet">
     <!-- UI UX Pro Max - Force Fresh -->
     <link href="{{asset('admin/css/ui-ux-pro-max.css')}}?v={{time()}}" rel="stylesheet">
+    <!-- Next.js UI 风格 -->
+    <link href="{{asset('admin/css/next-ui.css')}}" rel="stylesheet">
     
     <script src="{{asset('admin/js/jquery.min.js')}}"></script>
     <script src="{{asset('admin/js/common.js')}}"></script>

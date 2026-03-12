@@ -1,0 +1,376 @@
+/* Next.js UI 风格覆盖样式 */
+
+/* ==================== 按钮样式 ==================== */
+.layui-btn {
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+    border: none !important;
+    padding: 8px 16px !important;
+    font-size: 14px !important;
+}
+
+.layui-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.layui-btn:active {
+    transform: translateY(0);
+}
+
+/* 主要按钮 - 蓝色 */
+.layui-btn-normal,
+.layui-btn-nomal {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+}
+
+/* 成功按钮 - 绿色 */
+.layui-btn-primary {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: #fff !important;
+}
+
+/* 危险按钮 - 红色 */
+.layui-btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+}
+
+/* 警告按钮 - 橙色 */
+.layui-btn-warm {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+}
+
+/* 编辑按钮 */
+.edit_button {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+}
+
+/* 删除按钮 */
+.delete_button {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+}
+
+/* 添加按钮 */
+.add_button {
+    background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%) !important;
+}
+
+/* 导出按钮 */
+.export_button {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+}
+
+/* 刷新按钮 */
+.shuaxin_button {
+    background: linear-gradient(135deg, #ec4899 0%, #db2777 100%) !important;
+}
+
+/* 小按钮 */
+.layui-btn-sm {
+    padding: 6px 12px !important;
+    font-size: 13px !important;
+    border-radius: 6px !important;
+}
+
+/* 大按钮 */
+.layui-btn-lg {
+    padding: 12px 24px !important;
+    font-size: 16px !important;
+    border-radius: 10px !important;
+}
+
+/* 按钮组 */
+.layui-btn-group .layui-btn {
+    border-radius: 6px !important;
+    margin: 0 2px !important;
+}
+
+/* ==================== 警告框 Alert ==================== */
+.alert {
+    border-radius: 12px !important;
+    border: none !important;
+    padding: 16px 20px !important;
+    font-size: 14px !important;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+    color: #92400e !important;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2) !important;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%) !important;
+    color: #065f46 !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2) !important;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%) !important;
+    color: #991b1b !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2) !important;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%) !important;
+    color: #1e40af !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2) !important;
+}
+
+/* ==================== 卡片样式 ==================== */
+.layui-card {
+    border-radius: 12px !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    overflow: hidden;
+}
+
+.layui-card-header {
+    border-bottom: 1px solid #e5e7eb !important;
+    padding: 16px 20px !important;
+    font-weight: 600 !important;
+    font-size: 15px !important;
+    background: #f9fafb;
+}
+
+.layui-card-body {
+    padding: 20px !important;
+}
+
+/* ==================== 表格样式 ==================== */
+.layui-table {
+    border-radius: 10px !important;
+    overflow: hidden;
+}
+
+.layui-table th {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%) !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    color: #374151 !important;
+}
+
+.layui-table td {
+    font-size: 14px !important;
+    color: #4b5563 !important;
+    padding: 12px 15px !important;
+}
+
+.layui-table tr:hover td {
+    background-color: #f9fafb !important;
+}
+
+.layui-table[lay-skin="line"] th,
+.layui-table[lay-skin="line"] td {
+    border-bottom: 1px solid #e5e7eb !important;
+}
+
+/* ==================== 表单样式 ==================== */
+.layui-input,
+.layui-textarea {
+    border-radius: 8px !important;
+    border: 1px solid #d1d5db !important;
+    padding: 10px 14px !important;
+    font-size: 14px !important;
+    transition: all 0.2s ease !important;
+}
+
+.layui-input:focus,
+.layui-textarea:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+.layui-form-label {
+    font-weight: 500 !important;
+    font-size: 14px !important;
+    color: #374151 !important;
+}
+
+/* ==================== Tab 标签页 ==================== */
+.layui-tab-title {
+    border-bottom: 2px solid #e5e7eb !important;
+}
+
+.layui-tab-title li {
+    border-radius: 8px 8px 0 0 !important;
+    margin-bottom: -2px !important;
+    transition: all 0.2s ease !important;
+}
+
+.layui-tab-title li.layui-this {
+    background: #fff !important;
+    border-bottom: 2px solid #3b82f6 !important;
+    color: #3b82f6 !important;
+    font-weight: 600 !important;
+}
+
+/* ==================== 下拉选择 ==================== */
+.layui-select-title input {
+    border-radius: 8px !important;
+}
+
+.layui-form-select dl {
+    border-radius: 10px !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid #e5e7eb !important;
+    padding: 6px 0 !important;
+}
+
+.layui-form-select dl dd {
+    padding: 10px 16px !important;
+    font-size: 14px !important;
+}
+
+.layui-form-select dl dd:hover {
+    background-color: #f3f4f6 !important;
+}
+
+.layui-form-select dl dd.layui-this {
+    background-color: #eff6ff !important;
+    color: #3b82f6 !important;
+    font-weight: 500 !important;
+}
+
+/* ==================== 分页 ==================== */
+.layui-laypage a,
+.layui-laypage span {
+    border-radius: 8px !important;
+    margin: 0 4px !important;
+}
+
+.layui-laypage .layui-laypage-curr .layui-laypage-em {
+    border-radius: 8px !important;
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+}
+
+/* ==================== 复选框和单选框 ==================== */
+.layui-form-checkbox[lay-skin="primary"]:hover i,
+.layui-form-radio:hover > *,
+.layui-form-checked[lay-skin="primary"] i {
+    border-color: #3b82f6 !important;
+}
+
+/* ==================== 弹窗 Modal (SweetAlert2 风格覆盖) ==================== */
+.swal2-popup {
+    border-radius: 16px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2) !important;
+    padding: 24px !important;
+}
+
+.swal2-title {
+    font-size: 20px !important;
+    font-weight: 600 !important;
+    color: #1f2937 !important;
+}
+
+.swal2-content {
+    font-size: 15px !important;
+    color: #4b5563 !important;
+}
+
+.swal2-confirm,
+.swal2-cancel {
+    border-radius: 8px !important;
+    padding: 10px 24px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+}
+
+.swal2-confirm {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+}
+
+.swal2-confirm:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4) !important;
+}
+
+.swal2-cancel {
+    background: #f3f4f6 !important;
+    color: #374151 !important;
+}
+
+.swal2-cancel:hover {
+    background: #e5e7eb !important;
+}
+
+/* ==================== 加载中 ==================== */
+.layui-layer-loading .layui-layer-content {
+    border-radius: 12px !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* ==================== 工具提示 ==================== */
+.layui-layer-tips {
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* ==================== 滑块 ==================== */
+.layui-slider {
+    border-radius: 4px !important;
+}
+
+.layui-slider-bar {
+    border-radius: 4px !important;
+    background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%) !important;
+}
+
+.layui-slider-wrap {
+    border-radius: 50% !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* ==================== 穿梭框 ==================== */
+.layui-transfer-box {
+    border-radius: 10px !important;
+    border: 1px solid #e5e7eb !important;
+}
+
+.layui-transfer-header {
+    border-radius: 10px 10px 0 0 !important;
+}
+
+/* ==================== 颜色选择器 ==================== */
+.layui-colorpicker-wrapper {
+    border-radius: 8px !important;
+}
+
+/* ==================== 评分 ==================== */
+.layui-rate li i {
+    font-size: 20px !important;
+}
+
+/* ==================== 徽章 ==================== */
+.layui-badge,
+.layui-badge-dot,
+.layui-badge-rim {
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+}
+
+.layui-badge {
+    padding: 4px 10px !important;
+}
+
+/* ==================== 关闭按钮 ==================== */
+.layui-layer-setwin a {
+    border-radius: 50% !important;
+    transition: all 0.2s ease !important;
+}
+
+.layui-layer-setwin a:hover {
+    background-color: #f3f4f6 !important;
+}
+
+/* ==================== 分割线 ==================== */
+.layui-divider {
+    border-color: #e5e7eb !important;
+}
+
+.layui-divider-text {
+    color: #6b7280 !important;
+    font-weight: 500 !important;
+}

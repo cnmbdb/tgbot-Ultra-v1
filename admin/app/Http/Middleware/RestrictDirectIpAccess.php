@@ -17,8 +17,8 @@ class RestrictDirectIpAccess
     public function handle($request, Closure $next)
     {
         try {
-            // 1. 如果环境变量 ALLOW_DIRECT_IP_ACCESS 为 true，则直接放行
-            $allowDirectIp = env('ALLOW_DIRECT_IP_ACCESS', true);
+            // 1. 读取开关配置，支持新旧两种环境变量
+            $allowDirectIp = env('IP_ACCESS_ENABLE', env('ALLOW_DIRECT_IP_ACCESS', false));
             if (filter_var($allowDirectIp, FILTER_VALIDATE_BOOLEAN)) {
                 return $next($request);
             }
