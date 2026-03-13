@@ -221,12 +221,9 @@
                     <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
                     <span class="nav-label">系统设置</span><span class="fa arrow"></span>
                 </a>
-                <ul class="nav nav-second-level collapse">
+                <ul class="nav nav-second-level collapse{{ View::hasSection('nav-status-setting') || View::hasSection('nav-status-setting-config') ? ' in' : '' }}">
                     @if( auth('admin')->user()->can('配置信息') || auth('admin')->user()->hasrole('超级管理员') )
-                        <li class="menumulu" id="menu30"><a _href="{{route('admin.setting.config.index')}}">配置信息</a></li>
-                    @endif
-                    @if( auth('admin')->user()->can('授权激活') || auth('admin')->user()->hasrole('超级管理员') )
-                        <li class="menumulu" id="menu31"><a _href="{{route('admin.setting.config.index', ['activate' => 1])}}">授权激活</a></li>
+                        <li class="menumulu{{ View::hasSection('nav-status-setting-config') ? ' active' : '' }}" id="menu30"><a _href="{{route('admin.setting.config.index')}}">配置信息</a></li>
                     @endif
                 </ul>
             </li>

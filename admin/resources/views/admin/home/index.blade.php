@@ -29,6 +29,7 @@
 
             <div class="layui-tab tab" lay-filter="wenav_tab" id="WeTabTip" lay-allowclose="true">
             <ul class="layui-tab-title" id="tabName" style="display: none !important;">
+                <li class="layui-this" lay-id="0">仪表台</li>
             </ul>
             <div class="layui-tab-content">
                 <div class="layui-tab-item layui-show">
@@ -61,21 +62,59 @@
     <script src="{{asset('admin/js/plugins/pace/pace.min.js')}}"></script>
 
     <script type="text/javascript">
-        layui.use(['jquery', 'admin', 'menu', 'http', 'element', 'form', 'layer'], function () {
+        var showFooter = @json(isset($show_footer) ? (bool)$show_footer : false);
+        layui.use(['jquery', 'element', 'form', 'layer'], function () {
             var $ = layui.jquery,
-            admin = layui.admin,
-            http = layui.http,
-            menu = layui.menu,
             element = layui.element,
             form = layui.form,
             layer = layui.layer;
 
             var tabTimer;
+            var menu = [];
+            var frameWHTimer;
 
             var FrameWH = function () {
-                var h = $(window).height() - 164;
-                $("iframe").css("height", h + "px");
-                $("iframe").css("width", "100%");
+                if (frameWHTimer) clearTimeout(frameWHTimer);
+                frameWHTimer = setTimeout(function () {
+                    var h = $(window).height() - 164;
+                    $("iframe").css("height", h + "px");
+                    $("iframe").css("width", "100%");
+                }, 50);
+            }
+
+            // 窗口大小改变时防抖调整 iframe 高度
+            $(window).on('resize', function () {
+                FrameWH();
+            });
+
+            // 优化：检查 tab 是否已存在，避免重复创建
+            function switchToExistingTab(id) {
+                var $tabs = $('.layui-tab-title li', window.parent.document);
+                var $tab = $tabs.filter('[lay-id="' + id + '"]');
+                if ($tab.length) {
+                    var topLayui = parent === self ? layui : top.layui;
+                    topLayui.element.tabChange('wenav_tab', id);
+                    FrameWH();
+                    return true;
+                }
+                return false;
+            }
+
+            // 从左侧菜单 DOM 构建菜单并写入 sessionStorage（不依赖缺失的 admin/menu/http 模块）
+            function buildMenuFromDom() {
+                var list = [];
+                $('.left-nav #side-menu li.menumulu').each(function () {
+                    var $li = $(this);
+                    var idStr = $li.attr('id');
+                    if (!idStr || idStr.indexOf('menu') !== 0) return;
+                    var id = parseInt(idStr.replace('menu', ''), 10);
+                    if (isNaN(id)) return;
+                    var title = $li.find('a').first().text().trim();
+                    var url = $li.children('a').attr('_href');
+                    if (url) list.push({ id: id, title: title, url: url });
+                });
+                sessionStorage.setItem("menu", JSON.stringify(list));
+                menu = list;
             }
 
             var tab = {
@@ -85,22 +124,25 @@
                     }
                     tabTimer = setTimeout(function () {
                         var storageMenu = sessionStorage.getItem("menu");
-                        if (!storageMenu) {
-                            return;
+                        if (storageMenu) {
+                            menu = JSON.parse(storageMenu);
                         }
-                        menu = JSON.parse(storageMenu);
-                        for (var i = 0; i < menu.length; i++) {
-                            tab.tabAdd(menu[i].title, menu[i].url, menu[i].id);
-                        }
+                        // 只恢复当前选中的 tab，不预加载所有菜单为 tab（避免同时加载大量 iframe）
                         var curMenu = sessionStorage.getItem("curMenu") ? JSON.parse(sessionStorage.getItem("curMenu")) : {};
                         if (curMenu && curMenu.id) {
                             var id = curMenu.id;
-                            $('.layui-tab-title').find('layui-this').removeClass('layui-class');
-                            $('.layui-tab-title li[lay-id="' + id + '"]').addClass('layui-this');
-                            tab.tabChange(id);
+                            var found = $('.layui-tab-title li[lay-id="' + id + '"]').length;
+                            if (found) {
+                                $('.layui-tab-title').find('.layui-this').removeClass('layui-this');
+                                $('.layui-tab-title li[lay-id="' + id + '"]').addClass('layui-this');
+                                tab.tabChange(id);
+                            } else {
+                                $(".layui-tab-title li").eq(0).addClass('layui-this');
+                                $('.layui-tab-content .layui-tab-item').eq(0).addClass('layui-show');
+                            }
                         } else {
                             $(".layui-tab-title li").eq(0).addClass('layui-this');
-                            $('.layui-tab-content iframe').eq(0).parent().addClass('layui-show');
+                            $('.layui-tab-content .layui-tab-item').eq(0).addClass('layui-show');
                         }
                     }, 100);
                 },
@@ -131,19 +173,11 @@
 
             var wframe = {
                 openFrame: function (url, title, id) {
-                    var parentFrame = $('.weIframe', window.parent.document);
-                    var frameList = parentFrame && parentFrame.length ? parentFrame : $('.weIframe');
-
-                    for (var i = 0; i < frameList.length; i++) {
-                        if (frameList.eq(i).attr('tab-id') == id) {
-                            tab.tabChange(id);
-                            event.stopPropagation();
-                            return;
-                        }
-                    };
-
+                    // 检查 tab 是否已存在，存在则直接切换，避免重复创建
+                    if (switchToExistingTab(id)) return;
                     tab.tabAdd(title, url, id);
                     tab.tabChange(id);
+                    FrameWH();
                 }
             };
 
@@ -151,15 +185,26 @@
             window.wframe = wframe;
             window.tab = tab;
 
+            // 未授权时点击「配置信息」整页跳转，避免 iframe 被重定向后仍显示首页
+            var needFullPageForConfig = @json(!empty($show_license_warning));
+            var configMenuId = 30;
+
             // 菜单点击事件
             $('body').on('click', '.left-nav #side-menu li.menumulu', function (event) {
                 var url = $(this).children('a').attr('_href');
-                var title = $(this).find('a').text();
-                var id = parseInt($(this).attr('id').split('menu')[1])
-                console.log(url)
-                console.log(title)
-                console.log(id)
-                wframe.openFrame(url, title, id)
+                var title = $(this).find('a').text().trim();
+                var idStr = $(this).attr('id') || '';
+                var id = parseInt(idStr.replace('menu', ''), 10);
+                if (isNaN(id)) return;
+                if (needFullPageForConfig && id === configMenuId) {
+                    window.top.location.href = url;
+                    return;
+                }
+                // 配置信息在 iframe 内打开时，使用 embed=1 隐藏其自身的菜单/顶部栏，避免双重导航
+                if (id === configMenuId && url) {
+                    url = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'embed=1';
+                }
+                wframe.openFrame(url, title, id);
             });
 
             // Tab加载后刷新
@@ -177,10 +222,9 @@
             }
 
             $(function () {
-
-            http.getMenu();
-            admin.tab.tabInit();
-            if (showFooter) {
+                buildMenuFromDom();
+                tab.tabInit();
+                if (showFooter) {
                 var currentY = new Date().getFullYear();
                 $('#footer').show();
             } else {

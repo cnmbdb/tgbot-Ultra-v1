@@ -1,8 +1,16 @@
-@extends('layouts.admin.app')
+@php
+    $isEmbed = request()->get('embed') == 1;
+@endphp
+<!DOCTYPE html>
+<html lang="en">
+@include('layouts.admin._head')
+@include('common.tools')
+@include('common.modal')
 @section('nav-status-setting', 'active')
 @section('nav-status-setting-config', 'active')
-@section('style')
-    <style>
+<body class="zhuye">
+<link href="{{asset('admin/css/config.css')}}" rel="stylesheet">
+<style>
         .config-card { background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); overflow: hidden; }
         .config-tab-content { padding: 24px; background: #fff; }
         .config-section { margin-bottom: 32px; }
@@ -23,7 +31,8 @@
             margin: 0; line-height: 1; border-radius: 10px 10px 0 0;
             display: flex; align-items: center;
         }
-        .config-page-wrap .layui-card-header::before { display: none; }
+        .config-page-wrap .layui-card-header::before { display: none !important; }
+        .config-page-wrap .layui-card-header { background: transparent !important; }
         .config-page-wrap .layui-card-header .layui-icon {
             margin-right: 12px;
             color: #00DC82;
@@ -131,130 +140,304 @@
         .activate-status-card .status-text .layui-icon { margin-right: 6px; vertical-align: middle; }
         .activate-status-card .status-meta { color: inherit; opacity: .85; font-size: 13px; }
         .activate-next-wrap .config-actions { padding-top: 20px; margin-top: 8px; border-top: 1px solid #e5e7eb; }
-    </style>
-    <link href="{{asset('admin/css/config.css')}}" rel="stylesheet">
-@endsection
-@section('contents')
+</style>
+@if(!$isEmbed)
+    <div id="wrapper">
+        <nav class="navbar-default navbar-static-side" role="navigation">
+            {{--菜单栏--}}
+            @include('layouts.admin._navleft')
+        </nav>
 
-    @if(session('license_warning'))
-        <div class="alert alert-warning" style="margin-bottom: 20px; padding: 12px 16px; border-radius: 8px;">{{ session('license_warning') }}</div>
-    @endif
-
-    <div class="config-card config-page-wrap">
-        <div class="config-tab-content">
-            <div class="config-section">
-                <form class="layui-form" id="config-form1" action="{{route('admin.setting.config.update')}}" method="POST">
-                    <input type="hidden" name="config_type" value="1">
-                    @php
-                        $jobConfig = $data->firstWhere('config_key', 'job_url');
-                        $jobUrl = $jobConfig ? $jobConfig->config_val->url : 'http://tgbot-job:9503';
-                        $tonConfig = $data->firstWhere('config_key', 'ton_url');
-                        $tonUrl = $tonConfig ? $tonConfig->config_val->url : 'http://host.docker.internal:4444/api/premium';
-                        $apiWebConfig = $data->firstWhere('config_key', 'api_web_url');
-                        $apiWebUrl = $apiWebConfig ? $apiWebConfig->config_val->url : 'http://host.docker.internal:4444/';
-                        $tronscanConfig = $data->firstWhere('config_key', 'tronscan_api_keys');
-                        $tronscanKeys = $tronscanConfig && isset($tronscanConfig->config_val->keys) ? $tronscanConfig->config_val->keys : '';
-                        $trongridConfig = $data->firstWhere('config_key', 'trongrid_api_keys');
-                        $trongridKeys = $trongridConfig && isset($trongridConfig->config_val->keys) ? $trongridConfig->config_val->keys : '';
-                    @endphp
-
-                    <!-- 每个配置项一张卡片 -->
-                    <div class="layui-card config-item-card">
-                        <div class="layui-card-header"><i class="layui-icon layui-icon-util"></i>Job 任务域名 URL</div>
-                        <div class="layui-card-body">
-                            <input type="text" class="z-input layui-input" name="job_url[url]" autocomplete="off" value="{{ $jobUrl }}" placeholder="https://job.example.com">
-                            <p class="tip"><i class="layui-icon layui-icon-tips"></i>{{ $jobConfig ? $jobConfig->comments : '任务域名 URL' }}</p>
-                        </div>
-                    </div>
-                    <div class="layui-card config-item-card">
-                        <div class="layui-card-header"><i class="layui-icon layui-icon-rmb"></i>TON 支付接口 URL</div>
-                        <div class="layui-card-body">
-                            <input type="text" class="z-input layui-input" name="ton_url[url]" autocomplete="off" value="{{ $tonUrl }}" placeholder="https://api.example.com/api/premium">
-                            <p class="tip"><i class="layui-icon layui-icon-tips"></i>{{ $tonConfig ? $tonConfig->comments : 'TON 支付接口，不需要开通 TG 会员时可留空' }}</p>
-                        </div>
-                    </div>
-                    <div class="layui-card config-item-card">
-                        <div class="layui-card-header"><i class="layui-icon layui-icon-link"></i>API 连接 URL</div>
-                        <div class="layui-card-body">
-                            <input type="text" class="z-input layui-input" name="api_web_url[url]" autocomplete="off" value="{{ $apiWebUrl }}" placeholder="https://api.example.com">
-                            <p class="tip"><i class="layui-icon layui-icon-tips"></i>API 授权系统连接地址</p>
-                        </div>
-                    </div>
-                    <div class="layui-card config-item-card">
-                        <div class="layui-card-header"><i class="layui-icon layui-icon-key"></i>TRONSCAN API Keys</div>
-                        <div class="layui-card-body">
-                            <input type="text" class="z-input layui-input" name="tronscan_api_keys[keys]" autocomplete="off" value="{{ $tronscanKeys }}" placeholder="多条 key 用英文逗号分隔">
-                            <p class="tip"><i class="layui-icon layui-icon-tips"></i>用于访问 <code>https://apilist.tronscanapi.com</code>，多个 key 用英文逗号分隔，系统随机轮询使用。</p>
-                        </div>
-                    </div>
-                    <div class="layui-card config-item-card">
-                        <div class="layui-card-header"><i class="layui-icon layui-icon-password"></i>TRONGRID API Keys</div>
-                        <div class="layui-card-body">
-                            <input type="text" class="z-input layui-input" name="trongrid_api_keys[keys]" autocomplete="off" value="{{ $trongridKeys }}" placeholder="多条 key 用英文逗号分隔">
-                            <p class="tip"><i class="layui-icon layui-icon-tips"></i>用于访问 <code>https://api.trongrid.io</code> 等接口，多个 key 逗号分隔，系统自动随机选择以降低限频风险。</p>
-                            <div class="config-actions">
-                                <button class="layui-btn btn-capsule" lay-submit lay-filter="formDemo">保存</button>
-                            </div>
-                        </div>
-                    </div>
-                </form>
+        <div id="page-wrapper" class="gray-bg dashbard-1">
+            <div class="row border-bottom">
+                <nav class="navbar navbar-static-top" role="navigation" style="margin-bottom: 0">
+                    {{--顶部导航栏--}}
+                    @include('layouts.admin._navbar')
+                </nav>
             </div>
-            <!-- 授权激活 -->
-            <div class="config-section">
-                                @php
-                                    $licenseStatus = $licenseInfo['status'] ?? 'unactivated';
-                                    $isActivated = $licenseStatus === 'active';
-                                @endphp
-                                <div class="activate-next-wrap">
-                                    <!-- 状态卡片 -->
-                                    <div class="layui-card activate-status-card {{ $isActivated ? 'activate-ok' : 'activate-no' }}">
-                                        <div class="layui-card-body">
-                                            <span class="status-label">当前状态</span>
-                                            @if($isActivated)
-                                                <span class="status-text"><i class="layui-icon layui-icon-ok-circle"></i>已激活</span>
-                                                <span class="status-meta">最大机器人数：{{ $licenseInfo['max_bots'] ?? '-' }} · 过期时间：{{ $licenseInfo['expires_at'] ?? '永久' }}</span>
-                                            @else
-                                                <span class="status-text"><i class="layui-icon layui-icon-close-fill"></i>未激活</span>
-                                                @if(!empty($licenseInfo['message']))
-                                                    <span class="status-meta">{{ $licenseInfo['message'] }}</span>
-                                                @endif
-                                            @endif
-                                        </div>
-                                    </div>
 
-                                    <!-- 激活表单 - 每项一张卡片 -->
-                                    <form class="layui-form" id="config-form2" action="{{route('admin.setting.config.activate')}}" method="POST">
-                                        @csrf
-                                        <div class="layui-card config-item-card">
-                                            <div class="layui-card-header"><i class="layui-icon layui-icon-link"></i>API 网站地址</div>
-                                            <div class="layui-card-body">
-                                                <input type="text" class="z-input layui-input" id="api_site_url" name="api_site_url" autocomplete="off" value="{{ $apiWebUrl ?? '' }}" placeholder="https://api.example.com">
-                                                <p class="tip"><i class="layui-icon layui-icon-tips"></i>请填写【API 授权系统】(API-web) 的网站地址，不要填本机器人后台地址。</p>
+            <div class="layui-tab tab" lay-filter="wenav_tab" id="WeTabTip" lay-allowclose="true">
+                <ul class="layui-tab-title" id="tabName" style="display: none !important;">
+                </ul>
+                <div class="layui-tab-content">
+                    <div class="layui-tab-item layui-show">
+@endif
+                        @if(session('license_warning'))
+                            <div class="alert alert-warning" style="margin: 10px 15px;">{{ session('license_warning') }}</div>
+                        @endif
+
+                        @if(!$isLicensed)
+                            <div class="alert alert-warning" style="margin: 10px 15px;">
+                                请先激活系统授权后才能使用完整功能 &nbsp;
+                                <a href="{{ route('admin.setting.config.index', ['activate' => 1]) }}" style="color: #007bff; font-weight: 600;">点击此处前往激活</a>
+                            </div>
+                        @endif
+
+                        <div class="config-page-wrap" style="padding: 24px 20px 40px; max-width: 960px; margin: 0 auto;">
+                            <div class="config-card">
+                                <div class="config-tab-content">
+                                    <div class="config-section">
+                                        <form class="layui-form" id="config-form1" action="{{route('admin.setting.config.update')}}" method="POST">
+                                            <input type="hidden" name="config_type" value="1">
+                                            @php
+                                                $jobConfig = $data->firstWhere('config_key', 'job_url');
+                                                $jobUrl = $jobConfig ? $jobConfig->config_val->url : 'http://tgbot-job:9503';
+                                                $tonConfig = $data->firstWhere('config_key', 'ton_url');
+                                                $tonUrl = $tonConfig ? $tonConfig->config_val->url : 'http://host.docker.internal:4444/api/premium';
+                                                $apiWebConfig = $data->firstWhere('config_key', 'api_web_url');
+                                                $apiWebUrl = $apiWebConfig ? $apiWebConfig->config_val->url : 'http://host.docker.internal:4444/';
+                                                $tronscanConfig = $data->firstWhere('config_key', 'tronscan_api_keys');
+                                                $tronscanKeys = $tronscanConfig && isset($tronscanConfig->config_val->keys) ? $tronscanConfig->config_val->keys : '';
+                                                $trongridConfig = $data->firstWhere('config_key', 'trongrid_api_keys');
+                                                $trongridKeys = $trongridConfig && isset($trongridConfig->config_val->keys) ? $trongridConfig->config_val->keys : '';
+                                            @endphp
+
+                                            <!-- 每个配置项一张卡片 -->
+                                            <div class="layui-card config-item-card">
+                                                <div class="layui-card-header"><i class="layui-icon layui-icon-util"></i>Job 任务域名 URL</div>
+                                                <div class="layui-card-body">
+                                                    <input type="text" class="z-input layui-input" name="job_url[url]" autocomplete="off" value="{{ $jobUrl }}" placeholder="https://job.example.com">
+                                                    <p class="tip"><i class="layui-icon layui-icon-tips"></i>{{ $jobConfig ? $jobConfig->comments : '任务域名 URL' }}</p>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="layui-card config-item-card">
-                                            <div class="layui-card-header"><i class="layui-icon layui-icon-password"></i>激活码</div>
-                                            <div class="layui-card-body">
-                                                <input type="text" class="z-input layui-input" id="auth_code" name="auth_code" autocomplete="off" value="" placeholder="XXXX-XXXX-XXXX-XXXX">
-                                                <p class="tip"><i class="layui-icon layui-icon-tips"></i>从 API 授权系统获取的激活码。</p>
-                                                <div class="config-actions">
+                                            <div class="layui-card config-item-card">
+                                                <div class="layui-card-header"><i class="layui-icon layui-icon-rmb"></i>TON 支付接口 URL</div>
+                                                <div class="layui-card-body">
+                                                    <input type="text" class="z-input layui-input" name="ton_url[url]" autocomplete="off" value="{{ $tonUrl }}" placeholder="https://api.example.com/api/premium">
+                                                    <p class="tip"><i class="layui-icon layui-icon-tips"></i>{{ $tonConfig ? $tonConfig->comments : 'TON 支付接口，不需要开通 TG 会员时可留空' }}</p>
+                                                </div>
+                                            </div>
+                                            <div class="layui-card config-item-card">
+                                                <div class="layui-card-header"><i class="layui-icon layui-icon-link"></i>API 连接 URL</div>
+                                                <div class="layui-card-body">
+                                                    <input type="text" class="z-input layui-input" name="api_web_url[url]" autocomplete="off" value="{{ $apiWebUrl }}" placeholder="https://api.example.com">
+                                                    <p class="tip"><i class="layui-icon layui-icon-tips"></i>API 授权系统连接地址</p>
+                                                </div>
+                                            </div>
+                                            <div class="layui-card config-item-card">
+                                                <div class="layui-card-header"><i class="layui-icon layui-icon-key"></i>TRONSCAN API Keys</div>
+                                                <div class="layui-card-body">
+                                                    <input type="text" class="z-input layui-input" name="tronscan_api_keys[keys]" autocomplete="off" value="{{ $tronscanKeys }}" placeholder="多条 key 用英文逗号分隔">
+                                                    <p class="tip"><i class="layui-icon layui-icon-tips"></i>用于访问 <code>https://apilist.tronscanapi.com</code>，多个 key 用英文逗号分隔，系统随机轮询使用。</p>
+                                                </div>
+                                            </div>
+                                            <div class="layui-card config-item-card">
+                                                <div class="layui-card-header"><i class="layui-icon layui-icon-password"></i>TRONGRID API Keys</div>
+                                                <div class="layui-card-body">
+                                                    <input type="text" class="z-input layui-input" name="trongrid_api_keys[keys]" autocomplete="off" value="{{ $trongridKeys }}" placeholder="多条 key 用英文逗号分隔">
+                                                    <p class="tip"><i class="layui-icon layui-icon-tips"></i>用于访问 <code>https://api.trongrid.io</code> 等接口，多个 key 逗号分隔，系统自动随机选择以降低限频风险。</p>
+                                                    <div class="config-actions">
+                                                        <button class="layui-btn btn-capsule" lay-submit lay-filter="formDemo">保存</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <!-- 授权激活 -->
+                                    <div class="config-section" id="activate-section">
+                                        @php
+                                            $licenseStatus = $licenseInfo['status'] ?? 'unactivated';
+                                            $isActivated = $licenseStatus === 'active';
+                                        @endphp
+                                        <div class="activate-next-wrap">
+                                            <!-- 状态卡片 -->
+                                            <div class="layui-card activate-status-card {{ $isActivated ? 'activate-ok' : 'activate-no' }}">
+                                                <div class="layui-card-body">
+                                                    <span class="status-label">当前状态</span>
                                                     @if($isActivated)
-                                                        <button type="button" class="layui-btn btn-capsule btn-capsule-danger" id="deactivate-btn" onclick="deactivateLicense()">解除授权</button>
+                                                        <span class="status-text"><i class="layui-icon layui-icon-ok-circle"></i>已激活</span>
+                                                        <span class="status-meta">最大机器人数：{{ $licenseInfo['max_bots'] ?? '-' }} · 过期时间：{{ $licenseInfo['expires_at'] ?? '永久' }}</span>
                                                     @else
-                                                        <button class="layui-btn btn-capsule" lay-submit lay-filter="formActivate">激活</button>
+                                                        <span class="status-text"><i class="layui-icon layui-icon-close-fill"></i>未激活</span>
+                                                        @if(!empty($licenseInfo['message']))
+                                                            <span class="status-meta">{{ $licenseInfo['message'] }}</span>
+                                                        @endif
                                                     @endif
                                                 </div>
                                             </div>
+
+                                            <!-- 激活表单 - 每项一张卡片 -->
+                                            <form class="layui-form" id="config-form2" action="{{route('admin.setting.config.activate')}}" method="POST">
+                                                @csrf
+                                                <div class="layui-card config-item-card">
+                                                    <div class="layui-card-header"><i class="layui-icon layui-icon-link"></i>API 网站地址</div>
+                                                    <div class="layui-card-body">
+                                                        <input type="text" class="z-input layui-input" id="api_site_url" name="api_site_url" autocomplete="off" value="{{ $apiWebUrl ?? '' }}" placeholder="https://api.example.com">
+                                                        <p class="tip"><i class="layui-icon layui-icon-tips"></i>请填写【API 授权系统】(API-web) 的网站地址，不要填本机器人后台地址。</p>
+                                                    </div>
+                                                </div>
+                                                <div class="layui-card config-item-card">
+                                                    <div class="layui-card-header"><i class="layui-icon layui-icon-password"></i>激活码</div>
+                                                    <div class="layui-card-body">
+                                                        <input type="text" class="z-input layui-input" id="auth_code" name="auth_code" autocomplete="off" value="" placeholder="XXXX-XXXX-XXXX-XXXX">
+                                                        <p class="tip"><i class="layui-icon layui-icon-tips"></i>从 API 授权系统获取的激活码。</p>
+                                                        <div class="config-actions">
+                                                            @if($isActivated)
+                                                                <button type="button" class="layui-btn btn-capsule btn-capsule-danger" id="deactivate-btn" onclick="deactivateLicense()">解除授权</button>
+                                                            @else
+                                                                <button class="layui-btn btn-capsule" lay-submit lay-filter="formActivate">激活</button>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </form>
                                         </div>
-                                    </form>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+@if(!$isEmbed)
+                    </div>
+                </div>
+            </div>
+            <div style="padding-bottom: 30px;"></div>
+            <div class="footer">
+                <div class="float-right"></div>
+                <div></div>
+            </div>
+        </div>
     </div>
-@endsection
+@endif
 
-@section('scripts')
-    <script>
+    <!-- Mainly scripts -->
+    <script src="{{asset('admin/js/jquery-form.js')}}"></script>
+    <script src="{{asset('admin/js/popper.min.js')}}"></script>
+    <script src="{{asset('admin/js/bootstrap.js')}}"></script>
+    <script src="{{asset('admin/js/plugins/metisMenu/jquery.metisMenu.js')}}"></script>
+    <script src="{{asset('admin/js/plugins/slimscroll/jquery.slimscroll.min.js')}}"></script>
+
+    <!-- Custom and plugin javascript -->
+    <!--<script src="{{asset('admin/js/inspinia.js')}}"></script>-->
+    <script src="{{asset('admin/js/plugins/pace/pace.min.js')}}"></script>
+
+    <script type="text/javascript">
+        var showFooter = @json(isset($show_footer) ? (bool)$show_footer : false);
+        layui.use(['jquery', 'element', 'form', 'layer'], function () {
+            var $ = layui.jquery,
+            element = layui.element,
+            form = layui.form,
+            layer = layui.layer;
+
+            var tabTimer;
+            var menu = [];
+            var frameWHTimer;
+
+            var FrameWH = function () {
+                if (frameWHTimer) clearTimeout(frameWHTimer);
+                frameWHTimer = setTimeout(function () {
+                    var h = $(window).height() - 164;
+                    $("iframe").css("height", h + "px");
+                    $("iframe").css("width", "100%");
+                }, 50);
+            }
+
+            $(window).on('resize', function () {
+                FrameWH();
+            });
+
+            function switchToExistingTab(id) {
+                var $tabs = $('.layui-tab-title', window.parent.document);
+                var $tab = $tabs.find('[lay-id="' + id + '"]');
+                if ($tab.length) {
+                    var topLayui = parent === self ? layui : top.layui;
+                    topLayui.element.tabChange('wenav_tab', id);
+                    FrameWH();
+                    return true;
+                }
+                return false;
+            }
+
+            function buildMenuFromDom() {
+                var list = [];
+                $('.left-nav #side-menu li.menumulu').each(function () {
+                    var $li = $(this);
+                    var idStr = $li.attr('id');
+                    if (!idStr || idStr.indexOf('menu') !== 0) return;
+                    var id = parseInt(idStr.replace('menu', ''), 10);
+                    if (isNaN(id)) return;
+                    var title = $li.find('a').first().text().trim();
+                    var url = $li.children('a').attr('_href');
+                    if (url) list.push({ id: id, title: title, url: url });
+                });
+                sessionStorage.setItem("menu", JSON.stringify(list));
+                menu = list;
+            }
+
+            var tab = {
+                tabInit: function () {
+                    if (tabTimer) {
+                        clearTimeout(tabTimer);
+                    }
+                    tabTimer = setTimeout(function () {
+                        var storageMenu = sessionStorage.getItem("menu");
+                        if (storageMenu) {
+                            menu = JSON.parse(storageMenu);
+                        }
+                        var curMenu = sessionStorage.getItem("curMenu") ? JSON.parse(sessionStorage.getItem("curMenu")) : {};
+                        if (curMenu && curMenu.id) {
+                            var id = curMenu.id;
+                            var found = $('.layui-tab-title li[lay-id="' + id + '"]').length;
+                            if (found) {
+                                $('.layui-tab-title').find('.layui-this').removeClass('layui-this');
+                                $('.layui-tab-title li[lay-id="' + id + '"]').addClass('layui-this');
+                                tab.tabChange(id);
+                            } else {
+                                $(".layui-tab-title li").eq(0).addClass('layui-this');
+                                $('.layui-tab-content .layui-tab-item').eq(0).addClass('layui-show');
+                            }
+                        } else {
+                            $(".layui-tab-title li").eq(0).addClass('layui-this');
+                            $('.layui-tab-content .layui-tab-item').eq(0).addClass('layui-show');
+                        }
+                    }, 100);
+                },
+                tabAdd: function (title, url, id) {
+                    var topLayui = parent === self ? layui : top.layui;
+                    topLayui.element.tabAdd('wenav_tab', {
+                        title: title,
+                        content: '<iframe tab-id="' + id + '" frameborder="0" src="' + url + '" scrolling="yes" class="weIframe"></iframe>',
+                        id: id
+                    });
+                    FrameWH();
+                },
+                tabDelete: function (id) {
+                    var topLayui = parent === self ? layui : top.layui;
+                    topLayui.element.tabDelete("wenav_tab", id);
+                },
+                tabChange: function (id) {
+                    var topLayui = parent === self ? layui : top.layui;
+                    topLayui.element.tabChange('wenav_tab', id);
+                }
+            };
+
+            var wframe = {
+                openFrame: function (url, title, id) {
+                    if (switchToExistingTab(id)) return;
+                    tab.tabAdd(title, url, id);
+                    tab.tabChange(id);
+                    FrameWH();
+                }
+            };
+
+            window.wframe = wframe;
+            window.tab = tab;
+
+            $('body').on('click', '.left-nav #side-menu li.menumulu', function (event) {
+                var url = $(this).children('a').attr('_href');
+                var title = $(this).find('a').text().trim();
+                var idStr = $(this).attr('id') || '';
+                var id = parseInt(idStr.replace('menu', ''), 10);
+                if (isNaN(id)) return;
+                wframe.openFrame(url, title, id);
+            });
+
+            $(function () {
+                buildMenuFromDom();
+                tab.tabInit();
+            });
+        });
+    </script>
+    <script type="text/javascript">
         layui.use(['table', 'layer', 'element'], function () {
             var table = layui.table,
                 element = layui.element,
@@ -358,6 +541,17 @@
                     'border':'none'
                 });
             });
+
+            // 未授权时自动滚动到授权激活区域
+            @if($showActivateTab)
+            setTimeout(function(){
+                var activateSection = document.getElementById('activate-section');
+                if (activateSection) {
+                    activateSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 300);
+            @endif
         });
     </script>
-@endsection
+</body>
+</html>

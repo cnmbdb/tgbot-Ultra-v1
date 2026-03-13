@@ -16,13 +16,39 @@ class ConfigController extends Controller
     {
         $data = SysConfig::get();
 
+        // 检查系统是否已激活授权
+        $isLicensed = $this->isLicensed();
+
         // 获取授权信息
         $licenseInfo = $this->getLicenseInfo($data);
 
         // 未授权时从菜单跳转过来，默认打开「授权激活」标签
         $showActivateTab = $request->get('activate') == '1';
 
-        return view('admin.setting.config.index', compact('data', 'licenseInfo', 'showActivateTab'));
+        return view('admin.setting.config.index', compact('data', 'licenseInfo', 'showActivateTab', 'isLicensed'));
+    }
+
+    /**
+     * 检查系统是否已激活授权
+     */
+    private function isLicensed()
+    {
+        $licenseConfig = SysConfig::where('config_key', 'license_activation')->first();
+
+        if (!$licenseConfig) {
+            return false;
+        }
+
+        $configVal = $licenseConfig->config_val;
+        $localLicense = is_string($configVal)
+            ? json_decode($configVal, true)
+            : (array) $configVal;
+
+        if (!$localLicense || empty($localLicense['auth_code'])) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
