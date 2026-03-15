@@ -11,5 +11,5 @@ declare(strict_types=1);
  */
 return [
     Hyperf\Crontab\Process\CrontabDispatcherProcess::class,
-    App\Process\TelegramPollingProcess::class,
+    // App\Process\TelegramPollingProcess::class, // 禁用轮询，使用 Webhook
 ];

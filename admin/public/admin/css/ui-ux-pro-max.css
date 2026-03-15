@@ -92,7 +92,7 @@ body .navbar-static-side {
     color: var(--vp-c-text-1) !important;
 }
 
-/* Active State Level 1 - No background, just text */
+/* Active State Level 1 - 无背景，仅保持原色 */
 #side-menu > li.active {
     background: transparent !important;
     border-left: none !important;
@@ -119,7 +119,7 @@ body .navbar-static-side {
 /* Hover/Active State for Icons */
 #side-menu > li > a:hover > svg.nav-icon,
 #side-menu > li.active > a > svg.nav-icon {
-    color: #4B5563 !important; /* Darker gray on hover */
+    color: #4B5563 !important; /* Darker gray on hover/active */
 }
 
 /* Ensure text aligns with icon */
@@ -170,16 +170,16 @@ body .navbar-static-side {
     z-index: 1;
 }
 
-/* 8. Active State Level 2 - Green Text + Green Indicator Overlay */
+/* 8. Active State Level 2 - 仅绿色标题，无背景色（统一所有左侧菜单） */
 .nav-second-level li.active a,
 .nav-second-level li.active a:hover,
 .menumulu.active a {
     color: var(--vp-c-brand-1) !important;
     font-weight: 600 !important;
-    background: #F0FDF4 !important; /* Very subtle green bg for active item */
+    background: transparent !important;
 }
 
-/* Green Indicator Bar */
+/* Green Indicator Bar（左侧竖条，非背景） */
 .nav-second-level li.active a::after,
 .menumulu.active a::after {
     content: "";

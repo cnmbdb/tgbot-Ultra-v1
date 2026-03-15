@@ -136,6 +136,10 @@
                                 $('.layui-tab-title').find('.layui-this').removeClass('layui-this');
                                 $('.layui-tab-title li[lay-id="' + id + '"]').addClass('layui-this');
                                 tab.tabChange(id);
+                                // 页面加载时恢复菜单高亮
+                                var menuId = 'menu' + id;
+                                $('.left-nav #side-menu li.menumulu').removeClass('active');
+                                $('.left-nav #side-menu li.menumulu#' + menuId).addClass('active');
                             } else {
                                 $(".layui-tab-title li").eq(0).addClass('layui-this');
                                 $('.layui-tab-content .layui-tab-item').eq(0).addClass('layui-show');
@@ -162,6 +166,10 @@
                 tabChange: function (id) {
                     var topLayui = parent === self ? layui : top.layui;
                     topLayui.element.tabChange('wenav_tab', id);
+                    // 切换 tab 时同步菜单高亮
+                    var menuId = 'menu' + id;
+                    $('.left-nav #side-menu li.menumulu').removeClass('active');
+                    $('.left-nav #side-menu li.menumulu#' + menuId).addClass('active');
                 },
                 tabDeleteAll: function (ids) {
                     var topLayui = parent === self ? layui : top.layui;
@@ -189,8 +197,13 @@
             var needFullPageForConfig = @json(!empty($show_license_warning));
             var configMenuId = 30;
 
-            // 菜单点击事件
+            // 菜单点击事件 - 点击时设置高亮
             $('body').on('click', '.left-nav #side-menu li.menumulu', function (event) {
+                // 移除所有菜单的 active
+                $('.left-nav #side-menu li.menumulu').removeClass('active');
+                // 给当前点击的菜单添加 active
+                $(this).addClass('active');
+
                 var url = $(this).children('a').attr('_href');
                 var title = $(this).find('a').text().trim();
                 var idStr = $(this).attr('id') || '';
@@ -205,6 +218,16 @@
                     url = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'embed=1';
                 }
                 wframe.openFrame(url, title, id);
+            });
+
+            // Tab 切换时同步菜单高亮
+            $(document).on('click', '.layui-tab-title li', function () {
+                var layId = $(this).attr('lay-id');
+                if (!layId) return;
+                // 根据 lay-id 找到对应的菜单项
+                var menuId = 'menu' + layId;
+                $('.left-nav #side-menu li.menumulu').removeClass('active');
+                $('.left-nav #side-menu li.menumulu#' + menuId).addClass('active');
             });
 
             // Tab加载后刷新

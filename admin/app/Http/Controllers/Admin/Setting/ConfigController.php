@@ -16,39 +16,13 @@ class ConfigController extends Controller
     {
         $data = SysConfig::get();
 
-        // 检查系统是否已激活授权
-        $isLicensed = $this->isLicensed();
-
         // 获取授权信息
         $licenseInfo = $this->getLicenseInfo($data);
 
         // 未授权时从菜单跳转过来，默认打开「授权激活」标签
         $showActivateTab = $request->get('activate') == '1';
 
-        return view('admin.setting.config.index', compact('data', 'licenseInfo', 'showActivateTab', 'isLicensed'));
-    }
-
-    /**
-     * 检查系统是否已激活授权
-     */
-    private function isLicensed()
-    {
-        $licenseConfig = SysConfig::where('config_key', 'license_activation')->first();
-
-        if (!$licenseConfig) {
-            return false;
-        }
-
-        $configVal = $licenseConfig->config_val;
-        $localLicense = is_string($configVal)
-            ? json_decode($configVal, true)
-            : (array) $configVal;
-
-        if (!$localLicense || empty($localLicense['auth_code'])) {
-            return false;
-        }
-
-        return true;
+        return view('admin.setting.config.index', compact('data', 'licenseInfo', 'showActivateTab'));
     }
 
     /**
@@ -56,7 +30,7 @@ class ConfigController extends Controller
      */
     private function getLicenseInfo($configData)
     {
-        $result = ['status' => 'unactivated', 'max_bots' => 0, 'expires_at' => null, 'message' => ''];
+        $result = ['status' => 'unactivated', 'max_bots' => 0, 'expires_at' => null, 'message' => '', 'api_user' => null];
 
         // 获取API网站地址配置
         $apiWebConfig = $configData->firstWhere('config_key', 'api_web_url');
@@ -105,7 +79,124 @@ class ConfigController extends Controller
             $result['message'] = 'API连接失败: ' . $e->getMessage();
         }
 
+        // 获取绑定该站点的 API 用户信息（用户名、余额）
+        // 优先使用本地存储的 api_username，然后从 API 获取实时余额
+        $apiUsername = $localLicense['api_username'] ?? '';
+        try {
+            $client2 = new \GuzzleHttp\Client(['timeout' => 10]);
+            $response2 = $client2->get($apiSiteUrl . '/api/license/api-user-by-site', [
+                'query' => ['site_url' => $apiSiteUrl]
+            ]);
+            $apiUserResult = json_decode($response2->getBody()->getContents(), true);
+            if (($apiUserResult['code'] ?? 0) === 200 && !empty($apiUserResult['data']['apiUser'])) {
+                $apiUser = $apiUserResult['data']['apiUser'];
+                // 如果本地没有存用户名，用 API 返回的并回写本地，下次无需再请求
+                if (empty($apiUsername) && !empty($apiUser['username'])) {
+                    $apiUsername = $apiUser['username'];
+                    $this->saveLicenseApiUsername($licenseConfig, $apiUsername);
+                }
+                $result['api_user'] = [
+                    'username' => $apiUsername,
+                    'balance' => $apiUser['balance'] ?? '0',
+                ];
+            } else if (!empty($apiUsername)) {
+                // API 查询失败但本地有用户名，显示本地用户名，余额为空
+                $result['api_user'] = [
+                    'username' => $apiUsername,
+                    'balance' => null,
+                ];
+            }
+        } catch (\Exception $e) {
+            // 获取 API 用户信息失败不影响主流程
+            if (!empty($apiUsername)) {
+                $result['api_user'] = [
+                    'username' => $apiUsername,
+                    'balance' => null,
+                ];
+            }
+        }
+
         return $result;
+    }
+
+    /**
+     * 将 API 用户名回写到 license_activation 配置，便于下次直接显示
+     */
+    private function saveLicenseApiUsername($licenseConfig, string $apiUsername): void
+    {
+        if (!$licenseConfig || empty($apiUsername)) {
+            return;
+        }
+        $configVal = $licenseConfig->config_val;
+        $data = is_string($configVal) ? json_decode($configVal, true) : (array) $configVal;
+        $data['api_username'] = $apiUsername;
+        $licenseConfig->config_val = json_encode($data);
+        $licenseConfig->update_by = (string) Auth::guard('admin')->id();
+        $licenseConfig->update_time = nowDate();
+        $licenseConfig->save();
+    }
+
+    /**
+     * 刷新 API 用户余额（供前端「刷新余额」按钮调用）
+     */
+    public function apiUserBalance(Request $request)
+    {
+        $data = SysConfig::get();
+        $apiWebConfig = $data->firstWhere('config_key', 'api_web_url');
+        $apiSiteUrl = $apiWebConfig && isset($apiWebConfig->config_val->url) ? $apiWebConfig->config_val->url : null;
+
+        if (empty($apiSiteUrl)) {
+            return $this->responseData(400, '请先配置 API 网站地址');
+        }
+
+        $licenseConfig = $data->firstWhere('config_key', 'license_activation');
+        $configVal = $licenseConfig ? $licenseConfig->config_val : null;
+        $localLicense = is_string($configVal) ? json_decode($configVal, true) : (array) $configVal;
+        $apiUsername = $localLicense['api_username'] ?? '';
+
+        try {
+            $client = new \GuzzleHttp\Client(['timeout' => 10]);
+            $response = $client->get(rtrim($apiSiteUrl, '/') . '/api/license/api-user-by-site', [
+                'query' => ['site_url' => rtrim($apiSiteUrl, '/')]
+            ]);
+            $apiUserResult = json_decode($response->getBody()->getContents(), true);
+            if (($apiUserResult['code'] ?? 0) === 200 && !empty($apiUserResult['data']['apiUser'])) {
+                $apiUser = $apiUserResult['data']['apiUser'];
+                $balance = $apiUser['balance'] ?? null;
+                if ($balance !== null && $balance !== '') {
+                    $balance = (string) $balance;
+                }
+                $username = $apiUser['username'] ?? $apiUsername;
+                if (empty($apiUsername) && !empty($username) && $licenseConfig) {
+                    $this->saveLicenseApiUsername($licenseConfig, $username);
+                }
+                return $this->responseData(200, 'ok', [
+                    'username' => $username ?: $apiUsername,
+                    'balance' => $balance,
+                ]);
+            }
+            $msg = $apiUserResult['msg'] ?? $apiUserResult['message'] ?? 'API 未返回用户信息';
+            return $this->responseData(400, $msg, [
+                'username' => $apiUsername,
+                'balance' => null,
+            ]);
+        } catch (\GuzzleHttp\Exception\ConnectException $e) {
+            return $this->responseData(400, '无法连接 API 授权系统，请检查地址与网络', [
+                'username' => $apiUsername,
+                'balance' => null,
+            ]);
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            $msg = $e->getResponse() ? (string) $e->getResponse()->getBody() : $e->getMessage();
+            return $this->responseData(400, '请求失败: ' . $msg, [
+                'username' => $apiUsername,
+                'balance' => null,
+            ]);
+        } catch (\Exception $e) {
+            return $this->responseData(400, '获取余额失败: ' . $e->getMessage(), [
+                'username' => $apiUsername,
+                'balance' => null,
+            ]);
+        }
     }
 
     /**
@@ -172,6 +263,27 @@ class ConfigController extends Controller
             $apiResult = json_decode($response->getBody()->getContents(), true);
 
             if (($apiResult['success'] ?? false) === true) {
+                // 优先使用 verify 接口返回的 api_username（激活后立即可用）
+                $apiUsername = trim((string) ($apiResult['api_username'] ?? ''));
+                $apiBalance = isset($apiResult['api_balance']) ? (string) $apiResult['api_balance'] : null;
+                if ($apiUsername === '') {
+                    try {
+                        $client2 = new \GuzzleHttp\Client(['timeout' => 10]);
+                        $response2 = $client2->get($apiSiteUrl . '/api/license/api-user-by-site', [
+                            'query' => ['site_url' => $apiSiteUrl]
+                        ]);
+                        $apiUserResult = json_decode($response2->getBody()->getContents(), true);
+                        if (($apiUserResult['code'] ?? 0) === 200 && !empty($apiUserResult['data']['apiUser']['username'])) {
+                            $apiUsername = $apiUserResult['data']['apiUser']['username'];
+                            if ($apiBalance === null && isset($apiUserResult['data']['apiUser']['balance'])) {
+                                $apiBalance = (string) $apiUserResult['data']['apiUser']['balance'];
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        // 获取用户名失败不影响激活
+                    }
+                }
+
                 // 保存激活码信息到本地
                 DB::beginTransaction();
                 try {
@@ -183,6 +295,7 @@ class ConfigController extends Controller
                         'max_bots' => $apiResult['max_bots'] ?? 0,
                         'expires_at' => $apiResult['expires_at'] ?? null,
                         'activated_at' => $time,
+                        'api_username' => $apiUsername,
                     ]);
 
                     $licenseConfig = SysConfig::where('config_key', 'license_activation')->first();

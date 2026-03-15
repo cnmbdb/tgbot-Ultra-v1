@@ -397,6 +397,8 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin'], function () {
                 Route::post('activate', 'ConfigController@activate')->name('admin.setting.config.activate');
                 /* 解除授权 */
                 Route::post('deactivate', 'ConfigController@deactivate')->name('admin.setting.config.deactivate');
+                /* 刷新 API 用户余额 */
+                Route::get('api-user-balance', 'ConfigController@apiUserBalance')->name('admin.setting.config.api-user-balance');
                 /* ueditor上传图片 */
                 Route::post('uploadfile', 'ConfigController@uploadfile')->name('admin.setting.config.uploadfile');
                 Route::post('uploadfileNew', 'ConfigController@uploadfileNew')->name('admin.setting.config.uploadfileNew');

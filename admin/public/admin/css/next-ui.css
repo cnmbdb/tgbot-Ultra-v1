@@ -86,6 +86,105 @@
     margin: 0 2px !important;
 }
 
+/* 表格操作栏按钮组 - 统一圆角与间距 */
+.bot-toolbar {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+}
+.bot-toolbar .layui-btn {
+    margin: 0 !important;
+    border-radius: 6px !important;
+    padding: 0 12px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    height: 28px !important;
+    line-height: 28px !important;
+    box-sizing: border-box !important;
+}
+.bot-toolbar .layui-btn,
+.bot-toolbar .layui-btn * {
+    vertical-align: middle !important;
+}
+.bot-toolbar .layui-btn .fa,
+.bot-toolbar .layui-btn i {
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+.bot-toolbar .layui-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12) !important;
+}
+/* 浅色背景 + 有色边框 */
+.bot-toolbar .btn-toolbar-edit {
+    background: #eff6ff !important;
+    border: 1.5px solid #3b82f6 !important;
+    color: #2563eb !important;
+}
+.bot-toolbar .btn-toolbar-update {
+    background: #ecfdf5 !important;
+    border: 1.5px solid #10b981 !important;
+    color: #059669 !important;
+}
+.bot-toolbar .btn-toolbar-webhook {
+    background: #f5f3ff !important;
+    border: 1.5px solid #8b5cf6 !important;
+    color: #7c3aed !important;
+}
+.bot-toolbar .btn-toolbar-clone {
+    background: #fffbeb !important;
+    border: 1.5px solid #f59e0b !important;
+    color: #d97706 !important;
+}
+.bot-toolbar .btn-toolbar-delete {
+    background: #fef2f2 !important;
+    border: 1.5px solid #ef4444 !important;
+    color: #dc2626 !important;
+}
+.bot-toolbar .btn-toolbar-recharge {
+    background: #eff6ff !important;
+    border: 1.5px solid #3b82f6 !important;
+    color: #2563eb !important;
+}
+.bot-toolbar .btn-toolbar-edit:hover,
+.bot-toolbar .btn-toolbar-update:hover,
+.bot-toolbar .btn-toolbar-webhook:hover,
+.bot-toolbar .btn-toolbar-clone:hover,
+.bot-toolbar .btn-toolbar-delete:hover,
+.bot-toolbar .btn-toolbar-recharge:hover {
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 添加机器人主按钮 - 浅色背景 + 有色边框 */
+.btn-add-bot {
+    border-radius: 8px !important;
+    padding: 0 20px !important;
+    font-weight: 500 !important;
+    background: #eff6ff !important;
+    border: 1.5px solid #3b82f6 !important;
+    color: #2563eb !important;
+    transition: all 0.2s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    height: 32px !important;
+    line-height: 32px !important;
+    box-sizing: border-box !important;
+}
+.btn-add-bot:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.25) !important;
+}
+
 /* ==================== 警告框 Alert ==================== */
 .alert {
     border-radius: 12px !important;
@@ -138,6 +237,166 @@
     padding: 20px !important;
 }
 
+/* 使用说明卡片（机器人列表等） */
+.bot-tips-card {
+    margin: 12px 0 16px 10px !important;
+}
+.bot-tips-card .layui-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #374151;
+}
+.bot-tips-card .layui-card-header .fa {
+    color: #3b82f6;
+    font-size: 16px;
+}
+.bot-tips-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.bot-tip-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.6;
+}
+.bot-tip-item:last-child {
+    margin-bottom: 0;
+}
+.bot-tip-num {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    text-align: center;
+    border-radius: 50%;
+    font-weight: 600;
+    font-size: 13px;
+}
+.bot-tip-warning .bot-tip-num {
+    background: #fef3c7;
+    color: #d97706;
+}
+.bot-tip-warning {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    color: #92400e;
+}
+.bot-tip-info .bot-tip-num {
+    background: #dbeafe;
+    color: #2563eb;
+}
+.bot-tip-info {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1e40af;
+}
+.bot-tip-text strong {
+    font-weight: 600;
+}
+
+/* ==================== 机器人列表卡片 ==================== */
+.bot-list-wrap {
+    margin: 12px 0 20px 10px;
+    min-height: 120px;
+}
+.bot-card-loading,
+.bot-card-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6b7280;
+    font-size: 14px;
+}
+.bot-card-loading .fa {
+    margin-right: 8px;
+}
+.bot-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+}
+.bot-card {
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+.bot-card .layui-card-header {
+    padding: 16px 16px 18px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+    border-bottom: 1px solid #e5e7eb;
+    line-height: 1.4;
+}
+.bot-card-title {
+    color: #3b82f6;
+}
+.bot-card-desc {
+    font-size: 12px;
+    font-weight: 400;
+    color: #6b7280;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.bot-card .layui-card-body {
+    padding: 12px 16px;
+    flex: 1;
+}
+.bot-card-dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 6px 12px;
+    font-size: 13px;
+}
+.bot-card-dl dt {
+    margin: 0;
+    color: #6b7280;
+    font-weight: 500;
+}
+.bot-card-dl dd {
+    margin: 0;
+    color: #374151;
+    word-break: break-all;
+}
+.bot-card-token {
+    font-family: monospace;
+    font-size: 12px;
+}
+.bot-card .layui-card-footer.bot-card-footer {
+    padding: 12px 16px;
+    border-top: 1px solid #e5e7eb;
+    background: #f9fafb;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+.bot-card-footer .layui-btn {
+    margin: 0;
+}
+.bot-card-pagination {
+    margin-top: 16px;
+    display: flex;
+    justify-content: center;
+}
+
 /* ==================== 表格样式 ==================== */
 .layui-table {
     border-radius: 10px !important;
@@ -155,6 +414,13 @@
     font-size: 14px !important;
     color: #4b5563 !important;
     padding: 12px 15px !important;
+}
+
+/* 表格行高与表头对齐优化（机器人列表等） */
+.project-list .layui-table th,
+.project-list .layui-table td {
+    min-height: 52px !important;
+    padding: 14px 12px !important;
 }
 
 .layui-table tr:hover td {
@@ -238,11 +504,42 @@
 .layui-laypage span {
     border-radius: 8px !important;
     margin: 0 4px !important;
+    transition: all 0.2s ease !important;
 }
 
+/* 当前页：浅色背景 + 有色边框 */
 .layui-laypage .layui-laypage-curr .layui-laypage-em {
     border-radius: 8px !important;
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+    background: #eff6ff !important;
+    border: 1.5px solid #3b82f6 !important;
+    color: #2563eb !important;
+    font-weight: 500 !important;
+}
+
+/* 当前页数字颜色（覆盖 layui 默认 .layui-laypage-curr em{color:#fff}） */
+.layui-laypage .layui-laypage-curr,
+.layui-laypage .layui-laypage-curr em,
+.layui-box.layui-laypage .layui-laypage-curr em {
+    color: #2563eb !important;
+    font-weight: 500 !important;
+}
+
+.layui-laypage .layui-laypage-curr .layui-laypage-em:hover {
+    background: #dbeafe !important;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2) !important;
+}
+
+/* 其他分页按钮：浅色背景 + 灰色边框 */
+.layui-laypage a {
+    background: #f9fafb !important;
+    border: 1px solid #e5e7eb !important;
+    color: #374151 !important;
+}
+
+.layui-laypage a:hover {
+    background: #f3f4f6 !important;
+    border-color: #d1d5db !important;
+    color: #1d4ed8 !important;
 }
 
 /* ==================== 复选框和单选框 ==================== */
@@ -270,30 +567,38 @@
     color: #4b5563 !important;
 }
 
+/* 弹窗按钮：浅色背景 + 有色边框，与 bot-toolbar 风格一致 */
 .swal2-confirm,
 .swal2-cancel {
     border-radius: 8px !important;
     padding: 10px 24px !important;
     font-weight: 500 !important;
     transition: all 0.2s ease !important;
+    border: 1.5px solid !important;
 }
 
 .swal2-confirm {
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+    background: #eff6ff !important;
+    border-color: #3b82f6 !important;
+    color: #2563eb !important;
 }
 
 .swal2-confirm:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4) !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25) !important;
 }
 
 .swal2-cancel {
-    background: #f3f4f6 !important;
-    color: #374151 !important;
+    background: #f9fafb !important;
+    border-color: #d1d5db !important;
+    color: #6b7280 !important;
 }
 
 .swal2-cancel:hover {
-    background: #e5e7eb !important;
+    background: #f3f4f6 !important;
+    border-color: #9ca3af !important;
+    color: #374151 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
 }
 
 /* ==================== 加载中 ==================== */

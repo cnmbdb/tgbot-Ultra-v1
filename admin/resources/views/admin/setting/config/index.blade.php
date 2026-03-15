@@ -91,6 +91,38 @@
             color: #b91c1c !important;
             border-color: #b91c1c !important;
         }
+        /* 刷新余额按钮：浅色背景 + 绿色边框，图标与文字上下居中 */
+        .btn-refresh-balance {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px;
+            min-height: 32px;
+            padding: 6px 14px;
+            font-size: 13px;
+            font-weight: 500;
+            line-height: 1 !important;
+            color: #00DC82 !important;
+            background: #ecfdf5 !important;
+            border: 1px solid #00DC82 !important;
+            border-radius: 8px;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+        .btn-refresh-balance:hover {
+            background: #d1fae5 !important;
+            color: #059669 !important;
+            border-color: #059669 !important;
+        }
+        .btn-refresh-balance:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .btn-refresh-balance .layui-icon {
+            font-size: 14px;
+            line-height: 1;
+            vertical-align: middle;
+        }
         .layui-table.config-table { border: none; }
         .layui-table.config-table td, .layui-table.config-table th { border: none; font-size: 14px; padding: 12px 0; }
         .layui-table.config-table .fu-title { font-weight: 600; color: #374151; width: 160px; }
@@ -166,7 +198,7 @@
                             <div class="alert alert-warning" style="margin: 10px 15px;">{{ session('license_warning') }}</div>
                         @endif
 
-                        @if(!$isLicensed)
+                        @if(!$licenseInfo || $licenseInfo['status'] !== 'active')
                             <div class="alert alert-warning" style="margin: 10px 15px;">
                                 请先激活系统授权后才能使用完整功能 &nbsp;
                                 <a href="{{ route('admin.setting.config.index', ['activate' => 1]) }}" style="color: #007bff; font-weight: 600;">点击此处前往激活</a>
@@ -182,8 +214,6 @@
                                             @php
                                                 $jobConfig = $data->firstWhere('config_key', 'job_url');
                                                 $jobUrl = $jobConfig ? $jobConfig->config_val->url : 'http://tgbot-job:9503';
-                                                $tonConfig = $data->firstWhere('config_key', 'ton_url');
-                                                $tonUrl = $tonConfig ? $tonConfig->config_val->url : 'http://host.docker.internal:4444/api/premium';
                                                 $apiWebConfig = $data->firstWhere('config_key', 'api_web_url');
                                                 $apiWebUrl = $apiWebConfig ? $apiWebConfig->config_val->url : 'http://host.docker.internal:4444/';
                                                 $tronscanConfig = $data->firstWhere('config_key', 'tronscan_api_keys');
@@ -192,26 +222,12 @@
                                                 $trongridKeys = $trongridConfig && isset($trongridConfig->config_val->keys) ? $trongridConfig->config_val->keys : '';
                                             @endphp
 
-                                            <!-- 每个配置项一张卡片 -->
+                                            <!-- 每个配置项一张卡片；TON 支付接口已改为动态使用 API 连接 URL + /api/premium -->
                                             <div class="layui-card config-item-card">
                                                 <div class="layui-card-header"><i class="layui-icon layui-icon-util"></i>Job 任务域名 URL</div>
                                                 <div class="layui-card-body">
                                                     <input type="text" class="z-input layui-input" name="job_url[url]" autocomplete="off" value="{{ $jobUrl }}" placeholder="https://job.example.com">
                                                     <p class="tip"><i class="layui-icon layui-icon-tips"></i>{{ $jobConfig ? $jobConfig->comments : '任务域名 URL' }}</p>
-                                                </div>
-                                            </div>
-                                            <div class="layui-card config-item-card">
-                                                <div class="layui-card-header"><i class="layui-icon layui-icon-rmb"></i>TON 支付接口 URL</div>
-                                                <div class="layui-card-body">
-                                                    <input type="text" class="z-input layui-input" name="ton_url[url]" autocomplete="off" value="{{ $tonUrl }}" placeholder="https://api.example.com/api/premium">
-                                                    <p class="tip"><i class="layui-icon layui-icon-tips"></i>{{ $tonConfig ? $tonConfig->comments : 'TON 支付接口，不需要开通 TG 会员时可留空' }}</p>
-                                                </div>
-                                            </div>
-                                            <div class="layui-card config-item-card">
-                                                <div class="layui-card-header"><i class="layui-icon layui-icon-link"></i>API 连接 URL</div>
-                                                <div class="layui-card-body">
-                                                    <input type="text" class="z-input layui-input" name="api_web_url[url]" autocomplete="off" value="{{ $apiWebUrl }}" placeholder="https://api.example.com">
-                                                    <p class="tip"><i class="layui-icon layui-icon-tips"></i>API 授权系统连接地址</p>
                                                 </div>
                                             </div>
                                             <div class="layui-card config-item-card">
@@ -264,6 +280,31 @@
                                                     <div class="layui-card-body">
                                                         <input type="text" class="z-input layui-input" id="api_site_url" name="api_site_url" autocomplete="off" value="{{ $apiWebUrl ?? '' }}" placeholder="https://api.example.com">
                                                         <p class="tip"><i class="layui-icon layui-icon-tips"></i>请填写【API 授权系统】(API-web) 的网站地址，不要填本机器人后台地址。</p>
+                                                        <!-- API 用户信息：紧跟在 API 网站地址下方 -->
+                                                        <div class="config-api-user-wrap" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+                                                            <div style="font-weight: 600; color: #374151; margin-bottom: 10px; font-size: 14px;"><i class="layui-icon layui-icon-user" style="color: #00DC82; margin-right: 6px;"></i>API 用户信息</div>
+                                                            @if(!empty($licenseInfo['api_user']['username']))
+                                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                                                <span style="color: #666;">用户名</span>
+                                                                <span style="font-weight: 600; font-size: 15px;">{{ $licenseInfo['api_user']['username'] }}</span>
+                                                            </div>
+                                                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                                                                <span style="color: #666;">余额</span>
+                                                                <span style="display: flex; align-items: center; gap: 8px;">
+                                                                    <span id="api-balance-display" style="font-weight: 600; font-size: 15px; color: #00DC82;">
+                                                                        @if(isset($licenseInfo['api_user']['balance']) && $licenseInfo['api_user']['balance'] !== null)
+                                                                            {{ $licenseInfo['api_user']['balance'] }} USDT
+                                                                        @else
+                                                                            <span class="api-balance-text" style="color: #999; font-size: 13px;">（未获取）</span>
+                                                                        @endif
+                                                                    </span>
+                                                                    <button type="button" id="refresh-api-balance-btn" class="btn-refresh-balance"><span class="layui-icon layui-icon-refresh"></span><span>刷新</span></button>
+                                                                </span>
+                                                            </div>
+                                                            @else
+                                                            <p class="tip" style="margin: 0;"><i class="layui-icon layui-icon-tips"></i>填写下方激活码并点击「激活」后，将自动同步绑定该授权码的 API 用户名与余额。</p>
+                                                            @endif
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <div class="layui-card config-item-card">
@@ -438,8 +479,9 @@
         });
     </script>
     <script type="text/javascript">
-        layui.use(['table', 'layer', 'element'], function () {
-            var table = layui.table,
+        layui.use(['jquery', 'table', 'layer', 'element'], function () {
+            var $ = layui.jquery,
+                table = layui.table,
                 element = layui.element,
                 form = layui.form;
 
@@ -531,6 +573,38 @@
                     });
                 });
             };
+
+            // 刷新 API 用户余额（事件委托，兼容 iframe 与动态内容）
+            var refreshBalanceUrl = "{{ url()->route('admin.setting.config.api-user-balance') }}";
+            $(document).off('click', '#refresh-api-balance-btn').on('click', '#refresh-api-balance-btn', function(){
+                var $btn = $(this);
+                var $display = $('#api-balance-display');
+                if ($btn.prop('disabled')) return;
+                $btn.prop('disabled', true).html('<span class="layui-icon layui-icon-loading layui-anim layui-anim-rotate layui-anim-loop"></span><span>刷新中</span>');
+                $.ajax({
+                    url: refreshBalanceUrl,
+                    type: 'GET',
+                    dataType: 'json'
+                }).done(function(res){
+                    $btn.prop('disabled', false).html('<span class="layui-icon layui-icon-refresh"></span><span>刷新</span>');
+                    if (res && res.code == 200 && res.data) {
+                        var bal = res.data.balance;
+                        if (bal !== null && bal !== undefined && bal !== '') {
+                            $display.text(String(bal) + ' USDT').css('color', '#00DC82');
+                        } else {
+                            $display.html('<span class="api-balance-text" style="color: #999; font-size: 13px;">（未获取）</span>');
+                        }
+                        layer.msg('已刷新', {icon: 6});
+                    } else {
+                        layer.msg((res && res.msg) ? res.msg : '获取失败', {icon: 5});
+                        $display.html('<span class="api-balance-text" style="color: #999; font-size: 13px;">（未获取）</span>');
+                    }
+                }).fail(function(xhr){
+                    $btn.prop('disabled', false).html('<span class="layui-icon layui-icon-refresh"></span><span>刷新</span>');
+                    var msg = (xhr.responseJSON && xhr.responseJSON.msg) ? xhr.responseJSON.msg : (xhr.statusText || '请求失败');
+                    layer.msg(msg, {icon: 5});
+                });
+            });
 
             // 缩略图预览
             $(".thumb").change(function(){

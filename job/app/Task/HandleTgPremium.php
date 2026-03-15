@@ -110,8 +110,8 @@ class HandleTgPremium
                     $v->update_time = $time;
                     $v->save();
                     
-                    $apiWebUrl = config('services.api_web.url');
-                    $ton_url = $apiWebUrl . '/api/ton/premium';
+                    $apiWebUrl = rtrim(config('services.api_web.url'), '/');
+                    $ton_url = $apiWebUrl . '/api/premium';
                     $param = '{
                         "username": "'.$v->premium_tg_username.'",
                         "isshow": true,

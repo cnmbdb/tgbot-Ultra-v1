@@ -14,7 +14,7 @@ use App\Http\Services\RsaServices;
 
 class PremiumPlatformController extends Controller
 {
-    public $PlatformName = ['1' => '自己搭建'];
+    public $PlatformName = ['1' => '自己搭建', '2' => 'API平台调用'];
     public $Status = ['开启','关闭'];
     
     public function index(Request $request)

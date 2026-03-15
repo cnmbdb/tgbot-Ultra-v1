@@ -2,14 +2,22 @@
 #tabName li{border-right: 1px solid #ccc;}
 /*#tabName li.layui-this{border-right: 1px solid #1ab394;}*/
 .project-list table .layui-table-cell{min-width: 80px}
-.layui-btn{border-radius: 3px!important;}
+.layui-btn{border-radius: 8px!important;}
 .add_button{background-color: #1c84c6!important;}
 .export_button{background-color: #ffb800!important;}
 .edit_button{background-color: #1e9fff!important;}
 .delete_button{background-color: #ec4758!important;color: #fff!important;}
 .form-box .layui-input,.layui-textarea{min-width: 100px!important;}
-.soushou_button{background-color: #1ab394;border-color: #1ab394;color: #FFFFFF;border-radius: 50px!important;}
-.layui-btn-group .f_chongzhi{background-color: #f8ac59;border-color: #f8ac59;color: #FFFFFF;border-radius: 50px!important;margin-left: 4px!important;}
+/* 搜索 / 重置 按钮 - 浅色背景 + 有色边框 */
+.com-search-btns{margin: 10px 0 5px 10px;display: inline-flex;gap: 8px;}
+.com-search-btns .btn-search,.com-search-btns .btn-reset{display:inline-flex!important;align-items:center!important;justify-content:center!important;text-align:center!important;border-radius: 50px!important;padding: 0 18px!important;font-weight: 500!important;transition: all .2s ease!important;box-sizing: border-box!important;height: 34px!important;line-height: 34px!important;}
+.com-search-btns .btn-search .fa,.com-search-btns .btn-reset .fa{display:inline-flex!important;align-items:center!important;}
+.com-search-btns .btn-search{background: #ecfdf5!important;border: 1.5px solid #10b981!important;color: #059669!important;}
+.com-search-btns .btn-search:hover{box-shadow: 0 4px 12px rgba(16,185,129,.25)!important;}
+.com-search-btns .btn-reset{background: #f0fdfa!important;border: 1.5px solid #0d9488!important;color: #0f766e!important;margin-left: 0!important;}
+.com-search-btns .btn-reset:hover{box-shadow: 0 4px 12px rgba(13,148,136,.25)!important;}
+.soushou_button{background: linear-gradient(135deg, #10b981 0%, #059669 100%)!important;border: none!important;color: #fff!important;border-radius: 50px!important;}
+.layui-btn-group .f_chongzhi{background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%)!important;border: none!important;color: #fff!important;border-radius: 50px!important;margin-left: 8px!important;}
 .shuaxin_button{background-color: #ef6776;border-color: #ef6776;}
 .mleft1{margin-left: 3px;}
 .z-input,.layui-input, .layui-textarea{border-color:burlywood;}
