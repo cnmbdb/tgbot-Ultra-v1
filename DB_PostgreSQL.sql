@@ -66,6 +66,9 @@ ALTER TABLE IF EXISTS ONLY public.t_energy_ai_trusteeship DROP CONSTRAINT IF EXI
 ALTER TABLE IF EXISTS ONLY public.t_energy_ai_bishu DROP CONSTRAINT IF EXISTS t_energy_ai_bishu_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_collection_wallet DROP CONSTRAINT IF EXISTS t_collection_wallet_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_collection_wallet_list DROP CONSTRAINT IF EXISTS t_collection_wallet_list_pkey;
+ALTER TABLE IF EXISTS ONLY public.t_bind_a_send_n_grant DROP CONSTRAINT IF EXISTS t_bind_a_send_n_grant_pkey;
+ALTER TABLE IF EXISTS ONLY public.t_bind_a_send_n_config DROP CONSTRAINT IF EXISTS t_bind_a_send_n_config_pkey;
+ALTER TABLE IF EXISTS ONLY public.t_bind_a_send_n_binding DROP CONSTRAINT IF EXISTS t_bind_a_send_n_binding_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_admin DROP CONSTRAINT IF EXISTS t_admin_pkey;
 ALTER TABLE IF EXISTS ONLY public.t_admin_login_log DROP CONSTRAINT IF EXISTS t_admin_login_log_pkey;
 ALTER TABLE IF EXISTS public.t_transit_wallet_trade_list ALTER COLUMN rid DROP DEFAULT;
@@ -112,6 +115,9 @@ ALTER TABLE IF EXISTS public.t_energy_ai_trusteeship ALTER COLUMN rid DROP DEFAU
 ALTER TABLE IF EXISTS public.t_energy_ai_bishu ALTER COLUMN rid DROP DEFAULT;
 ALTER TABLE IF EXISTS public.t_collection_wallet_list ALTER COLUMN rid DROP DEFAULT;
 ALTER TABLE IF EXISTS public.t_collection_wallet ALTER COLUMN rid DROP DEFAULT;
+ALTER TABLE IF EXISTS public.t_bind_a_send_n_grant ALTER COLUMN rid DROP DEFAULT;
+ALTER TABLE IF EXISTS public.t_bind_a_send_n_config ALTER COLUMN rid DROP DEFAULT;
+ALTER TABLE IF EXISTS public.t_bind_a_send_n_binding ALTER COLUMN rid DROP DEFAULT;
 ALTER TABLE IF EXISTS public.t_admin_login_log ALTER COLUMN rid DROP DEFAULT;
 ALTER TABLE IF EXISTS public.t_admin ALTER COLUMN id DROP DEFAULT;
 DROP SEQUENCE IF EXISTS public.t_transit_wallet_trade_list_rid_seq;
@@ -205,6 +211,12 @@ DROP SEQUENCE IF EXISTS public.t_collection_wallet_rid_seq;
 DROP SEQUENCE IF EXISTS public.t_collection_wallet_list_rid_seq;
 DROP TABLE IF EXISTS public.t_collection_wallet_list;
 DROP TABLE IF EXISTS public.t_collection_wallet;
+DROP SEQUENCE IF EXISTS public.t_bind_a_send_n_grant_rid_seq;
+DROP TABLE IF EXISTS public.t_bind_a_send_n_grant;
+DROP SEQUENCE IF EXISTS public.t_bind_a_send_n_config_rid_seq;
+DROP TABLE IF EXISTS public.t_bind_a_send_n_config;
+DROP SEQUENCE IF EXISTS public.t_bind_a_send_n_binding_rid_seq;
+DROP TABLE IF EXISTS public.t_bind_a_send_n_binding;
 DROP SEQUENCE IF EXISTS public.t_admin_login_log_rid_seq;
 DROP TABLE IF EXISTS public.t_admin_login_log;
 DROP SEQUENCE IF EXISTS public.t_admin_id_seq;
@@ -279,6 +291,138 @@ CREATE SEQUENCE public.t_admin_login_log_rid_seq
 --
 
 ALTER SEQUENCE public.t_admin_login_log_rid_seq OWNED BY public.t_admin_login_log.rid;
+
+
+--
+-- Name: t_bind_a_send_n_binding; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.t_bind_a_send_n_binding (
+    rid integer NOT NULL,
+    bot_rid integer NOT NULL,
+    tg_uid bigint NOT NULL,
+    wallet_addr character varying(100) NOT NULL,
+    status smallint DEFAULT 0 NOT NULL,
+    activate_threshold numeric(14,2) DEFAULT 0,
+    activate_time timestamp without time zone,
+    activated_by integer,
+    unbind_time timestamp without time zone,
+    unbind_by integer,
+    unbind_reason character varying(500),
+    create_by integer NOT NULL,
+    create_time timestamp without time zone NOT NULL,
+    update_by integer,
+    update_time timestamp without time zone
+);
+
+
+--
+-- Name: t_bind_a_send_n_binding_rid_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.t_bind_a_send_n_binding_rid_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: t_bind_a_send_n_binding_rid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.t_bind_a_send_n_binding_rid_seq OWNED BY public.t_bind_a_send_n_binding.rid;
+
+
+--
+-- Name: t_bind_a_send_n_config; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.t_bind_a_send_n_config (
+    rid integer NOT NULL,
+    bot_rid integer,
+    is_enable smallint DEFAULT 1 NOT NULL,
+    energy_per_send integer DEFAULT 65000 NOT NULL,
+    activate_threshold numeric(14,2) DEFAULT 0 NOT NULL,
+    daily_limit integer DEFAULT 9999 NOT NULL,
+    monthly_limit integer DEFAULT 9999 NOT NULL,
+    n_addr_daily_limit integer DEFAULT 9999 NOT NULL,
+    audit_threshold numeric(14,2) DEFAULT 0 NOT NULL,
+    audit_enabled smallint DEFAULT 0 NOT NULL,
+    whitelist text,
+    blacklist text,
+    retry_count smallint DEFAULT 3 NOT NULL,
+    energy_platform_bot_rid integer,
+    create_by integer NOT NULL,
+    create_time timestamp without time zone NOT NULL,
+    update_by integer,
+    update_time timestamp without time zone
+);
+
+
+--
+-- Name: t_bind_a_send_n_config_rid_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.t_bind_a_send_n_config_rid_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: t_bind_a_send_n_config_rid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.t_bind_a_send_n_config_rid_seq OWNED BY public.t_bind_a_send_n_config.rid;
+
+
+--
+-- Name: t_bind_a_send_n_grant; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.t_bind_a_send_n_grant (
+    rid integer NOT NULL,
+    binding_rid integer NOT NULL,
+    bot_rid integer NOT NULL,
+    tg_uid bigint NOT NULL,
+    a_addr character varying(100) NOT NULL,
+    n_addr character varying(100) NOT NULL,
+    tx_hash character varying(200) NOT NULL,
+    energy_amount integer NOT NULL,
+    grant_status smallint DEFAULT 0 NOT NULL,
+    audit_status smallint DEFAULT 0 NOT NULL,
+    retry_count smallint DEFAULT 0 NOT NULL,
+    fail_reason character varying(500),
+    grant_time timestamp without time zone,
+    update_time timestamp without time zone,
+    create_time timestamp without time zone
+);
+
+
+--
+-- Name: t_bind_a_send_n_grant_rid_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.t_bind_a_send_n_grant_rid_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: t_bind_a_send_n_grant_rid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.t_bind_a_send_n_grant_rid_seq OWNED BY public.t_bind_a_send_n_grant.rid;
 
 
 --
@@ -523,7 +667,8 @@ CREATE TABLE public.t_energy_platform_bot (
     per_bishu_energy_quantity integer DEFAULT 65000 NOT NULL,
     per_energy_day_bishu integer DEFAULT 1,
     bishu_recovery_type smallint DEFAULT 1 NOT NULL,
-    bishu_daili_type smallint DEFAULT 1 NOT NULL
+    bishu_daili_type smallint DEFAULT 1 NOT NULL,
+    ai_trusteeship_recovery_type character varying(20) DEFAULT '1'::character varying NOT NULL
 );
 
 
@@ -2140,6 +2285,27 @@ ALTER TABLE ONLY public.t_admin_login_log ALTER COLUMN rid SET DEFAULT nextval('
 
 
 --
+-- Name: t_bind_a_send_n_binding rid; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.t_bind_a_send_n_binding ALTER COLUMN rid SET DEFAULT nextval('public.t_bind_a_send_n_binding_rid_seq'::regclass);
+
+
+--
+-- Name: t_bind_a_send_n_config rid; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.t_bind_a_send_n_config ALTER COLUMN rid SET DEFAULT nextval('public.t_bind_a_send_n_config_rid_seq'::regclass);
+
+
+--
+-- Name: t_bind_a_send_n_grant rid; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.t_bind_a_send_n_grant ALTER COLUMN rid SET DEFAULT nextval('public.t_bind_a_send_n_grant_rid_seq'::regclass);
+
+
+--
 -- Name: t_collection_wallet rid; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -2463,6 +2629,24 @@ INSERT INTO public.t_admin_login_log VALUES (2, 'trxadmin', '192.168.65.1', '202
 
 
 --
+-- Data for Name: t_bind_a_send_n_binding; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
+-- Data for Name: t_bind_a_send_n_config; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
+-- Data for Name: t_bind_a_send_n_grant; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
 -- Data for Name: t_collection_wallet; Type: TABLE DATA; Schema: public; Owner: -
 --
 
@@ -2500,7 +2684,7 @@ INSERT INTO public.t_energy_platform VALUES (4, 'A', 4, 1, 'user', 0, 36.360000,
 -- Data for Name: t_energy_platform_bot; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-INSERT INTO public.t_energy_platform_bot VALUES (3, 1, 'A', '6666666', 0, 'tttttttttttttttt', '2023-11-25 00:00:00', '6666666', '-111111', '', 'N', 6, 12, 1, '2023-11-25 02:06:35', '2023-12-02 11:36:36');
+INSERT INTO public.t_energy_platform_bot (rid, bot_rid, poll_group, tg_admin_uid, status, receive_wallet, get_tx_time, tg_notice_obj_receive, tg_notice_obj_send, comments, is_open_ai_trusteeship, trx_price_energy_32000, trx_price_energy_65000, per_energy_day, create_time, update_time) VALUES (3, 1, 'A', '6666666', 0, 'tttttttttttttttt', '2023-11-25 00:00:00', '6666666', '-111111', '', 'N', 6, 12, 1, '2023-11-25 02:06:35', '2023-12-02 11:36:36');
 
 
 --
@@ -2760,7 +2944,7 @@ INSERT INTO public.t_sys_config VALUES (3, 'api_web_url', '{"url":"http:\/\/host
 -- Data for Name: t_telegram_bot; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-INSERT INTO public.t_telegram_bot VALUES (1, '6666666:AAHOcqAPQuqtO3', '@aaaa', 'TRX 能量 会员 靓号 24小时营业', 'pri_bot', 'own-01', NULL, '2023-11-21 23:03:34', NULL, '2023-11-21 23:07:56', 'ttttttttt', '2023-11-21 00:00:00');
+INSERT INTO public.t_telegram_bot (rid, bot_token, bot_admin_username, bot_firstname, bot_username, comments, create_by, create_time, update_by, update_time, recharge_wallet_addr, get_tx_time) VALUES (1, '6666666:AAHOcqAPQuqtO3', '@aaaa', 'TRX 能量 会员 靓号 24小时营业', 'pri_bot', 'own-01', NULL, '2023-11-21 23:03:34', NULL, '2023-11-21 23:07:56', 'ttttttttt', '2023-11-21 00:00:00');
 
 
 --
@@ -3078,6 +3262,27 @@ SELECT pg_catalog.setval('public.t_admin_id_seq', 1, false);
 --
 
 SELECT pg_catalog.setval('public.t_admin_login_log_rid_seq', 2, true);
+
+
+--
+-- Name: t_bind_a_send_n_binding_rid_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.t_bind_a_send_n_binding_rid_seq', 1, false);
+
+
+--
+-- Name: t_bind_a_send_n_config_rid_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.t_bind_a_send_n_config_rid_seq', 1, false);
+
+
+--
+-- Name: t_bind_a_send_n_grant_rid_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.t_bind_a_send_n_grant_rid_seq', 1, false);
 
 
 --
@@ -3406,6 +3611,30 @@ ALTER TABLE ONLY public.t_admin_login_log
 
 ALTER TABLE ONLY public.t_admin
     ADD CONSTRAINT t_admin_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: t_bind_a_send_n_binding t_bind_a_send_n_binding_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.t_bind_a_send_n_binding
+    ADD CONSTRAINT t_bind_a_send_n_binding_pkey PRIMARY KEY (rid);
+
+
+--
+-- Name: t_bind_a_send_n_config t_bind_a_send_n_config_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.t_bind_a_send_n_config
+    ADD CONSTRAINT t_bind_a_send_n_config_pkey PRIMARY KEY (rid);
+
+
+--
+-- Name: t_bind_a_send_n_grant t_bind_a_send_n_grant_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.t_bind_a_send_n_grant
+    ADD CONSTRAINT t_bind_a_send_n_grant_pkey PRIMARY KEY (rid);
 
 
 --
@@ -3972,4 +4201,3 @@ BEGIN
         END IF;
     END LOOP;
 END $$;
-
