@@ -1,0 +1,129 @@
+# =============================================================================
+# TGBot-Ultra-v1 生产环境部署
+# 镜像已推送至 Docker Hub，服务器拉取即可运行
+# 部署前请先配置 .env 中的关键参数
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # 1. 后台管理服务 (Laravel/PHP)
+  # ---------------------------------------------------------------------------
+  admin:
+    image: ghcr.io/cnmbdb/tgbot-admin:latest
+    container_name: tgbot-admin
+    env_file:
+      - .env
+    volumes:
+      - admin_storage:/var/www/html/storage
+      - admin_cache:/var/www/html/bootstrap/cache
+      # Laravel 会读取 /var/www/html/.env；仅 env_file 注入变量时仍会触发 file_get_contents 报错
+      - ./.env:/var/www/html/.env:ro
+      # 上传文件改存 storage/app/public/news（admin_storage 卷内），勿再单独挂 public/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - tgbot-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://127.0.0.1/ || echo 'Nginx not ready'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ---------------------------------------------------------------------------
+  # 2. 任务处理服务 (Hyperf/Swoole)
+  # ---------------------------------------------------------------------------
+  job:
+    image: ghcr.io/cnmbdb/tgbot-job:latest
+    container_name: tgbot-job
+    env_file:
+      - .env
+    environment:
+      APP_NAME: "tgbot-job"
+    volumes:
+      - job_storage:/opt/www/runtime
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - tgbot-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9501 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # ---------------------------------------------------------------------------
+  # 3. 主数据库 (PostgreSQL)
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:15-alpine
+    container_name: tgbot-postgres
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./DB_PostgreSQL.sql:/docker-entrypoint-initdb.d/001_DB_PostgreSQL.sql:ro
+    restart: unless-stopped
+    networks:
+      - tgbot-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # 4. 主缓存 (Redis)
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: tgbot-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - tgbot-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # 5. Cloudflare Tunnel
+  # ---------------------------------------------------------------------------
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: tgbot-tunnel
+    env_file:
+      - .env
+    command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
+    restart: unless-stopped
+    networks:
+      - tgbot-network
+    depends_on:
+      - admin
+
+
+networks:
+  tgbot-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  admin_storage:
+  admin_cache:
+  job_storage:
