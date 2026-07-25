@@ -1,7 +1,10 @@
 # Environment
 /.env
 /.env.*
-!/.env.example
+!/.env.admin.example
+!/.env.job.example
+!/.env.postgres.example
+!/.env.redis.example
 
 # Laravel
 /admin/vendor/
@@ -27,9 +30,8 @@
 /API-web/.env
 /API-web/.env.local
 
-# Docker
+# Runtime
 *.log
-docker-compose.override.yml
 
 # IDE
 .idea/
